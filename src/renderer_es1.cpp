@@ -149,8 +149,8 @@ namespace ERI {
 		glEnable(GL_SCISSOR_TEST);
 		glEnable(GL_CULL_FACE);
 		
-		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); // because pre-multiplied alpha?
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		//glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); // because pre-multiplied alpha?
 		
 		glEnableClientState(GL_VERTEX_ARRAY);
 	}
