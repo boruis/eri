@@ -41,4 +41,9 @@ namespace ERI {
 		if (handler_) handler_->Move(screen_x, screen_y);
 	}
 	
+	void InputMgr::Accelerate(float g_x, float g_y, float g_z)
+	{
+		if (handler_) handler_->Accelerate(g_x, g_y, g_z);
+	}
+	
 }

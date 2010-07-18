@@ -29,7 +29,8 @@ namespace ERI {
 			tex_filter_mag(FILTER_NEAREST),
 			opacity_type(OPACITY_ALPHA_BLEND),
 			depth_test(true),
-			depth_write(true)
+			depth_write(true),
+			accept_light(false)
 		{
 		}
 		
@@ -40,6 +41,8 @@ namespace ERI {
 		OpacityType		opacity_type;
 		bool			depth_test;
 		bool			depth_write;
+		
+		bool			accept_light;
 	};
 	
 }

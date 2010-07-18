@@ -43,8 +43,8 @@ namespace ERI {
 		
 		// scene
 		
-		void AddToScene(int layer_id = 0);
-		void RemoveFromScene();
+		virtual void AddToScene(int layer_id = 0);
+		virtual void RemoveFromScene();
 
 		void MoveToLayer(int layer_id);
 		
@@ -71,6 +71,8 @@ namespace ERI {
 		const Matrix4& GetInvTransform();
 		const Matrix4& GetWorldTransform();
 		
+		// TODO: 2D & 3D transform interface is suck, re-design
+		
 		// 2D
 		virtual void SetPos(float x, float y);
 		Vector2 GetPos();
@@ -85,19 +87,25 @@ namespace ERI {
 		virtual void SetPos(const Vector3& pos);
 		const Vector3& GetPos3();
 		void SetRotate(float degree, const Vector3& axis);
+		void SetScale(const Vector3& scale);
 		
 		// material
+		// TODO: bad interface, re-design
 		
-		virtual void SetMaterial(const std::string& texture_path, TextureFilter filter_min = FILTER_NEAREST, TextureFilter filter_mag = FILTER_NEAREST);
+		inline void set_accept_light(bool accept) { material_data_.accept_light = accept; }
+		
+		void SetMaterial(const std::string& texture_path, TextureFilter filter_min = FILTER_NEAREST, TextureFilter filter_mag = FILTER_NEAREST);
+		void SetMaterial(const Texture* tex, TextureFilter filter_min = FILTER_NEAREST, TextureFilter filter_mag = FILTER_NEAREST);
 		void SetTextureFilter(TextureFilter filter_min, TextureFilter filter_mag);
-		inline const MaterialData& material() { return material_data_; }
 		
 		void SetOpacityType(OpacityType type);
 		inline OpacityType opacity_type() { return material_data_.opacity_type; }
 		
 		void SetDepthTest(bool enable);
 		void SetDepthWrite(bool enable);
-		
+
+		inline const MaterialData& material() { return material_data_; }
+
 		//
 
 		inline void set_visible(bool visible) { visible_ = visible; }
@@ -134,19 +142,89 @@ namespace ERI {
 	class CameraActor : public SceneActor
 	{
 	public:
-		CameraActor();
+		enum Projection
+		{
+			ORTHOGONAL,
+			PERSPECTIVE
+		};
+		
+		CameraActor(Projection projection = ORTHOGONAL);
 		virtual ~CameraActor();
 		
 		virtual void SetPos(float x, float y);
 		virtual void SetPos(const Vector3& pos);
-		void SetZoom(float zoom);
-	
-		inline const Matrix4& view_matrix() { return view_matrix_; }
-		inline float zoom() { return zoom_; }
+		
+		void SetLookAt(const Vector3& look_at, bool is_offset = false);
+		
+		void SetOrthoZoom(float zoom);
+		void SetPerspectiveFov(float fov_y);
+
+		void UpdateViewMatrix();
+		void UpdateProjectionMatrix();
+		
+		void SetViewProjectionModified();
+		void SetViewModified();
+		void SetProjectionModified();
+		
+		inline Projection projection() { return projection_; }
+		inline float ortho_zoom() { return ortho_zoom_; }
+		inline float perspective_fov() { return perspective_fov_y_; }
+		inline bool is_view_modified() { return is_view_modified_; }
+		inline bool is_projection_modified() { return is_projection_modified_; }
 		
 	private:
-		Matrix4		view_matrix_;
-		float		zoom_;
+		Projection	projection_;
+		
+		Vector3		look_at_;
+		bool		is_look_at_offset_;
+		
+		float		ortho_zoom_;
+		float		perspective_fov_y_;
+		
+		bool		is_view_modified_;
+		bool		is_projection_modified_;
+	};
+	
+#pragma mark LightActor
+	
+	class LightActor : public SceneActor
+	{
+	public:
+		enum Type
+		{
+			POINT,
+			DIRECTION,
+			SPOT
+		};
+		
+		LightActor(Type type);
+		virtual ~LightActor();
+		
+		virtual void AddToScene(int layer_id = 0);
+		virtual void RemoveFromScene();
+		
+		virtual void SetPos(float x, float y);
+		virtual void SetPos(const Vector3& pos);
+
+		void SetDir(const Vector3& dir);
+		
+		void SetAmbient(const Color& ambient);
+		void SetDiffuse(const Color& diffuse);
+		void SetSpecular(const Color& specular);
+		
+		void SetAttenuation(float constant, float linear, float quadratic);
+		
+		void SetSpotExponent(float exponent);
+		void SetSpotCutoff(float cutoff);
+		
+	private:
+		Type	type_;
+		int		idx_;
+		Color	ambient_, diffuse_, specular_;
+		float	attenuation_constant_, attenuation_linear_, attenuation_quadratic_;
+		
+		Vector3	dir_;
+		float	spot_exponent_, spot_cutoff_;
 	};
 	
 #pragma mark SpriteActor
@@ -180,6 +258,20 @@ namespace ERI {
 		Vector2		tex_scale_;
 		Vector2		tex_scroll_;
 		bool		is_use_line_;
+	};
+	
+#pragma mark BoxActor
+	
+	class BoxActor : public SceneActor
+	{
+	public:
+		BoxActor(const Vector3& half_ext);
+		virtual ~BoxActor();
+		
+	private:
+		void UpdateVertexBuffer();
+		
+		Vector3		half_ext_;
 	};
 	
 #pragma mark NumberActor

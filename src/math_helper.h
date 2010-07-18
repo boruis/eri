@@ -119,10 +119,45 @@ namespace ERI {
 		static const Matrix4 IDENTITY;
 	};
 	
+	struct Quaternion
+	{
+		Quaternion() : x(0), y(0), z(0), w(1) {}
+		Quaternion(float _x, float _y, float _z, float _w) : x(_x), y(_y), z(_z), w(_w) {}
+		Quaternion(float degree, const Vector3& axis);
+		
+		inline Quaternion operator * (const Quaternion& q) const { Quaternion ret; Multiply(ret, *this, q); return ret; }
+		inline Quaternion& operator *= (const Quaternion& q) { Multiply(*this, Quaternion(*this), q); return *this; }
+		
+		void Normalize();
+		
+		void GetRotationAxis(float& out_degree, Vector3& out_axis);
+		void GetRotationMatrix(Matrix4& out_m);
+		
+		static void Multiply(Quaternion& out_q, const Quaternion& q1, const Quaternion& q2);
+		
+		float x, y, z, w;
+	};
+	
 	void MatrixLookAtRH(Matrix4& out_m,
 						const Vector3& eye,
 						const Vector3& at,
 						const Vector3& up);
+	
+	void MatrixPerspectiveFovRH(Matrix4	&out_m,
+								const float	fov_y,
+								const float	aspect,
+								const float	near,
+								const float	far);
+	
+	void MatrixOrthoRH(Matrix4	&out_m,
+					   const float w,
+					   const float h,
+					   const float zn,
+					   const float zf);
+	
+	float UnitRandom();
+	int RangeRandom(int min, int max);
+	float RangeRandom(float min, float max);
 	
 	struct Color
 	{
@@ -131,13 +166,9 @@ namespace ERI {
 		
 		inline bool operator == (const Color& c) const { return (r == c.r && g == c.g && b == c.b && a == c.a); }
 		inline bool operator != (const Color& c) const { return (r != c.r || g != c.g || b != c.b || a != c.a); }
-	
+		
 		float r, g, b, a;
 	};
-	
-	float UnitRandom();
-	int RangeRandom(int min, int max);
-	float RangeRandom(float min, float max);
 }
 
 #endif // ERI_MATH_HELPER_H

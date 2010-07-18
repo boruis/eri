@@ -28,7 +28,7 @@ namespace ERI {
 		
 		virtual bool Init(bool use_depth_buffer);
 		virtual void BackingLayer(void* layer);
-		virtual void Resize(int w, int h) {}
+		virtual void Resize(int width, int height) {}
 		
 		virtual int width() { return backing_width_; }
 		virtual int height() { return backing_height_; }
@@ -41,19 +41,39 @@ namespace ERI {
 		virtual void SaveTransform() {}
 		virtual void RecoverTransform() {}
 		
-		virtual void EnableDepthTest(bool enable) {}
-		virtual void EnableDepthWrite(bool enable) {}
+		virtual void EnableRenderToBuffer(int width, int height, int frame_buffer) {}
+		virtual void RestoreRenderToBuffer() {}
+		
+		virtual void ReleaseFrameBuffer(int frame_buffer) {}
+		
 		virtual void EnableBlend(bool enable) {}
 		virtual void EnableAlphaTest(bool enable) {}
 		virtual void EnableMaterial(const MaterialData* data) {}
 		
+		virtual void ObtainLight(int& idx) {}
+		virtual void ReleaseLight(int idx) {}
+		virtual void SetLightPos(int idx, const Vector3& pos) {}
+		virtual void SetLightDir(int idx, const Vector3& dir) {}
+		virtual void SetLightSpotDir(int idx, const Vector3& dir) {}
+		virtual void SetLightAmbient(int idx, const Color& ambient) {}
+		virtual void SetLightDiffuse(int idx, const Color& diffuse) {}
+		virtual void SetLightSpecular(int idx, const Color& specular) {}
+		virtual void SetLightAttenuation(int idx, float constant, float linear, float quadratic) {}
+		virtual void SetLightSpotExponent(int idx, float exponent) {}
+		virtual void SetLightSpotCutoff(int idx, float cutoff) {}
+		
 		virtual unsigned int GenerateTexture(void* buffer, int width, int height, PixelFormat format) { return 0; }
-		virtual unsigned int BindTexture() { return 0; }
+		virtual unsigned int GenerateRenderToTexture(int width, int height, int& out_frame_buffer) { return 0; }
+		virtual void ReleaseTexture(int texture_id) {}
 		
 		virtual void SetBgColor(const Color& color) {}
 		
-		virtual void UpdateOrthoProj(float center_x, float center_y, float zoom) {}
-		virtual void UpdateViewMatrix(const Matrix4& view_matrix) {}
+		virtual void UpdateView(const Vector3& eye, const Vector3& at, const Vector3& up) {}
+		
+		virtual void UpdateOrthoProjection(float width, float height, float near, float far) {}
+		virtual void UpdateOrthoProjection(float zoom, float near, float far) {}
+		virtual void UpdatePerspectiveProjection(float fov_y, float aspect, float near, float far) {}
+		virtual void UpdatePerspectiveProjection(float fov_y, float near, float far) {}
 		
 		virtual void SetViewOrientation(ViewOrientation orientaion) { view_orientation_ = orientaion; }
 	

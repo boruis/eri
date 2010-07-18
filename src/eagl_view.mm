@@ -28,21 +28,27 @@ bool	in_zoom;
     return [CAEAGLLayer class];
 }
 
-- (id)initWithFrame:(CGRect)frame {
-    if (self = [super initWithFrame:frame]) {
-		
+- (id)initWithFrame:(CGRect)frame
+{
+    if (self = [super initWithFrame:frame])
+	{
 		// Enable multipletouch support
 		self.multipleTouchEnabled = YES;
 
 		// Get the layer
-		CAEAGLLayer *eaglLayer = (CAEAGLLayer *)self.layer;
+		CAEAGLLayer *eaglLayer = (CAEAGLLayer*)self.layer;
 
 		eaglLayer.opaque = TRUE;
 		eaglLayer.drawableProperties = [NSDictionary dictionaryWithObjectsAndKeys:
-										[NSNumber numberWithBool:FALSE], kEAGLDrawablePropertyRetainedBacking, kEAGLColorFormatRGBA8, kEAGLDrawablePropertyColorFormat, nil];
+										[NSNumber numberWithBool:FALSE],
+										kEAGLDrawablePropertyRetainedBacking,
+										kEAGLColorFormatRGBA8,
+										kEAGLDrawablePropertyColorFormat,
+										nil];
 		
 		in_zoom = false;
     }
+
     return self;
 }
 
@@ -143,6 +149,21 @@ bool	in_zoom;
 	}
 }
 
+- (void)enableAccelerometer:(BOOL)enable withTimeInterval:(NSTimeInterval)interval
+{
+	UIAccelerometer *accel = [UIAccelerometer sharedAccelerometer];
+
+	if (enable && interval > 0)
+	{
+		accel.delegate = self;
+		accel.updateInterval = interval;
+	}
+	else if (accel.delegate == self)
+	{
+		accel.delegate = nil;
+	}
+}
+
 - (void)convertPointByViewOrientation:(CGPoint*)point
 {
 	CGRect bounds = [self bounds];
@@ -179,5 +200,12 @@ bool	in_zoom;
     [super dealloc];
 }
 
+#pragma mark Accelerometer Delegate
+
+- (void)accelerometer:(UIAccelerometer*)accelerometer
+	didAccelerate:(UIAcceleration*)acceleration
+{
+	ERI::Root::Ins().input_mgr()->Accelerate(acceleration.x, acceleration.y, acceleration.z);
+} 
 
 @end

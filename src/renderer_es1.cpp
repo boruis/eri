@@ -15,6 +15,8 @@
 #include "render_context_iphone.h"
 #endif
 
+#include "root.h"
+#include "scene_mgr.h"
 #include "render_data.h"
 #include "material_data.h"
 
@@ -24,14 +26,18 @@
 
 namespace ERI {
 	
+	const int kDefaultFrameBufferIdx = 0;
+	
 	RendererES1::RendererES1() :
 		context_(NULL),
 		width_(0),
 		height_(0),
-		default_frame_buffer_(0),
+		current_frame_buffer_(0),
 		color_render_buffer_(0),
 		depth_buffer_(0),
 		use_depth_buffer_(true),
+		vertex_normal_enable_(false),
+		light_enable_(false),
 		depth_test_enable_(true),
 		depth_write_enable_(true),
 		blend_enable_(false),
@@ -39,6 +45,7 @@ namespace ERI {
 		now_texture_(0),
 		bg_color_(Color(0.0f, 0.0f, 0.0f, 0.0f))
 	{
+		memset(frame_buffers_, 0, sizeof(frame_buffers_));
 	}
 	
 	RendererES1::~RendererES1()
@@ -54,11 +61,14 @@ namespace ERI {
 			glDeleteRenderbuffersOES(1, &color_render_buffer_);
 		}
 		
-		if (default_frame_buffer_)
+		for (int i = 0; i < MAX_FRAMEBUFFER; ++i)
 		{
-			glDeleteFramebuffersOES(1, &default_frame_buffer_);
+			if (frame_buffers_[i])
+			{
+				glDeleteFramebuffersOES(1, &frame_buffers_[i]);
+			}
 		}
-		
+	
 		if (context_) delete context_;
 #endif
 	}
@@ -77,55 +87,6 @@ namespace ERI {
 		}
 #endif
 		
-		return true;
-	}
-	
-	void RendererES1::BackingLayer(void* layer)
-	{
-#ifndef OS_ANDROID
-		// Create default framebuffer object. The backing will be allocated for the current layer in -resizeFromLayer
-		glGenFramebuffersOES(1, &default_frame_buffer_);
-		glGenRenderbuffersOES(1, &color_render_buffer_);
-		glBindFramebufferOES(GL_FRAMEBUFFER_OES, default_frame_buffer_);
-		glBindRenderbufferOES(GL_RENDERBUFFER_OES, color_render_buffer_);
-		glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_RENDERBUFFER_OES, color_render_buffer_);
-		
-		context_->BackingLayer(layer);
-		
-		int backing_width, backing_height;
-		
-		glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_WIDTH_OES, &backing_width);
-		glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_HEIGHT_OES, &backing_height);
-		
-		if (glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) != GL_FRAMEBUFFER_COMPLETE_OES)
-		{
-			printf("Failed to make complete framebuffer object %x", glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES));
-			ASSERT(0);
-		}
-		
-		if (use_depth_buffer_)
-		{
-			glGenRenderbuffersOES(1, &depth_buffer_);
-			glBindRenderbufferOES(GL_RENDERBUFFER_OES, depth_buffer_);
-			glRenderbufferStorageOES(GL_RENDERBUFFER_OES, GL_DEPTH_COMPONENT16_OES, backing_width, backing_height);
-			glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_DEPTH_ATTACHMENT_OES, GL_RENDERBUFFER_OES, depth_buffer_);
-			
-			if (glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) != GL_FRAMEBUFFER_COMPLETE_OES)
-			{
-				printf("Failed to make complete framebuffer object %x", glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES));
-				ASSERT(0);
-			}
-		}
-		
-		Resize(backing_width, backing_height);
-#endif
-	}
-	
-	void RendererES1::Resize(int w, int h)
-	{
-		backing_width_ = w;
-		backing_height_ = h;
-		
 		clear_bits_ = GL_COLOR_BUFFER_BIT;
 		
 		if (use_depth_buffer_)
@@ -137,14 +98,10 @@ namespace ERI {
 			depth_test_enable_ = false;
 		}
 		
-		glViewport(0, 0, backing_width_, backing_height_);
-		glScissor(0, 0, backing_width_, backing_height_);
-		
-		SetViewOrientation(view_orientation_);
-		UpdateOrthoProj(0.0f, 0.0f, 1.0f);
-		
 		if (depth_test_enable_)
+		{
 			glEnable(GL_DEPTH_TEST);
+		}
 		
 		glEnable(GL_SCISSOR_TEST);
 		glEnable(GL_CULL_FACE);
@@ -152,7 +109,69 @@ namespace ERI {
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		//glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); // because pre-multiplied alpha?
 		
+		glEnable(GL_COLOR_MATERIAL);
+		
 		glEnableClientState(GL_VERTEX_ARRAY);
+		
+		return true;
+	}
+	
+	void RendererES1::BackingLayer(void* layer)
+	{
+#ifndef OS_ANDROID
+		// Create default framebuffer object. The backing will be allocated for the current layer in -resizeFromLayer
+		glGenFramebuffersOES(1, &frame_buffers_[kDefaultFrameBufferIdx]);
+		glGenRenderbuffersOES(1, &color_render_buffer_);
+		glBindFramebufferOES(GL_FRAMEBUFFER_OES, frame_buffers_[kDefaultFrameBufferIdx]);
+		glBindRenderbufferOES(GL_RENDERBUFFER_OES, color_render_buffer_);
+		glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_RENDERBUFFER_OES, color_render_buffer_);
+		
+		context_->BackingLayer(layer);
+		
+		int backing_width, backing_height;
+		
+		glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_WIDTH_OES, &backing_width);
+		glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_HEIGHT_OES, &backing_height);
+		
+		GLenum status = glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES);
+		if (status != GL_FRAMEBUFFER_COMPLETE_OES)
+		{
+			printf("Failed to make complete framebuffer object %x", status);
+			ASSERT(0);
+		}
+		
+		if (use_depth_buffer_)
+		{
+			glGenRenderbuffersOES(1, &depth_buffer_);
+			glBindRenderbufferOES(GL_RENDERBUFFER_OES, depth_buffer_);
+			glRenderbufferStorageOES(GL_RENDERBUFFER_OES, GL_DEPTH_COMPONENT16_OES, backing_width, backing_height);
+			glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_DEPTH_ATTACHMENT_OES, GL_RENDERBUFFER_OES, depth_buffer_);
+			
+			status = glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES);
+			if (status != GL_FRAMEBUFFER_COMPLETE_OES)
+			{
+				printf("Failed to make complete framebuffer object %x", status);
+				ASSERT(0);
+			}
+		}
+		
+		current_frame_buffer_ = frame_buffers_[kDefaultFrameBufferIdx];
+		
+		Resize(backing_width, backing_height);
+#endif
+	}
+	
+	void RendererES1::Resize(int width, int height)
+	{
+		backing_width_ = width;
+		backing_height_ = height;
+		
+		SetViewOrientation(view_orientation_);
+		
+		glViewport(0, 0, backing_width_, backing_height_);
+		glScissor(0, 0, backing_width_, backing_height_);
+		
+		Root::Ins().scene_mgr()->OnRenderResize();
 	}
 
 	void RendererES1::RenderStart()
@@ -164,7 +183,7 @@ namespace ERI {
 		
 		// This application only creates a single default framebuffer which is already bound at this point.
 		// This call is redundant, but needed if dealing with multiple framebuffers.
-		glBindFramebufferOES(GL_FRAMEBUFFER_OES, default_frame_buffer_);
+		glBindFramebufferOES(GL_FRAMEBUFFER_OES, current_frame_buffer_);
 #endif
 		
 		glClearColor(bg_color_.r, bg_color_.g, bg_color_.b, bg_color_.a);
@@ -199,21 +218,56 @@ namespace ERI {
 			}
 			
 			glBindBuffer(GL_ARRAY_BUFFER, data->vertex_buffer);
-			glVertexPointer(2, GL_FLOAT, sizeof(vertex_2_pos_tex), (void*)offsetof(vertex_2_pos_tex, position));
-
-			if (texture_enable_)
+			
+			switch (data->vertex_format)
 			{
-//				if (data->is_tex_transform)
-//				{
-//					glMatrixMode(GL_TEXTURE);
-//					glTranslatef(data->tex_translate.x, data->tex_translate.y, 0.0f);
-//					glScalef(data->tex_scale.x, data->tex_scale.y, 1.0f);
-//				}
-				
-				glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_2_pos_tex), (void*)offsetof(vertex_2_pos_tex, tex_coord));
+				case POS_TEX_2:
+					glVertexPointer(2, GL_FLOAT, sizeof(vertex_2_pos_tex), (void*)offsetof(vertex_2_pos_tex, position));
+					if (vertex_normal_enable_)
+					{
+						vertex_normal_enable_ = false;
+						glDisableClientState(GL_NORMAL_ARRAY);
+					}
+					if (texture_enable_)
+					{
+						//if (data->is_tex_transform)
+						//{
+						//	glMatrixMode(GL_TEXTURE);
+						//	glTranslatef(data->tex_translate.x, data->tex_translate.y, 0.0f);
+						//	glScalef(data->tex_scale.x, data->tex_scale.y, 1.0f);
+						//}
+						
+						glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_2_pos_tex), (void*)offsetof(vertex_2_pos_tex, tex_coord));
+					}
+					break;
+					
+				case POS_NORMAL_TEX_3:
+					glVertexPointer(3, GL_FLOAT, sizeof(vertex_3_pos_normal_tex), (void*)offsetof(vertex_3_pos_normal_tex, position));
+					if (!vertex_normal_enable_)
+					{
+						vertex_normal_enable_ = true;
+						glEnableClientState(GL_NORMAL_ARRAY);
+					}
+					glNormalPointer(GL_FLOAT, sizeof(vertex_3_pos_normal_tex), (void*)offsetof(vertex_3_pos_normal_tex, normal));
+					if (texture_enable_)
+					{
+						glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_3_pos_normal_tex), (void*)offsetof(vertex_3_pos_normal_tex, tex_coord));
+					}
+					break;
+
+				default:
+					break;
 			}
 			
-			glDrawArrays(data->vertex_type, 0,  data->vertex_count);
+			if (data->index_count > 0)
+			{
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data->index_buffer);
+				glDrawElements(data->vertex_type, data->index_count, GL_UNSIGNED_SHORT, 0);
+			}
+			else
+			{
+				glDrawArrays(data->vertex_type, 0,  data->vertex_count);
+			}
 			
 //			if (data->is_tex_transform)
 //			{
@@ -221,65 +275,6 @@ namespace ERI {
 //				glMatrixMode(GL_MODELVIEW);
 //			}
 		}
-	}
-	
-	void RendererES1::Render()
-	{
-		// Replace the implementation of this method to do your own custom drawing
-		
-		static const GLfloat squareVertices[] = {
-			-50.0f,  -50.0f,
-			50.0f,  -50.0f,
-			-50.0f,   50.0f,
-			50.0f,   50.0f,
-		};
-		
-		static const GLubyte squareColors[] = {
-			255, 255,   0, 255,
-			0,   255, 255, 255,
-			0,     0,   0,   0,
-			255,   0, 255, 255,
-		};
-		
-		static float transY = 0.0f;
-
-#ifndef OS_ANDROID
-		// This application only creates a single context which is already set current at this point.
-		// This call is redundant, but needed if dealing with multiple contexts.
-		context_->SetAsCurrent();
-
-		// This application only creates a single default framebuffer which is already bound at this point.
-		// This call is redundant, but needed if dealing with multiple framebuffers.
-		glBindFramebufferOES(GL_FRAMEBUFFER_OES, default_frame_buffer_);
-#endif
-		
-		glViewport(0, 0, backing_width_, backing_height_);
-		
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrthof(-backing_width_ * 0.5, backing_width_ * 0.5, -backing_height_ * 0.5, backing_height_ * 0.5, -1, 1);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		glTranslatef(0.0f, (GLfloat)(sinf(transY) * 50), 0.0f);
-		transY += 0.075f;
-		
-		glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		
-		glVertexPointer(2, GL_FLOAT, 0, squareVertices);
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glColorPointer(4, GL_UNSIGNED_BYTE, 0, squareColors);
-		glEnableClientState(GL_COLOR_ARRAY);
-		
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		
-#ifndef OS_ANDROID
-		// This application only creates a single color renderbuffer which is already bound at this point.
-		// This call is redundant, but needed if dealing with multiple renderbuffers.
-		glBindRenderbufferOES(GL_RENDERBUFFER_OES, color_render_buffer_);
-		
-		context_->Present();
-#endif
 	}
 	
 	void RendererES1::SaveTransform()
@@ -291,30 +286,41 @@ namespace ERI {
 	{
 		glPopMatrix();
 	}
-
-	void RendererES1::EnableDepthTest(bool enable)
+	
+	void RendererES1::EnableRenderToBuffer(int width, int height, int frame_buffer)
 	{
-		if (use_depth_buffer_ && depth_test_enable_ != enable)
-		{
-			depth_test_enable_ = enable;
+		backing_width_backup_ = backing_width_;
+		backing_height_backup_ = backing_height_;
+		backing_width_ = width;
+		backing_height_ = height;
+		
+		glViewport(0, 0, backing_width_, backing_height_);
 			
-			if (enable)
-				glEnable(GL_DEPTH_TEST);
-			else
-				glDisable(GL_DEPTH_TEST);
-		}
+		current_frame_buffer_ = frame_buffer;
 	}
 	
-	void RendererES1::EnableDepthWrite(bool enable)
+	void RendererES1::RestoreRenderToBuffer()
 	{
-		if (use_depth_buffer_ && depth_write_enable_ != enable)
+		backing_width_ = backing_width_backup_;
+		backing_height_ = backing_height_backup_;
+		
+		glViewport(0, 0, backing_width_, backing_height_);
+		
+		current_frame_buffer_ = frame_buffers_[kDefaultFrameBufferIdx];
+	}
+	
+	void RendererES1::ReleaseFrameBuffer(int frame_buffer)
+	{
+		ASSERT(frame_buffer > 0);
+		
+		for (int i = 0; i < MAX_FRAMEBUFFER; ++i)
 		{
-			depth_write_enable_ = enable;
-			
-			if (enable)
-				glEnable(GL_DEPTH_TEST);
-			else
-				glDisable(GL_DEPTH_TEST);
+			if (frame_buffers_[i] == frame_buffer)
+			{
+				glDeleteFramebuffersOES(1, &frame_buffers_[i]);
+				frame_buffers_[i] = 0;
+				return;
+			}
 		}
 	}
 	
@@ -335,33 +341,9 @@ namespace ERI {
 	{
 	}
 	
-	void RendererES1::EnableTexture(bool enable, unsigned int texture /*= 0*/)
-	{
-		if (texture_enable_ != enable)
-		{
-			texture_enable_ = enable;
-			
-			if (enable)
-			{
-				glEnable(GL_TEXTURE_2D);
-				glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-			}
-			else
-			{
-				glDisable(GL_TEXTURE_2D);
-				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-			}
-		}
-		
-		if (texture_enable_ && texture != 0 && now_texture_ != texture)
-		{
-			glBindTexture(GL_TEXTURE_2D, texture);
-			now_texture_ = texture;
-		}
-	}
-	
 	void RendererES1::EnableMaterial(const MaterialData* data)
 	{
+		EnableLight(data->accept_light);
 		EnableDepthTest(data->depth_test);
 		EnableDepthWrite(data->depth_write);
 		
@@ -410,6 +392,185 @@ namespace ERI {
 		}
 	}
 	
+	void RendererES1::EnableLight(bool enable)
+	{
+		if (light_enable_ != enable)
+		{
+			light_enable_ = enable;
+			
+			if (enable)
+				glEnable(GL_LIGHTING);
+			else
+				glDisable(GL_LIGHTING);
+		}
+	}
+	
+	void RendererES1::EnableDepthTest(bool enable)
+	{
+		if (use_depth_buffer_ && depth_test_enable_ != enable)
+		{
+			depth_test_enable_ = enable;
+			
+			if (enable)
+				glEnable(GL_DEPTH_TEST);
+			else
+				glDisable(GL_DEPTH_TEST);
+		}
+	}
+	
+	void RendererES1::EnableDepthWrite(bool enable)
+	{
+		if (use_depth_buffer_ && depth_write_enable_ != enable)
+		{
+			depth_write_enable_ = enable;
+			
+			if (enable)
+				glEnable(GL_DEPTH_TEST);
+			else
+				glDisable(GL_DEPTH_TEST);
+		}
+	}
+	
+	void RendererES1::EnableTexture(bool enable, unsigned int texture /*= 0*/)
+	{
+		if (texture_enable_ != enable)
+		{
+			texture_enable_ = enable;
+			
+			if (enable)
+			{
+				glEnable(GL_TEXTURE_2D);
+				glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+			}
+			else
+			{
+				glDisable(GL_TEXTURE_2D);
+				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+			}
+		}
+		
+		if (texture_enable_ && texture != 0 && now_texture_ != texture)
+		{
+			glBindTexture(GL_TEXTURE_2D, texture);
+			now_texture_ = texture;
+		}
+	}
+	
+	void RendererES1::ObtainLight(int& idx)
+	{
+		for (int i = 0; i < MAX_LIGHT; ++i)
+		{
+			if (!light_infos_[i].used)
+			{
+				light_infos_[i].used = true;
+				idx = i;
+				
+				glEnable(GL_LIGHT0 + idx);
+				
+				return;
+			}
+		}
+	}
+	
+	void RendererES1::ReleaseLight(int idx)
+	{
+		ASSERT(idx >= 0 && idx < MAX_LIGHT);
+		ASSERT(light_infos_[idx].used);
+		
+		light_infos_[idx].Clear();
+		
+		glDisable(GL_LIGHT0 + idx);
+		// clear setting?
+	}
+	
+	void RendererES1::SetLightPos(int idx, const Vector3& pos)
+	{
+		ASSERT(idx >= 0 && idx < MAX_LIGHT);
+		ASSERT(light_infos_[idx].used);
+		
+		light_infos_[idx].pos = pos;
+		light_infos_[idx].pos_w = 1.0f;
+		
+		GLfloat params[] = { pos.x, pos.y, pos.z, 1.0f };
+		glLightfv(GL_LIGHT0 + idx, GL_POSITION, params);
+	}
+	
+	void RendererES1::SetLightDir(int idx, const Vector3& dir)
+	{
+		ASSERT(idx >= 0 && idx < MAX_LIGHT);
+		ASSERT(light_infos_[idx].used);
+		
+		light_infos_[idx].pos = dir;
+		light_infos_[idx].pos_w = 0.0f;
+		
+		GLfloat params[] = { dir.x, dir.y, dir.z, 0.0f };
+		glLightfv(GL_LIGHT0 + idx, GL_POSITION, params);
+	}
+	
+	void RendererES1::SetLightSpotDir(int idx, const Vector3& dir)
+	{
+		ASSERT(idx >= 0 && idx < MAX_LIGHT);
+		ASSERT(light_infos_[idx].used);
+		
+		light_infos_[idx].spot_dir = dir;
+		
+		GLfloat params[] = { dir.x, dir.y, dir.z };
+		glLightfv(GL_LIGHT0 + idx, GL_SPOT_DIRECTION, params);
+	}
+	
+	void RendererES1::SetLightAmbient(int idx, const Color& ambient)
+	{
+		ASSERT(idx >= 0 && idx < MAX_LIGHT);
+		ASSERT(light_infos_[idx].used);
+		
+		GLfloat params[] = { ambient.r, ambient.g, ambient.b, 1.0f };
+		glLightfv(GL_LIGHT0 + idx, GL_AMBIENT, params);
+	}
+	
+	void RendererES1::SetLightDiffuse(int idx, const Color& diffuse)
+	{
+		ASSERT(idx >= 0 && idx < MAX_LIGHT);
+		ASSERT(light_infos_[idx].used);
+		
+		GLfloat params[] = { diffuse.r, diffuse.g, diffuse.b, 1.0f };
+		glLightfv(GL_LIGHT0 + idx, GL_DIFFUSE, params);
+	}
+	
+	void RendererES1::SetLightSpecular(int idx, const Color& specular)
+	{
+		ASSERT(idx >= 0 && idx < MAX_LIGHT);
+		ASSERT(light_infos_[idx].used);
+		
+		GLfloat params[] = { specular.r, specular.g, specular.b, 1.0f };
+		glLightfv(GL_LIGHT0 + idx, GL_SPECULAR, params);
+	}
+	
+	void RendererES1::SetLightAttenuation(int idx, float constant, float linear, float quadratic)
+	{
+		ASSERT(idx >= 0 && idx < MAX_LIGHT);
+		ASSERT(light_infos_[idx].used);
+
+		glLightf(GL_LIGHT0 + idx, GL_CONSTANT_ATTENUATION, constant);
+		glLightf(GL_LIGHT0 + idx, GL_LINEAR_ATTENUATION, linear);
+		glLightf(GL_LIGHT0 + idx, GL_QUADRATIC_ATTENUATION, quadratic);
+	}
+	
+	void RendererES1::SetLightSpotExponent(int idx, float exponent)
+	{
+		ASSERT(idx >= 0 && idx < MAX_LIGHT);
+		ASSERT(light_infos_[idx].used);
+		
+		glLightf(GL_LIGHT0 + idx, GL_SPOT_EXPONENT, exponent);
+	}
+	
+	void RendererES1::SetLightSpotCutoff(int idx, float cutoff)
+	{
+		ASSERT(idx >= 0 && idx < MAX_LIGHT);
+		ASSERT(light_infos_[idx].used);
+		
+		glLightf(GL_LIGHT0 + idx, GL_SPOT_CUTOFF, cutoff);
+	}
+	
 	unsigned int RendererES1::GenerateTexture(void* buffer, int width, int height, PixelFormat format)
 	{
 		GLuint texture;
@@ -441,11 +602,20 @@ namespace ERI {
 		return texture;
 	}
 	
-	unsigned int RendererES1::BindTexture()
+	unsigned int RendererES1::GenerateRenderToTexture(int width, int height, int& out_frame_buffer)
 	{
+		// create the framebuffer object
+		int frame_buffer = GenerateFrameBuffer();
+		if (!frame_buffer)
+			return 0;
+		
+		glBindFramebufferOES(GL_FRAMEBUFFER_OES, frame_buffer);
+		
+		// create the texture
 		GLuint texture;
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,  width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		now_texture_ = texture;
 		
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -453,46 +623,115 @@ namespace ERI {
 		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		
+		// attach the texture to the framebuffer
+		glFramebufferTexture2DOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_TEXTURE_2D, texture, 0);
+		
+		// TODO: use depth buffer?
+//		// allocate and attach a depth buffer
+//		GLuint depth_render_buffer;
+//		glGenRenderbuffersOES(1, &depth_render_buffer);
+//		glBindRenderbufferOES(GL_RENDERBUFFER_OES, depth_render_buffer);
+//		glRenderbufferStorageOES(GL_RENDERBUFFER_OES, GL_DEPTH_COMPONENT16_OES, width, height);
+//		glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_DEPTH_ATTACHMENT_OES, GL_RENDERBUFFER_OES, depth_render_buffer);
+		
+		GLenum status = glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) ;
+		if(status != GL_FRAMEBUFFER_COMPLETE_OES)
+		{
+			printf("Failed to make complete framebuffer object %x", status);
+			ASSERT(0);
+		}
+		
+		out_frame_buffer = frame_buffer;
+		
 		return texture;
 	}
 	
-	void RendererES1::UpdateOrthoProj(float center_x, float center_y, float zoom)
+	void RendererES1::ReleaseTexture(int texture_id)
+	{
+		ASSERT(texture_id > 0);
+		
+		if (now_texture_ == texture_id)
+		{
+			glBindTexture(GL_TEXTURE_2D, 0);
+			now_texture_ = 0;
+		}
+
+		GLuint id = texture_id;
+		glDeleteTextures(1, &id);
+	}
+	
+	void RendererES1::UpdateView(const Vector3& eye, const Vector3& at, const Vector3& up)
+	{
+		static Matrix4 view;
+		MatrixLookAtRH(view, eye, at, up);
+		
+		glMatrixMode(GL_MODELVIEW);
+		glLoadMatrixf(view.m);
+		
+		UpdateLightTransform();
+	}
+	
+	void RendererES1::UpdateOrthoProjection(float width, float height, float near, float far)
+	{
+		GLint original_matrix_mode;
+		glGetIntegerv(GL_MATRIX_MODE, &original_matrix_mode);
+		
+		if (original_matrix_mode != GL_PROJECTION)
+		{
+			glPushMatrix();
+			glMatrixMode(GL_PROJECTION);
+		}
+		
+		//static Matrix4 projection;
+		//MatrixOrthoRH(projection, width, height, near, far);
+		//glLoadMatrixf(projection.m);
+		
+		glLoadIdentity();
+		glOrthof(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, near, far);
+		
+		AdjustProjectionForViewOrientation();
+		
+		if (original_matrix_mode != GL_PROJECTION)
+		{
+			glMatrixMode(original_matrix_mode);
+			glPopMatrix();
+		}
+	}
+	
+	void RendererES1::UpdateOrthoProjection(float zoom, float near, float far)
 	{
 		ASSERT(zoom);
 		
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		
-		switch (view_orientation_)
-		{
-			case PORTRAIT_HOME_BOTTOM:
-				glOrthof(-backing_width_ * 0.5f / zoom + center_x, backing_width_ * 0.5f / zoom + center_x, -backing_height_ * 0.5f / zoom + center_y, backing_height_ * 0.5f / zoom + center_y, -1000, 1000);
-				break;
-			case PORTRAIT_HOME_TOP:
-				glOrthof(-backing_width_ * 0.5f / zoom - center_x, backing_width_ * 0.5f / zoom - center_x, -backing_height_ * 0.5f / zoom - center_y, backing_height_ * 0.5f / zoom - center_y, -1000, 1000);
-				glRotatef(180.0f, 0.0f, 0.0f, 1.0f);
-				break;
-			case LANDSCAPE_HOME_RIGHT:
-				glOrthof(-backing_width_ * 0.5f / zoom + center_y, backing_width_ * 0.5f / zoom + center_y, -backing_height_ * 0.5f / zoom - center_x, backing_height_ * 0.5f / zoom - center_x, -1000, 1000);
-				glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
-				break;
-			case LANDSCAPE_HOME_LEFT:
-				glOrthof(-backing_width_ * 0.5f / zoom - center_y, backing_width_ * 0.5f / zoom - center_y, -backing_height_ * 0.5f / zoom + center_x, backing_height_ * 0.5f / zoom + center_x, -1000, 1000);
-				glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
-				break;
-			default:
-				ASSERT(0);
-				break;
-		}
-		
-		glMatrixMode(GL_MODELVIEW);
+		UpdateOrthoProjection(backing_width_ / zoom, backing_height_ / zoom, near, far);
 	}
 	
-	void RendererES1::UpdateViewMatrix(const Matrix4& view_matrix)
+	void RendererES1::UpdatePerspectiveProjection(float fov_y, float aspect, float near, float far)
 	{
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		glMultMatrixf(view_matrix.m);
+		GLint original_matrix_mode;
+		glGetIntegerv(GL_MATRIX_MODE, &original_matrix_mode);
+		
+		if (original_matrix_mode != GL_PROJECTION)
+		{
+			glPushMatrix();
+			glMatrixMode(GL_PROJECTION);
+		}
+		
+		static Matrix4 projection;
+		MatrixPerspectiveFovRH(projection, fov_y, aspect, near, far);
+		glLoadMatrixf(projection.m);
+		
+		AdjustProjectionForViewOrientation();
+		
+		if (original_matrix_mode != GL_PROJECTION)
+		{
+			glMatrixMode(original_matrix_mode);
+			glPopMatrix();
+		}
+	}
+
+	void RendererES1::UpdatePerspectiveProjection(float fov_y, float near, float far)
+	{
+		UpdatePerspectiveProjection(fov_y, static_cast<float>(backing_width_) / backing_height_, near, far);
 	}
 	
 	void RendererES1::SetViewOrientation(ViewOrientation orientaion)
@@ -510,6 +749,56 @@ namespace ERI {
 			case LANDSCAPE_HOME_LEFT:
 				width_ = backing_height_;
 				height_ = backing_width_;
+				break;
+			default:
+				ASSERT(0);
+				break;
+		}
+	}
+	
+	int RendererES1::GenerateFrameBuffer()
+	{
+		for (int i = kDefaultFrameBufferIdx + 1; i < MAX_FRAMEBUFFER; ++i)
+		{
+			if (!frame_buffers_[i])
+			{
+				glGenFramebuffersOES(1, &frame_buffers_[i]);
+				return frame_buffers_[i];
+			}
+		}
+		
+		return 0;
+	}
+	
+	void RendererES1::UpdateLightTransform()
+	{
+		for (int i = 0; i < MAX_LIGHT; ++i)
+		{
+			if (light_infos_[i].used)
+			{
+				GLfloat params1[] = { light_infos_[i].pos.x, light_infos_[i].pos.y, light_infos_[i].pos.z, light_infos_[i].pos_w };
+				glLightfv(GL_LIGHT0 + i, GL_POSITION, params1);
+				
+				GLfloat params2[] = { light_infos_[i].spot_dir.x, light_infos_[i].spot_dir.y, light_infos_[i].spot_dir.z };
+				glLightfv(GL_LIGHT0 + i, GL_SPOT_DIRECTION, params2);
+			}
+		}
+	}
+	
+	void RendererES1::AdjustProjectionForViewOrientation()
+	{
+		switch (view_orientation_)
+		{
+			case PORTRAIT_HOME_BOTTOM:
+				break;
+			case PORTRAIT_HOME_TOP:
+				glRotatef(180.0f, 0.0f, 0.0f, 1.0f);
+				break;
+			case LANDSCAPE_HOME_RIGHT:
+				glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
+				break;
+			case LANDSCAPE_HOME_LEFT:
+				glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
 				break;
 			default:
 				ASSERT(0);

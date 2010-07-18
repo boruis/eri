@@ -274,9 +274,22 @@ namespace ERI {
 		SetTransformDirty();
 	}
 	
+	void SceneActor::SetScale(const Vector3& scale)
+	{
+		render_data_.scale = scale;
+		SetTransformDirty();
+	}
+	
 	void SceneActor::SetMaterial(const std::string& texture_path, TextureFilter filter_min /*= FILTER_NEAREST*/, TextureFilter filter_mag /*= FILTER_NEAREST*/)
 	{
 		SetTexture(Root::Ins().texture_mgr()->GetTexture(texture_path));
+		material_data_.tex_filter_min = filter_min;
+		material_data_.tex_filter_mag = filter_mag;
+	}
+	
+	void SceneActor::SetMaterial(const Texture* tex, TextureFilter filter_min /*= FILTER_NEAREST*/, TextureFilter filter_mag /*= FILTER_NEAREST*/)
+	{
+		SetTexture(tex);
 		material_data_.tex_filter_min = filter_min;
 		material_data_.tex_filter_mag = filter_mag;
 	}
@@ -351,7 +364,14 @@ namespace ERI {
 	
 #pragma mark CameraActor
 	
-	CameraActor::CameraActor() : zoom_(1.0f)
+	CameraActor::CameraActor(Projection projection) :
+		projection_(projection),
+		look_at_(Vector3(0, 0, -1)),
+		is_look_at_offset_(true),
+		ortho_zoom_(1.0f),
+		perspective_fov_y_(Math::PI / 3.0f),
+		is_view_modified_(true),
+		is_projection_modified_(true)
 	{
 	}
 	
@@ -363,33 +383,246 @@ namespace ERI {
 	{
 		SceneActor::SetPos(x, y);
 		
-		MatrixLookAtRH(view_matrix_, Vector3(x, y, 0), Vector3(x, y, -1), Vector3(0, 1, 0));
-
-		if (Root::Ins().scene_mgr()->current_cam() == this)
-			Root::Ins().scene_mgr()->UpdateCam();
+		is_view_modified_ = true;
 	}
 	
 	void CameraActor::SetPos(const Vector3& pos)
 	{
 		SceneActor::SetPos(pos);
 		
-		MatrixLookAtRH(view_matrix_, pos, Vector3(pos.x, pos.y, pos.z - 1), Vector3(0, 1, 0));
-		
-		if (Root::Ins().scene_mgr()->current_cam() == this)
-			Root::Ins().scene_mgr()->UpdateCam();
+		is_view_modified_ = true;
 	}
 	
-	void CameraActor::SetZoom(float zoom)
+	void CameraActor::SetLookAt(const Vector3& look_at, bool is_offset)
 	{
+		look_at_ = look_at;
+		is_look_at_offset_ = is_offset;
+		
+		is_view_modified_ = true;
+		
+		// TODO: modify self rotation to make childs' transform correct
+	}
+	
+	void CameraActor::SetOrthoZoom(float zoom)
+	{
+		ASSERT(projection_ == ORTHOGONAL);
 		ASSERT(zoom > 0);
 		
-		zoom_ = zoom;
-		SetScale(1 / zoom_, 1 / zoom_);
+		ortho_zoom_ = zoom;
+		SetScale(Vector3(1 / ortho_zoom_, 1 / ortho_zoom_, 1 / ortho_zoom_));
+		//SetScale(1 / ortho_zoom_, 1 / ortho_zoom_);
 		
-		if (Root::Ins().scene_mgr()->current_cam() == this)
-			Root::Ins().scene_mgr()->UpdateCamZoom();
+		is_projection_modified_ = true;
 	}
 	
+	void CameraActor::SetPerspectiveFov(float fov_y)
+	{
+		ASSERT(projection_ == PERSPECTIVE);
+		ASSERT(fov_y > 0);
+		
+		perspective_fov_y_ = fov_y;
+		
+		is_projection_modified_ = true;
+	}
+	
+	void CameraActor::UpdateViewMatrix()
+	{
+		ASSERT(is_view_modified_);
+		
+		const Vector3& pos = GetPos3();
+		Root::Ins().renderer()->UpdateView(pos, is_look_at_offset_ ? (pos + look_at_) : look_at_, Vector3(0, 1, 0));
+		
+		is_view_modified_ = false;
+	}
+	
+	void CameraActor::UpdateProjectionMatrix()
+	{
+		ASSERT(is_projection_modified_);
+		
+		if (projection_ == ORTHOGONAL)
+		{
+			Root::Ins().renderer()->UpdateOrthoProjection(ortho_zoom_, -1000, 1000);
+		}
+		else
+		{
+			Root::Ins().renderer()->UpdatePerspectiveProjection(perspective_fov_y_, 1, 1000);
+		}
+		
+		is_projection_modified_ = false;
+	}
+	
+	void CameraActor::SetViewProjectionModified()
+	{
+		is_view_modified_ = true;
+		is_projection_modified_ = true;
+	}
+	
+	void CameraActor::SetViewModified()
+	{
+		is_view_modified_ = true;
+	}
+	
+	void CameraActor::SetProjectionModified()
+	{
+		is_projection_modified_ = true;
+	}
+
+#pragma mark LightActor
+	
+	LightActor::LightActor(Type type) :
+		type_(type),
+		idx_(-1),
+		ambient_(Color(0, 0, 0)),
+		diffuse_(Color(0, 0, 0)),
+		specular_(Color(0, 0, 0)),
+		attenuation_constant_(1.0f),
+		attenuation_linear_(0.0f),
+		attenuation_quadratic_(0.0f),
+		dir_(Vector3(0, 0, -1)),
+		spot_exponent_(0.0f),
+		spot_cutoff_(180.0f)
+	{
+	}
+	
+	LightActor::~LightActor()
+	{
+		if (idx_ != -1)
+		{
+			Root::Ins().renderer()->ReleaseLight(idx_);
+			idx_ = -1;
+		}
+	}
+	
+	void LightActor::AddToScene(int layer_id)
+	{
+		ASSERT(idx_ == -1);
+		
+		Root::Ins().renderer()->ObtainLight(idx_);
+		
+		ASSERT(idx_ != -1);
+		
+		if (idx_ != -1)
+		{
+			SceneActor::AddToScene(layer_id);
+			
+			// apply settings
+			SetPos(GetPos3());
+			SetDir(dir_);
+			SetAmbient(ambient_);
+			SetDiffuse(diffuse_);
+			SetSpecular(specular_);
+			SetAttenuation(attenuation_constant_, attenuation_linear_, attenuation_quadratic_);
+			SetSpotExponent(spot_exponent_);
+			SetSpotCutoff(spot_cutoff_);
+		}
+	}
+	
+	void LightActor::RemoveFromScene()
+	{
+		ASSERT(idx_ != -1);
+		
+		SceneActor::RemoveFromScene();
+		
+		Root::Ins().renderer()->ReleaseLight(idx_);
+		idx_ = -1;
+	}
+	
+	void LightActor::SetPos(float x, float y)
+	{
+		SceneActor::SetPos(x, y);
+		
+		if (idx_ == -1) return;
+		
+		if (type_ != DIRECTION)
+		{
+			Root::Ins().renderer()->SetLightPos(idx_, GetPos3());
+		}
+	}
+		
+	void LightActor::SetPos(const Vector3& pos)
+	{
+		SceneActor::SetPos(pos);
+		
+		if (idx_ == -1) return;
+		
+		if (type_ != DIRECTION)
+		{
+			Root::Ins().renderer()->SetLightPos(idx_, pos);
+		}
+	}
+	
+	void LightActor::SetDir(const Vector3& dir)
+	{
+		dir_ = dir;
+		
+		if (idx_ == -1) return;
+		
+		if (type_ == DIRECTION)
+		{
+			Root::Ins().renderer()->SetLightDir(idx_, dir_);
+		}
+		else if (type_ == SPOT)
+		{
+			Root::Ins().renderer()->SetLightSpotDir(idx_, dir_);
+		}
+	}
+	
+	void LightActor::SetAmbient(const Color& ambient)
+	{
+		ambient_ = ambient;
+		
+		if (idx_ == -1) return;
+		
+		Root::Ins().renderer()->SetLightAmbient(idx_, ambient_);
+	}
+	
+	void LightActor::SetDiffuse(const Color& diffuse)
+	{
+		diffuse_ = diffuse;
+		
+		if (idx_ == -1) return;
+
+		Root::Ins().renderer()->SetLightDiffuse(idx_, diffuse_);
+	}
+	
+	void LightActor::SetSpecular(const Color& specular)
+	{
+		specular_ = specular;
+		
+		if (idx_ == -1) return;
+		
+		Root::Ins().renderer()->SetLightSpecular(idx_, specular_);
+	}
+	
+	void LightActor::SetAttenuation(float constant, float linear, float quadratic)
+	{
+		attenuation_constant_ = constant;
+		attenuation_linear_ = linear;
+		attenuation_quadratic_ = quadratic;
+		
+		if (idx_ == -1) return;
+		
+		Root::Ins().renderer()->SetLightAttenuation(idx_, attenuation_constant_, attenuation_linear_, attenuation_quadratic_);
+	}
+	
+	void LightActor::SetSpotExponent(float exponent)
+	{
+		spot_exponent_ = exponent;
+		
+		if (idx_ == -1 || type_ != SPOT) return;
+		
+		Root::Ins().renderer()->SetLightSpotExponent(idx_, spot_exponent_);
+	}
+	
+	void LightActor::SetSpotCutoff(float cutoff)
+	{
+		spot_cutoff_ = cutoff;
+		
+		if (idx_ == -1 || type_ != SPOT) return;
+		
+		Root::Ins().renderer()->SetLightSpotCutoff(idx_, spot_cutoff_);
+	}
+					
 #pragma mark SpriteActor
 
 	SpriteActor::SpriteActor(float width, float height, float offset_width, float offset_height) :
@@ -528,6 +761,85 @@ namespace ERI {
 		}
 	
 		return false;
+	}
+	
+#pragma mark BoxActor
+	
+	BoxActor::BoxActor(const Vector3& half_ext) : half_ext_(half_ext)
+	{
+		UpdateVertexBuffer();
+	}
+	
+	BoxActor::~BoxActor()
+	{
+	}
+	
+	void BoxActor::UpdateVertexBuffer()
+	{
+		if (render_data_.vertex_buffer == 0)
+		{
+			glGenBuffers(1, &render_data_.vertex_buffer);
+		}
+		
+		Vector2 unit_uv_(1.0f, 1.0f);
+		
+		vertex_3_pos_normal_tex v[36] = {
+			
+			// front
+			{ - half_ext_.x, - half_ext_.y, + half_ext_.z, 0, 0, 1, 0.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ + half_ext_.x, - half_ext_.y, + half_ext_.z, 0, 0, 1, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ - half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 0, 1, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ - half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 0, 1, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ + half_ext_.x, - half_ext_.y, + half_ext_.z, 0, 0, 1, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 0, 1, 1.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+
+			// back
+			{ + half_ext_.x, - half_ext_.y, - half_ext_.z, 0, 0, -1, 0.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ - half_ext_.x, - half_ext_.y, - half_ext_.z, 0, 0, -1, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 0, -1, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 0, -1, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ - half_ext_.x, - half_ext_.y, - half_ext_.z, 0, 0, -1, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ - half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 0, -1, 1.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			
+			// top
+			{ - half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 1, 0, 0.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 1, 0, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ - half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 1, 0, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ - half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 1, 0, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 1, 0, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 1, 0, 1.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			
+			// bottom
+			{ - half_ext_.x, - half_ext_.y, - half_ext_.z, 0, -1, 0, 0.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ + half_ext_.x, - half_ext_.y, - half_ext_.z, 0, -1, 0, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ - half_ext_.x, - half_ext_.y, + half_ext_.z, 0, -1, 0, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ - half_ext_.x, - half_ext_.y, + half_ext_.z, 0, -1, 0, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ + half_ext_.x, - half_ext_.y, - half_ext_.z, 0, -1, 0, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ + half_ext_.x, - half_ext_.y, + half_ext_.z, 0, -1, 0, 1.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			
+			// right
+			{ + half_ext_.x, - half_ext_.y, + half_ext_.z, 1, 0, 0, 0.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ + half_ext_.x, - half_ext_.y, - half_ext_.z, 1, 0, 0, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, + half_ext_.z, 1, 0, 0, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, + half_ext_.z, 1, 0, 0, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ + half_ext_.x, - half_ext_.y, - half_ext_.z, 1, 0, 0, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, - half_ext_.z, 1, 0, 0, 1.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+
+			// left
+			{ - half_ext_.x, - half_ext_.y, - half_ext_.z, -1, 0, 0, 0.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ - half_ext_.x, - half_ext_.y, + half_ext_.z, -1, 0, 0, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ - half_ext_.x, + half_ext_.y, - half_ext_.z, -1, 0, 0, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ - half_ext_.x, + half_ext_.y, - half_ext_.z, -1, 0, 0, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ - half_ext_.x, - half_ext_.y, + half_ext_.z, -1, 0, 0, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
+			{ - half_ext_.x, + half_ext_.y, + half_ext_.z, -1, 0, 0, 1.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+		};
+		
+		render_data_.vertex_type = GL_TRIANGLES;
+		render_data_.vertex_format = POS_NORMAL_TEX_3;
+		render_data_.vertex_count = 36;
+		
+		glBindBuffer(GL_ARRAY_BUFFER, render_data_.vertex_buffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(v), v, GL_STATIC_DRAW);
 	}
 
 #pragma mark NumberActor

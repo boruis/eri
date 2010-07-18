@@ -253,6 +253,15 @@ namespace ERI {
 	
 	void SceneMgr::Render(Renderer* renderer)
 	{
+		if (current_cam_)
+		{
+			if (current_cam_->is_projection_modified())
+				current_cam_->UpdateProjectionMatrix();
+			
+			if (current_cam_->is_view_modified())
+				current_cam_->UpdateViewMatrix();
+		}
+		
 		renderer->RenderStart();
 		
 		for (size_t i = 0; i < layers_.size(); ++i)
@@ -265,15 +274,19 @@ namespace ERI {
 	
 	Vector3 SceneMgr::ScreenToWorldPos(int screen_x, int screen_y)
 	{
+		// TODO: perspective?
+		
 		Vector3 world_pos;
-		world_pos.x = (screen_x - Root::Ins().renderer()->width() / 2) / current_cam_->zoom() + current_cam_->GetPos().x;
-		world_pos.y = (screen_y - Root::Ins().renderer()->height() / 2) / current_cam_->zoom() + current_cam_->GetPos().y;
+		world_pos.x = (screen_x - Root::Ins().renderer()->width() / 2) / current_cam_->ortho_zoom() + current_cam_->GetPos().x;
+		world_pos.y = (screen_y - Root::Ins().renderer()->height() / 2) / current_cam_->ortho_zoom() + current_cam_->GetPos().y;
 		
 		return world_pos;
 	}
 
 	SceneActor* SceneMgr::GetHitActor(const Vector3& pos)
 	{
+		// TODO: 3D handle?
+		
 		SceneActor* actor;
 		for (int i = layers_.size() - 1; i >= 0; --i)
 		{
@@ -287,22 +300,44 @@ namespace ERI {
 		return NULL;
 	}
 	
+	void SceneMgr::OnRenderResize()
+	{
+		if (current_cam_)
+		{
+			current_cam_->SetProjectionModified();
+		}
+		else
+		{
+			UpdateDefaultProjection();
+		}
+	}
+	
 	void SceneMgr::SetCurrentCam(CameraActor* cam)
 	{
-		ASSERT(cam);
+		if (current_cam_ == cam)
+			return;
 		
 		current_cam_ = cam;
-		UpdateCam();
+		
+		if (current_cam_)
+		{
+			current_cam_->SetViewProjectionModified();
+		}
+		else
+		{
+			UpdateDefaultProjection();
+			UpdateDefaultView();
+		}
 	}
 	
-	void SceneMgr::UpdateCam()
+	void SceneMgr::UpdateDefaultView()
 	{
-		Root::Ins().renderer()->UpdateViewMatrix(current_cam_->view_matrix());
+		Root::Ins().renderer()->UpdateView(Vector3(0, 0, 0), Vector3(0, 0, -1), Vector3(0, 1, 0));
 	}
 	
-	void SceneMgr::UpdateCamZoom()
+	void SceneMgr::UpdateDefaultProjection()
 	{
-		Root::Ins().renderer()->UpdateOrthoProj(0, 0, current_cam_->zoom());
+		Root::Ins().renderer()->UpdateOrthoProjection(1, -1000, 1000);
 	}
-
+	
 }

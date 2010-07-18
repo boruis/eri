@@ -28,7 +28,11 @@ enum {
 
 namespace ERI {
 
-	RendererES2::RendererES2() : context_(NULL), default_frame_buffer_(0), color_render_buffer_(0), program_(0)
+	RendererES2::RendererES2() :
+		context_(NULL),
+		default_frame_buffer_(0),
+		color_render_buffer_(0),
+		program_(0)
 	{
 	}
 	
