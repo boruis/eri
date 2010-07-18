@@ -9,10 +9,11 @@
 #import <UIKit/UIKit.h>
 
 
-@interface EAGLView : UIView
+@interface EAGLView : UIView <UIAccelerometerDelegate>
 {
 }
 
+- (void)enableAccelerometer:(BOOL)enable withTimeInterval:(NSTimeInterval)interval;
 - (void)convertPointByViewOrientation:(CGPoint*)point;
 
 @end

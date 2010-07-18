@@ -48,8 +48,36 @@ namespace ERI {
 		const Texture* GetTexture(const std::string& resource_path);
 		const Texture* GetTxtTexture(const std::string& txt, const std::string& font_name, float font_size, float w, float h);
 		
+		const Texture* GenerateRenderToTexture(int width, int height, int& out_frame_buffer);
+		
+		void ReleaseTexture(const Texture* texture);
+		
 	private:
 		std::map<std::string, Texture*>	texture_map_;
+	};
+	
+#pragma mark RenderToTexture
+	
+	class CameraActor;
+	
+	class RenderToTexture
+	{
+	public:
+		RenderToTexture(int width, int height, CameraActor* render_cam = NULL);
+		~RenderToTexture();
+		
+		void Init();
+		void Release();
+		void ProcessRender();
+		
+		inline const Texture* texture() { return texture_; }
+		
+	private:
+		int				width_, height_;
+		int				frame_buffer_;
+		const Texture*	texture_;
+		
+		CameraActor*	render_cam_;
 	};
 	
 }

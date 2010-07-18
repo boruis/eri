@@ -19,6 +19,8 @@ namespace ERI {
 		virtual void Release(int screen_x, int screen_y) {}
 		virtual void Click(int screen_x, int screen_y) {}
 		virtual void Move(int screen_x, int screen_y) {}
+		
+		virtual void Accelerate(float g_x, float g_y, float g_z) {}
 	};
 
 	class InputMgr
@@ -31,6 +33,8 @@ namespace ERI {
 		void Release(int screen_x, int screen_y);
 		void Click(int screen_x, int screen_y);
 		void Move(int screen_x, int screen_y);
+
+		void Accelerate(float g_x, float g_y, float g_z);
 		
 		void set_handler(InputHandler* handler) { handler_ = handler; }
 		

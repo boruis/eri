@@ -72,8 +72,8 @@ namespace ERI {
 		
 		return length;
 	}
-
 	
+
 	const Matrix4 Matrix4::IDENTITY(1.0f, 0.0f, 0.0f, 0.0f,
 									0.0f, 1.0f, 0.0f, 0.0f,
 									0.0f, 0.0f, 1.0f, 0.0f,
@@ -269,6 +269,182 @@ namespace ERI {
 		Matrix4::Translate(t, eye * -1);
 		Matrix4::Multiply(out_m, t, out_m);
 	}
+	
+	void MatrixPerspectiveFovRH(Matrix4	&out_m,
+								const float	fov_y,
+								const float	aspect,
+								const float	near,
+								const float	far,
+								const bool  is_rotate)
+	{
+		float f, n, real_aspect;
+		
+		if (is_rotate)
+			real_aspect = 1.0f / aspect;
+		else
+			real_aspect = aspect;
+		
+		// cotangent(a) == 1.0f / tan(a);
+		f = 1.0f / (float)tan(fov_y * 0.5f);
+		n = 1.0f / (near - far);
+		
+		out_m.m[ 0] = f / real_aspect;
+		out_m.m[ 1] = 0;
+		out_m.m[ 2] = 0;
+		out_m.m[ 3] = 0;
+		
+		out_m.m[ 4] = 0;
+		out_m.m[ 5] = f;
+		out_m.m[ 6] = 0;
+		out_m.m[ 7] = 0;
+		
+		out_m.m[ 8] = 0;
+		out_m.m[ 9] = 0;
+		out_m.m[10] = (far + near) * n;
+		out_m.m[11] = -1;
+		
+		out_m.m[12] = 0;
+		out_m.m[13] = 0;
+		out_m.m[14] = (2 * far * near) * n;
+		out_m.m[15] = 0;
+		
+		if (is_rotate)
+		{
+			Matrix4 rotation, temp = out_m;
+			Matrix4::RotateAxis(rotation, 90, Vector3(0, 0, 1));
+			Matrix4::Multiply(out_m, temp, rotation);
+		}
+	}
+	
+	void MatrixOrthoRH(Matrix4	&out_m,
+					   const float w,
+					   const float h,
+					   const float zn,
+					   const float zf,
+					   const bool  is_rotate)
+	{
+		out_m.m[ 0] = 2 / w;
+		out_m.m[ 1] = 0;
+		out_m.m[ 2] = 0;
+		out_m.m[ 3] = 0;
+		
+		out_m.m[ 4] = 0;
+		out_m.m[ 5] = 2 / h;
+		out_m.m[ 6] = 0;
+		out_m.m[ 7] = 0;
+		
+		out_m.m[ 8] = 0;
+		out_m.m[ 9] = 0;
+		out_m.m[10] = 1 / (zn - zf);
+		out_m.m[11] = zn / (zn - zf);
+		
+		out_m.m[12] = 0;
+		out_m.m[13] = 0;
+		out_m.m[14] = 0;
+		out_m.m[15] = 1;
+		
+		if (is_rotate)
+		{
+			Matrix4 rotation, temp = out_m;
+			Matrix4::RotateAxis(rotation, -90, Vector3(0, 0, 1));
+			Matrix4::Multiply(out_m, rotation, temp);
+		}
+	}
+	
+	Quaternion::Quaternion(float degree, const Vector3& axis)
+	{
+		float sin_value = static_cast<float>(sin(degree / 360 * Math::TWO_PI * 0.5f));
+		float cos_value = static_cast<float>(cos(degree / 360 * Math::TWO_PI * 0.5f));
+		
+		/* Create quaternion */
+		x = axis.x * sin_value;
+		y = axis.y * sin_value;
+		z = axis.z * sin_value;
+		w = cos_value;
+		
+		Normalize();
+	}
+	
+	void Quaternion::Normalize()
+	{
+		/* Compute quaternion magnitude */
+		double temp = w * w + x * x + y * y + z * z;
+		float magnitude = static_cast<float>(sqrt(temp));
+		
+		/* Divide each quaternion component by this magnitude */
+		if (magnitude != 0.0f)
+		{
+			magnitude = 1.0f / magnitude;
+			x *= magnitude;
+			y *= magnitude;
+			z *= magnitude;
+			w *= magnitude;
+		}
+	}
+	
+	void Quaternion::GetRotationAxis(float& out_degree, Vector3& out_axis)
+	{
+		/* Compute some values */
+		float cos_angle	= w;
+		double temp	= 1.0f - cos_angle * cos_angle;
+		float sin_angle	= static_cast<float>(sqrt(temp));
+		
+		/* This is to avoid a division by zero */
+		if (static_cast<float>(fabs(sin_angle)) < 0.0005f)
+			sin_angle = 1.0f;
+		
+		/* Get axis vector */
+		out_axis.x = x / sin_angle;
+		out_axis.y = y / sin_angle;
+		out_axis.z = z / sin_angle;
+		
+		out_degree = static_cast<float>(acos(cos_angle) * 2) / Math::TWO_PI * 360;
+	}
+	
+	void Quaternion::GetRotationMatrix(Matrix4& out_m)
+	{
+		out_m.m[0]  = 1.0f - 2.0f * y * y - 2.0f * z * z;
+		out_m.m[1]  = 2.0f * x * y - 2.0f * z * w;
+		out_m.m[2]  = 2.0f * x * z + 2.0f * y * w;
+		out_m.m[3]  = 0.0f;
+		
+		out_m.m[4]  = 2.0f * x * y + 2.0f * z * w;
+		out_m.m[5]  = 1.0f - 2.0f * x * x - 2.0f * z * z;
+		out_m.m[6]  = 2.0f * y * z - 2.0f * x * w;
+		out_m.m[7]  = 0.0f;
+		
+		out_m.m[8]  = 2.0f * x * z - 2.0f * y * w;
+		out_m.m[9]  = 2.0f * y * z + 2.0f * x * w;
+		out_m.m[10] = 1.0f - 2.0f * x * x - 2.0f * y * y;
+		out_m.m[11] = 0.0f;
+		
+		out_m.m[12] = 0.0f;
+		out_m.m[13] = 0.0f;
+		out_m.m[14] = 0.0f;
+		out_m.m[15] = 1.0f;
+	}
+	
+	void Quaternion::Multiply(Quaternion& out_q, const Quaternion& q1, const Quaternion& q2)
+	{
+		Vector3	cross_product;
+		
+		/* Compute scalar component */
+		out_q.w = (q1.w * q2.w) - (q1.x * q2.x + q1.y * q2.y + q1.z * q2.z);
+		
+		/* Compute cross product */
+		cross_product.x = q1.y * q2.z - q1.z * q2.y;
+		cross_product.y = q1.z * q2.x - q1.x * q2.z;
+		cross_product.z = q1.x * q2.y - q1.y * q2.x;
+		
+		/* Compute result vector */
+		out_q.x = (q1.w * q2.x) + (q2.w * q1.x) + cross_product.x;
+		out_q.y = (q1.w * q2.y) + (q2.w * q1.y) + cross_product.y;
+		out_q.z = (q1.w * q2.z) + (q2.w * q1.z) + cross_product.z;
+		
+		/* Normalize resulting quaternion */
+		out_q.Normalize();
+	}
+	
 
 	float UnitRandom()
 	{

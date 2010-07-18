@@ -67,17 +67,19 @@ namespace ERI {
 		
 		Vector3 ScreenToWorldPos(int screen_x, int screen_y);
 		SceneActor* GetHitActor(const Vector3& pos);
+		
+		void OnRenderResize();
 
 		void SetCurrentCam(CameraActor* cam);
-		void UpdateCam();
-		void UpdateCamZoom();
 	
-		CameraActor* current_cam() { return current_cam_; }
+		inline CameraActor* current_cam() { return current_cam_; }
 		
 	private:
-		std::vector<SceneLayer*>	layers_;
+		void UpdateDefaultView();
+		void UpdateDefaultProjection();
 		
-		CameraActor*	current_cam_;
+		std::vector<SceneLayer*>	layers_;
+		CameraActor*				current_cam_;
 	};
 
 }
