@@ -21,6 +21,11 @@ namespace ERI {
 	public:
 		TextureReaderUIImage(const std::string& path);
 		virtual ~TextureReaderUIImage();
+		
+		virtual void* texture_data() { return texture_data_; }
+		
+	private:
+		void* texture_data_;
 	};
 	
 	class TextureReaderUIFont : public TextureReader

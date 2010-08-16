@@ -15,7 +15,7 @@ namespace ERI {
 	
 #pragma mark TextureReaderUIImage
 
-	TextureReaderUIImage::TextureReaderUIImage(const std::string& path)
+	TextureReaderUIImage::TextureReaderUIImage(const std::string& path) : texture_data_(NULL)
 	{
 		CGImageRef texture_image = [UIImage imageNamed:[NSString stringWithUTF8String:path.c_str()]].CGImage;
 		
@@ -27,9 +27,9 @@ namespace ERI {
 		width_ = CGImageGetWidth(texture_image);
 		height_ = CGImageGetHeight(texture_image);
 		
-		void* texture_data = calloc(width_ * height_ * 4, sizeof(unsigned char));
+		texture_data_ = calloc(width_ * height_ * 4, sizeof(unsigned char));
 		
-		CGContextRef texture_context = CGBitmapContextCreate(texture_data,
+		CGContextRef texture_context = CGBitmapContextCreate(texture_data_,
 															 width_,
 															 height_,
 															 8, width_ * 4,
@@ -43,13 +43,12 @@ namespace ERI {
         CGContextRelease(texture_context);
 		
 		
-		texture_id_ = Root::Ins().renderer()->GenerateTexture(texture_data, width_, height_, RGBA);
-		
-		free(texture_data);
+		texture_id_ = Root::Ins().renderer()->GenerateTexture(texture_data_, width_, height_, RGBA);
 	}
 	
 	TextureReaderUIImage::~TextureReaderUIImage()
 	{
+		free(texture_data_);
 	}
 	
 #pragma mark TextureReaderUIFont

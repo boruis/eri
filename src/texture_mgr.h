@@ -15,6 +15,8 @@
 
 namespace ERI {
 	
+	struct Color;
+	
 	enum TextureFilter
 	{
 		FILTER_NEAREST,
@@ -23,18 +25,17 @@ namespace ERI {
 	
 	struct Texture
 	{
-		Texture(int _id, int _width, int _height) :
-			id(_id),
-			width(_width),
-			height(_height),
-			filter_min(FILTER_NEAREST),
-			filter_mag(FILTER_NEAREST)
-		{
-		}
+		Texture(int _id, int _width, int _height);		
+		~Texture();
 		
-		int				id;
-		int				width;
-		int				height;
+		void CopyPixels(const void* _data);
+		bool GetPixelColor(Color& out_color, int x, int y) const;
+		
+		int		id;
+		int		width;
+		int		height;
+		
+		void*	data;
 		
 		mutable TextureFilter	filter_min;
 		mutable TextureFilter	filter_mag;
@@ -45,7 +46,7 @@ namespace ERI {
 	public:
 		~TextureMgr();
 		
-		const Texture* GetTexture(const std::string& resource_path);
+		const Texture* GetTexture(const std::string& resource_path, bool keep_texture_data = false);
 		const Texture* GetTxtTexture(const std::string& txt, const std::string& font_name, float font_size, float w, float h);
 		
 		const Texture* GenerateRenderToTexture(int width, int height, int& out_frame_buffer);

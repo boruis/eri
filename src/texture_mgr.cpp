@@ -23,18 +23,63 @@
 
 namespace ERI {
 	
+#pragma mark Texture
+	
+	Texture::Texture(int _id, int _width, int _height) :
+		id(_id),
+		width(_width),
+		height(_height),
+		data(NULL),
+		filter_min(FILTER_NEAREST),
+		filter_mag(FILTER_NEAREST)
+	{
+	}
+	
+	Texture::~Texture()
+	{
+		if (data) free(data);
+	}
+	
+	void Texture::CopyPixels(const void* _data)
+	{
+		if (!data) data = calloc(width * height * 4, sizeof(unsigned char));
+		
+		memcpy(data, _data, width * height * 4 * sizeof(unsigned char));
+	}
+	
+	bool Texture::GetPixelColor(Color& out_color, int x, int y) const
+	{
+		if (!data) return false;
+		
+		if (x < 0) x = 0;
+		if (x >= width) x = width - 1;
+		if (y < 0) y = 0;
+		if (y >= height) y = height - 1;
+		
+		unsigned char* pixel = static_cast<unsigned char*>(data);
+		pixel += (width * y + x) * 4;
+		out_color.r = pixel[0] / 255.0f;
+		out_color.g = pixel[1] / 255.0f;
+		out_color.b = pixel[2] / 255.0f;
+		out_color.a = pixel[3] / 255.0f;
+		
+		return true;
+	}
+	
 #pragma mark TextureMgr
 	
 	TextureMgr::~TextureMgr()
 	{
 		for (std::map<std::string, Texture*>::iterator it = texture_map_.begin(); it != texture_map_.end(); ++it)
 		{
+			// TODO: release?
+			
 			delete it->second;
 		}
 		texture_map_.clear();
 	}
 	
-	const Texture* TextureMgr::GetTexture(const std::string& resource_path)
+	const Texture* TextureMgr::GetTexture(const std::string& resource_path, bool keep_texture_data /*= false*/)
 	{
 		std::map<std::string, Texture*>::iterator it = texture_map_.find(resource_path);
 		if (it == texture_map_.end())
@@ -51,9 +96,14 @@ namespace ERI {
 				return NULL;
 			
 			Texture* tex = new Texture(reader.texture_id(), reader.width(), reader.height());
-
-			texture_map_.insert(std::make_pair(resource_path, tex));
 			
+			if (keep_texture_data)
+			{
+				tex->CopyPixels(reader.texture_data());
+			}
+			
+			texture_map_.insert(std::make_pair(resource_path, tex));
+	
 			return tex;
 		}
 		else

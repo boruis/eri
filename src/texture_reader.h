@@ -23,6 +23,8 @@ namespace ERI {
 		
 		inline unsigned int texture_id() { return texture_id_; }
 		
+		virtual void* texture_data() { return NULL; }
+		
 	protected:
 		int			width_;
 		int			height_;
