@@ -35,15 +35,30 @@ namespace ERI {
 	{
 		if (handler_) handler_->Click(screen_x, screen_y);
 	}
+	
+	void InputMgr::DoubleClick(int screen_x, int screen_y)
+	{
+		if (handler_) handler_->DoubleClick(screen_x, screen_y);
+	}
 
 	void InputMgr::Move(int screen_x, int screen_y)
 	{
 		if (handler_) handler_->Move(screen_x, screen_y);
 	}
 	
+	void InputMgr::MultiMove(const Vector2* moves, int num, bool is_start)
+	{
+		if (handler_) handler_->MultiMove(moves, num, is_start);
+	}
+	
 	void InputMgr::Accelerate(float g_x, float g_y, float g_z)
 	{
 		if (handler_) handler_->Accelerate(g_x, g_y, g_z);
+	}
+	
+	void InputMgr::Shake()
+	{
+		if (handler_) handler_->Shake();
 	}
 	
 }

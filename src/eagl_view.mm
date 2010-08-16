@@ -17,8 +17,8 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-float	zoom_distance;
-bool	in_zoom;
+
+static bool	in_multi_move;
 
 @implementation EAGLView
 
@@ -46,7 +46,7 @@ bool	in_zoom;
 										kEAGLDrawablePropertyColorFormat,
 										nil];
 		
-		in_zoom = false;
+		in_multi_move = false;
     }
 
     return self;
@@ -86,10 +86,16 @@ bool	in_zoom;
 		[self convertPointByViewOrientation:&touch_pos];
 		
 		ERI::Root::Ins().input_mgr()->Release(touch_pos.x, touch_pos.y);
+		
+		// TODO: more precise click judgement (pos, time)
+		
 		ERI::Root::Ins().input_mgr()->Click(touch_pos.x, touch_pos.y);
 	}
 	
-	in_zoom = false;
+	if (([[event allTouches] count] - [touches count]) <= 1)
+	{
+		in_multi_move = false;
+	}
 	
 	//printf("now end num %d, total num %d\n", [touches count], [[event allTouches] count]);
 }
@@ -101,8 +107,6 @@ bool	in_zoom;
 	
 	if (now_touch_num == 1)
 	{
-		in_zoom = false;
-		
 		UITouch *t = [[touches allObjects] objectAtIndex:0];
 		CGPoint touch_pos = [t locationInView:t.view];
 		CGPoint prev_touch_pos = [t previousLocationInView:t.view];
@@ -111,41 +115,26 @@ bool	in_zoom;
 		[self convertPointByViewOrientation:&prev_touch_pos];
 		
 		ERI::Root::Ins().input_mgr()->Move(touch_pos.x, touch_pos.y);
-		
-//		ERI::Vector2 delta_pos(touch_pos.x - prev_touch_pos.x, touch_pos.y - prev_touch_pos.y);
-//		ERI::CameraActor* cam = ERI::Root::Ins().scene_mgr()->current_cam(); 
-//		ERI::Vector2 cam_pos = cam->GetPos();
-//		cam_pos -= (delta_pos * (1 / cam->zoom()));
-//		cam->SetPos(cam_pos.x, cam_pos.y);
 	}
 	else if (now_touch_num > 1)
 	{
-		UITouch* t = [[[event allTouches] allObjects] objectAtIndex:0];
-		CGPoint touch_pos_1 = [t locationInView:t.view];
-		t = [[[event allTouches] allObjects] objectAtIndex:1];
-		CGPoint touch_pos_2 = [t locationInView:t.view];
+		static ERI::Vector2 moves[16];
+
+		UITouch* t;
+		CGPoint touch_pos;
+		for (int i = 0; i < now_touch_num; ++i)
+		{
+			t = [[[event allTouches] allObjects] objectAtIndex:i];
+			touch_pos = [t locationInView:t.view];
+			[self convertPointByViewOrientation:&touch_pos];
+
+			moves[i].x = touch_pos.x;
+			moves[i].y = touch_pos.y;
+		}
 		
-		float delta_x = touch_pos_1.x - touch_pos_2.x;
-		float delta_y = touch_pos_1.y - touch_pos_2.y;
-		float distance = sqrt(delta_x * delta_x + delta_y * delta_y);
-
-		if (!in_zoom)
-		{
-			in_zoom = true;
-		}
-		else
-		{
-//			float cam_zoom = ERI::Root::Ins().scene_mgr()->current_cam()->zoom();
-//			cam_zoom += (distance - zoom_distance) * 0.005f;
-//			if (cam_zoom < 0.1f) cam_zoom = 0.1f;
-//			ERI::Root::Ins().scene_mgr()->current_cam()->SetZoom(cam_zoom);
-		}
-
-		zoom_distance = distance;
-	}
-	else
-	{
-		in_zoom = false;
+		ERI::Root::Ins().input_mgr()->MultiMove(moves, now_touch_num, !in_multi_move);
+		
+		in_multi_move = true;
 	}
 }
 
@@ -206,6 +195,26 @@ bool	in_zoom;
 	didAccelerate:(UIAcceleration*)acceleration
 {
 	ERI::Root::Ins().input_mgr()->Accelerate(acceleration.x, acceleration.y, acceleration.z);
+	
+	static CFTimeInterval shake_start_time = 0;
+
+	if (shake_start_time != 0)
+	{
+		if ((CFAbsoluteTimeGetCurrent() - shake_start_time) > 0.5)
+		{
+			shake_start_time = 0;
+		}
+
+		return;
+	}
+	
+	if (fabsf(acceleration.x) > 1.5
+        || fabsf(acceleration.y) > 1.5
+        || fabsf(acceleration.z) > 1.5)
+	{
+		shake_start_time = CFAbsoluteTimeGetCurrent();
+		ERI::Root::Ins().input_mgr()->Shake();
+    }
 } 
 
 @end
