@@ -164,6 +164,7 @@ namespace ERI {
 		Color() : r(1.0f), g(1.0f), b(1.0f), a(1.0f) {}
 		Color(float _r, float _g, float _b, float _a = 1.0f) : r(_r), g(_g), b(_b), a(_a) {}
 		
+		inline Color operator * (float value) const { return Color(r * value, g * value, b * value, a * value); }
 		inline bool operator == (const Color& c) const { return (r == c.r && g == c.g && b == c.b && a == c.a); }
 		inline bool operator != (const Color& c) const { return (r != c.r || g != c.g || b != c.b || a != c.a); }
 		
