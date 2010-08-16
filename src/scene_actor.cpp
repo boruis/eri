@@ -648,10 +648,6 @@ namespace ERI {
 	
 	SpriteActor::~SpriteActor()
 	{
-		if (render_data_.vertex_buffer != 0)
-		{
-			glDeleteBuffers(1, &render_data_.vertex_buffer);
-		}
 	}
 	
 	void SpriteActor::UpdateVertexBuffer()
@@ -876,11 +872,6 @@ namespace ERI {
 	NumberActor::~NumberActor()
 	{
 		if (vertices_) free(vertices_);
-		
-		if (render_data_.vertex_buffer != 0)
-		{
-			glDeleteBuffers(1, &render_data_.vertex_buffer);
-		}
 	}
 	
 	void NumberActor::SetTexUnit(int tex_unit_width, int tex_unit_height)
@@ -1068,11 +1059,6 @@ namespace ERI {
 	TxtActor::~TxtActor()
 	{
 		if (vertices_) free(vertices_);
-		
-		if (render_data_.vertex_buffer != 0)
-		{
-			glDeleteBuffers(1, &render_data_.vertex_buffer);
-		}
 	}
 	
 	void TxtActor::SetTxt(const std::string& txt)

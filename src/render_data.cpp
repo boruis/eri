@@ -13,6 +13,18 @@
 
 namespace ERI {
 	
+	RenderData::~RenderData()
+	{
+		if (vertex_buffer != 0)
+		{
+			glDeleteBuffers(1, &vertex_buffer);
+		}
+		if (index_buffer != 0)
+		{
+			glDeleteBuffers(1, &index_buffer);
+		}
+	}
+	
 	void RenderData::UpdateModelMatrix()
 	{
 		ASSERT(need_update_model_matrix);

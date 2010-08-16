@@ -56,6 +56,8 @@ namespace ERI {
 		{
 		}
 		
+		~RenderData();
+		
 		void UpdateModelMatrix();
 		void UpdateWorldModelMatrix(const Matrix4& parent_world_model_matrix);
 		void UpdateWorldModelMatrix();
