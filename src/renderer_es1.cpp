@@ -156,9 +156,13 @@ namespace ERI {
 		}
 		
 		current_frame_buffer_ = frame_buffers_[kDefaultFrameBufferIdx];
+#endif
 		
 		Resize(backing_width, backing_height);
-#endif
+		
+		// clear initial display
+		glClear(clear_bits_);
+		context_->Present();
 	}
 	
 	void RendererES1::Resize(int width, int height)
