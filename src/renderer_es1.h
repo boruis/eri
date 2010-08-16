@@ -140,6 +140,8 @@ namespace ERI {
 		Color bg_color_;
 		Color now_color_;
 		
+		GLenum blend_src_factor_, blend_dst_factor_;
+		
 		LightInfo light_infos_[MAX_LIGHT];
 	};
 

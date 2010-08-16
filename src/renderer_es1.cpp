@@ -43,7 +43,9 @@ namespace ERI {
 		blend_enable_(false),
 		texture_enable_(false),
 		now_texture_(0),
-		bg_color_(Color(0.0f, 0.0f, 0.0f, 0.0f))
+		bg_color_(Color(0.0f, 0.0f, 0.0f, 0.0f)),
+		blend_src_factor_(GL_SRC_ALPHA),
+		blend_dst_factor_(GL_ONE_MINUS_SRC_ALPHA)
 	{
 		memset(frame_buffers_, 0, sizeof(frame_buffers_));
 	}
@@ -105,12 +107,9 @@ namespace ERI {
 		
 		glEnable(GL_SCISSOR_TEST);
 		glEnable(GL_CULL_FACE);
-		
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBlendFunc(blend_src_factor_, blend_dst_factor_);
 		//glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); // because pre-multiplied alpha?
-		
 		glEnable(GL_COLOR_MATERIAL);
-		
 		glEnableClientState(GL_VERTEX_ARRAY);
 		
 		return true;
@@ -219,6 +218,13 @@ namespace ERI {
 			{
 				glColor4f(data->color.r, data->color.g, data->color.b, data->color.a);
 				now_color_ = data->color;
+			}
+			
+			if (blend_enable_ && (blend_src_factor_ != data->blend_src_factor || blend_dst_factor_ != data->blend_dst_factor))
+			{
+				blend_src_factor_ = data->blend_src_factor;
+				blend_dst_factor_ = data->blend_dst_factor;
+				glBlendFunc(blend_src_factor_, blend_dst_factor_);
 			}
 			
 			glBindBuffer(GL_ARRAY_BUFFER, data->vertex_buffer);

@@ -52,7 +52,9 @@ namespace ERI {
 			rotate_degree(0),
 			need_update_model_matrix(true),
 			need_update_world_model_matrix(true),
-			is_tex_transform(false)
+			is_tex_transform(false),
+			blend_src_factor(GL_SRC_ALPHA),
+			blend_dst_factor(GL_ONE_MINUS_SRC_ALPHA)
 		{
 		}
 		
@@ -90,6 +92,9 @@ namespace ERI {
 		
 		// color
 		Color	color;
+		
+		// blend
+		GLenum blend_src_factor, blend_dst_factor;
 	};
 
 }
