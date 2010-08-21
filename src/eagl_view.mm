@@ -87,9 +87,14 @@ static bool	in_multi_move;
 		
 		ERI::Root::Ins().input_mgr()->Release(touch_pos.x, touch_pos.y);
 		
-		// TODO: more precise click judgement (pos, time)
-		
-		ERI::Root::Ins().input_mgr()->Click(touch_pos.x, touch_pos.y);
+		if ([touch tapCount] == 1)
+		{
+			ERI::Root::Ins().input_mgr()->Click(touch_pos.x, touch_pos.y);
+		}
+		else if ([touch tapCount] == 2)
+		{
+			ERI::Root::Ins().input_mgr()->DoubleClick(touch_pos.x, touch_pos.y);
+		}
 	}
 	
 	if (([[event allTouches] count] - [touches count]) <= 1)
