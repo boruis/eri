@@ -7,7 +7,7 @@
  *
  */
 
-#include "render_context_iphone.h"
+#include "render_context_ios.h"
 
 #import <QuartzCore/QuartzCore.h>
 #import <OpenGLES/EAGL.h>

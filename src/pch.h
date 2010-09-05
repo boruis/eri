@@ -25,11 +25,11 @@
 
 //
 
-#include <cstddef>
+#include <stddef.h>
 
 // assert
 
-#include <cassert>
+#include <assert.h>
 #define ASSERT(exp)					assert(exp)
 #define ASSERT2(exp, description)	assert(exp)
 

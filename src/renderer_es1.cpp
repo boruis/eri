@@ -14,7 +14,7 @@
 #if ERI_PLATFORM == ERI_PLATFORM_WIN
 #include "win/render_context_win.h"
 #elif ERI_PLATFORM == ERI_PLATFORM_IOS
-#include "render_context_iphone.h"
+#include "ios/render_context_ios.h"
 #endif
 
 #include "root.h"

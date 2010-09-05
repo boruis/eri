@@ -43,6 +43,7 @@ namespace ERI {
 		virtual void RecoverTransform() {}
 		
 		virtual void EnableRenderToBuffer(int width, int height, int frame_buffer) {}
+		virtual void CopyTexture(unsigned int texture) {}
 		virtual void RestoreRenderToBuffer() {}
 		
 		virtual void ReleaseFrameBuffer(int frame_buffer) {}
@@ -66,6 +67,7 @@ namespace ERI {
 		virtual unsigned int GenerateTexture(void* buffer, int width, int height, PixelFormat format) { return 0; }
 		virtual unsigned int GenerateRenderToTexture(int width, int height, int& out_frame_buffer) { return 0; }
 		virtual void ReleaseTexture(int texture_id) {}
+		virtual void ReleaseRenderToTexture(int texture_id, int frame_buffer) {}
 		
 		virtual void SetBgColor(const Color& color) {}
 		

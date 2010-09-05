@@ -9,7 +9,12 @@
 
 #include "renderer_es2.h"
 
-#include "render_context_iphone.h"
+#if ERI_PLATFORM == ERI_PLATFORM_WIN
+#include "win/render_context_win.h"
+#elif ERI_PLATFORM == ERI_PLATFORM_IOS
+#include "ios/render_context_ios.h"
+#endif
+
 #include "platform_helper.h"
 
 // uniform index
