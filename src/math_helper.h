@@ -158,6 +158,7 @@ namespace ERI {
 	float UnitRandom();
 	int RangeRandom(int min, int max);
 	float RangeRandom(float min, float max);
+	void SetRandomSeed();
 	
 	struct Color
 	{

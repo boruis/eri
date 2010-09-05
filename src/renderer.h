@@ -29,8 +29,8 @@ namespace ERI {
 		RGBA
 	};
 	
-	class RenderData;
-	class MaterialData;
+	struct RenderData;
+	struct MaterialData;
 	
 	class Renderer
 	{
@@ -55,9 +55,8 @@ namespace ERI {
 		virtual void RecoverTransform() = 0;
 		
 		virtual void EnableRenderToBuffer(int width, int height, int frame_buffer) = 0;
+		virtual void CopyTexture(unsigned int texture) = 0;
 		virtual void RestoreRenderToBuffer() = 0;
-		
-		virtual void ReleaseFrameBuffer(int frame_buffer) = 0;
 		
 		virtual void EnableBlend(bool enable) = 0;
 		virtual void EnableAlphaTest(bool enable) = 0;
@@ -78,6 +77,7 @@ namespace ERI {
 		virtual unsigned int GenerateTexture(void* buffer, int width, int height, PixelFormat format) = 0;
 		virtual unsigned int GenerateRenderToTexture(int width, int height, int& out_frame_buffer) = 0;
 		virtual void ReleaseTexture(int texture_id) = 0;
+		virtual void ReleaseRenderToTexture(int texture_id, int frame_buffer) = 0;
 		
 		virtual void SetBgColor(const Color& color) = 0;
 		

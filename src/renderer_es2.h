@@ -10,11 +10,12 @@
 #ifndef ERI_RENDERER_ES2_H
 #define ERI_RENDERER_ES2_H
 
-#include "renderer.h"
-
 #include <string>
+
 #import <OpenGLES/ES2/gl.h>
 #import <OpenGLES/ES2/glext.h>
+
+#include "renderer.h"
 
 namespace ERI {
 	

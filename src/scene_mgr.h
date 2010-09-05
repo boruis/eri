@@ -64,7 +64,7 @@ namespace ERI {
 		void RemoveActor(SceneActor* actor, int layer_id);
 		
 		void Render(Renderer* renderer);
-		
+
 		Vector3 ScreenToWorldPos(int screen_x, int screen_y);
 		SceneActor* GetHitActor(const Vector3& pos);
 		

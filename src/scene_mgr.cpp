@@ -238,7 +238,7 @@ namespace ERI {
 	void SceneMgr::AddActor(SceneActor* actor, int layer_id /* = 0*/)
 	{
 		ASSERT(actor);
-		ASSERT(layer_id < layers_.size());
+		ASSERT(layer_id < static_cast<int>(layers_.size()));
 		
 		layers_[layer_id]->AddActor(actor);
 	}
@@ -246,7 +246,7 @@ namespace ERI {
 	void SceneMgr::RemoveActor(SceneActor* actor, int layer_id)
 	{
 		ASSERT(actor);
-		ASSERT(layer_id < layers_.size());
+		ASSERT(layer_id < static_cast<int>(layers_.size()));
 		
 		layers_[layer_id]->RemoveActor(actor);
 	}
@@ -262,16 +262,12 @@ namespace ERI {
 				current_cam_->UpdateViewMatrix();
 		}
 		
-		renderer->RenderStart();
-		
 		for (size_t i = 0; i < layers_.size(); ++i)
 		{
 			layers_[i]->Render(renderer);
 		}
-		
-		renderer->RenderEnd();
 	}
-	
+
 	Vector3 SceneMgr::ScreenToWorldPos(int screen_x, int screen_y)
 	{
 		// TODO: perspective?

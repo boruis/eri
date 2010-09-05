@@ -10,19 +10,23 @@
 #ifndef ERI_SCENE_ACTOR_H
 #define ERI_SCENE_ACTOR_H
 
-#include "math_helper.h"
-#include "render_data.h"
-#include "material_data.h"
-
 #include <string>
 #include <vector>
 
-#ifdef OS_ANDROID
+#if ERI_PLATFORM == ERI_PLATFORM_WIN
+#include "GL/glew.h"
+//#include "GL/wglew.h"
+//#include "GLee.h"
+#elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
 #include <GLES/gl.h>
-#else
+#elif ERI_PLATFORM == ERI_PLATFORM_IOS
 #import <OpenGLES/ES1/gl.h>
 #import <OpenGLES/ES2/gl.h>
 #endif
+
+#include "math_helper.h"
+#include "render_data.h"
+#include "material_data.h"
 
 namespace ERI {
 	
@@ -316,7 +320,7 @@ namespace ERI {
 	
 #pragma mark TxtActor
 	
-	class Font;
+	struct Font;
 	
 	class TxtActor : public SceneActor
 	{

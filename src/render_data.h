@@ -12,9 +12,13 @@
 
 #include "math_helper.h"
 
-#ifdef OS_ANDROID
+#if ERI_PLATFORM == ERI_PLATFORM_WIN
+#include "GL/glew.h"
+//#include "GL/wglew.h"
+//#include "GLee.h"
+#elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
 #include <GLES/gl.h>
-#else
+#elif ERI_PLATFORM == ERI_PLATFORM_IOS
 #import <OpenGLES/ES1/gl.h>
 #import <OpenGLES/ES2/gl.h>
 #endif

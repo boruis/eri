@@ -7,12 +7,16 @@
  *
  */
 
+#include "pch.h"
+
 #include "texture_mgr.h"
 
-#ifdef OS_ANDROID
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
+#include "texture_reader_uikit.h"
+#elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
 #include "texture_reader_bitmap_factory.h"
 #else
-#include "texture_reader_uikit.h"
+#include "texture_reader_freeimage.h"
 #endif
 
 #include "texture_reader.h"
@@ -30,6 +34,7 @@ namespace ERI {
 		width(_width),
 		height(_height),
 		data(NULL),
+		bind_frame_buffer(0),
 		filter_min(FILTER_NEAREST),
 		filter_mag(FILTER_NEAREST)
 	{
@@ -84,10 +89,12 @@ namespace ERI {
 		std::map<std::string, Texture*>::iterator it = texture_map_.find(resource_path);
 		if (it == texture_map_.end())
 		{
-#ifdef OS_ANDROID
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
+			TextureReaderUIImage reader(resource_path);
+#elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
 			TextureReaderBitmapFactory reader(resource_path);
 #else
-			TextureReaderUIImage reader(resource_path);
+			TextureReaderFreeImage reader(resource_path);
 #endif
 
 			// TODO: check texture invalid number, maybe use int -1 is better
@@ -117,10 +124,10 @@ namespace ERI {
 		std::map<std::string, Texture*>::iterator it = texture_map_.find(txt + "_txt");
 		if (it == texture_map_.end())
 		{
-#ifdef OS_ANDROID
-			TextureReader reader;
-#else
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 			TextureReaderUIFont reader(txt, font_name, font_size, w, h);
+#else
+			TextureReader reader;
 #endif
 			
 			// TODO: check texture invalid number, maybe use int -1 is better
@@ -140,28 +147,31 @@ namespace ERI {
 		}
 	}
 	
-	const Texture* TextureMgr::GenerateRenderToTexture(int width, int height, int& out_frame_buffer)
+	const Texture* TextureMgr::GenerateRenderToTexture(int width, int height)
 	{
-		int texture_id = Root::Ins().renderer()->GenerateRenderToTexture(width, height, out_frame_buffer);
+		int bind_frame_buffer = 0;
+		int texture_id = Root::Ins().renderer()->GenerateRenderToTexture(width, height, bind_frame_buffer);
 		
 		// TODO: check texture invalid number, maybe use int -1 is better
 		
 		if (texture_id != 0)
 		{
-			Texture* tex = new Texture(texture_id, width, height);
+			Texture* texture = new Texture(texture_id, width, height);
+
+			texture->bind_frame_buffer = bind_frame_buffer;
 			
 			static int serial_number = 0;
-			char key[6];
+			char key[16];
 			sprintf(key, "%d_render2tex", serial_number++);
 						
-			texture_map_.insert(std::make_pair(key, tex));
+			texture_map_.insert(std::make_pair(key, texture));
 			
-			return tex;
+			return texture;
 		}
 		
 		return NULL;
 	}
-	
+
 	void TextureMgr::ReleaseTexture(const Texture* texture)
 	{
 		ASSERT(texture);
@@ -173,7 +183,15 @@ namespace ERI {
 		{
 			if ((*it).second == texture)
 			{
-				Root::Ins().renderer()->ReleaseTexture(texture->id);
+				if (texture->bind_frame_buffer)
+				{
+					Root::Ins().renderer()->ReleaseRenderToTexture(texture->id, texture->bind_frame_buffer);
+				}
+				else
+				{
+					Root::Ins().renderer()->ReleaseTexture(texture->id);
+				}
+
 				texture_map_.erase(it);
 				delete texture;
 				return;
@@ -187,7 +205,6 @@ namespace ERI {
 		width_(width),
 		height_(height),
 		texture_(NULL),
-		frame_buffer_(0),
 		render_cam_(render_cam)
 	{
 	}
@@ -201,7 +218,7 @@ namespace ERI {
 	{
 		ASSERT(!texture_);
 
-		texture_ = Root::Ins().texture_mgr()->GenerateRenderToTexture(width_, height_, frame_buffer_);
+		texture_ = Root::Ins().texture_mgr()->GenerateRenderToTexture(width_, height_);
 	}
 	
 	void RenderToTexture::Release()
@@ -210,41 +227,45 @@ namespace ERI {
 		{
 			Root::Ins().texture_mgr()->ReleaseTexture(texture_);
 		}
-			
-		if (frame_buffer_)
-		{
-			Root::Ins().renderer()->ReleaseFrameBuffer(frame_buffer_);
-		}
 	}
 	
 	void RenderToTexture::ProcessRender()
 	{
 		ASSERT(texture_);
+
+		Renderer* renderer = Root::Ins().renderer();
+		SceneMgr* scene_mgr = Root::Ins().scene_mgr();
 		
-		Root::Ins().renderer()->EnableRenderToBuffer(width_, height_, frame_buffer_);
+		renderer->EnableRenderToBuffer(width_, height_, texture_->bind_frame_buffer);
 		
-		CameraActor* current_cam = Root::Ins().scene_mgr()->current_cam();
-		
-		if (render_cam_ && render_cam_ != current_cam)
-		{
-			Root::Ins().scene_mgr()->SetCurrentCam(render_cam_);
-		}
-		else
-		{
-			Root::Ins().scene_mgr()->OnRenderResize();
-		}
-		
-		Root::Ins().scene_mgr()->Render(Root::Ins().renderer());
-		
-		Root::Ins().renderer()->RestoreRenderToBuffer();
+		CameraActor* current_cam = scene_mgr->current_cam();
 		
 		if (render_cam_ && render_cam_ != current_cam)
 		{
-			Root::Ins().scene_mgr()->SetCurrentCam(current_cam);
+			scene_mgr->SetCurrentCam(render_cam_);
 		}
 		else
 		{
-			Root::Ins().scene_mgr()->OnRenderResize();
+			scene_mgr->OnRenderResize();
+		}
+		
+		//
+
+		renderer->RenderStart();
+		scene_mgr->Render(renderer);
+		renderer->CopyTexture(texture_->id);
+
+		//
+		
+		renderer->RestoreRenderToBuffer();
+		
+		if (render_cam_ && render_cam_ != current_cam)
+		{
+			scene_mgr->SetCurrentCam(current_cam);
+		}
+		else
+		{
+			scene_mgr->OnRenderResize();
 		}
 	}
 	

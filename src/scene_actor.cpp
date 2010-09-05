@@ -33,6 +33,8 @@ namespace ERI {
 	{
 		for (size_t i = 0; i < childs_.size(); ++i)
 		{
+			// TODO: is delete childs right?
+
 			childs_[i]->parent_ = NULL;
 			delete childs_[i];
 		}
@@ -788,52 +790,52 @@ namespace ERI {
 		vertex_3_pos_normal_tex v[36] = {
 			
 			// front
-			{ - half_ext_.x, - half_ext_.y, + half_ext_.z, 0, 0, 1, 0.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ + half_ext_.x, - half_ext_.y, + half_ext_.z, 0, 0, 1, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ - half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 0, 1, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
-			{ - half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 0, 1, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
-			{ + half_ext_.x, - half_ext_.y, + half_ext_.z, 0, 0, 1, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ + half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 0, 1, 1.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ - half_ext_.x, - half_ext_.y, + half_ext_.z, 0, 0, 1, 0.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ + half_ext_.x, - half_ext_.y, + half_ext_.z, 0, 0, 1, 1.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ - half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 0, 1, 0.0f * unit_uv_.x, 0.0f * unit_uv_.y },
+			{ - half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 0, 1, 0.0f * unit_uv_.x, 0.0f * unit_uv_.y },
+			{ + half_ext_.x, - half_ext_.y, + half_ext_.z, 0, 0, 1, 1.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 0, 1, 1.0f * unit_uv_.x, 0.0f * unit_uv_.y },
 
 			// back
-			{ + half_ext_.x, - half_ext_.y, - half_ext_.z, 0, 0, -1, 0.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ - half_ext_.x, - half_ext_.y, - half_ext_.z, 0, 0, -1, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ + half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 0, -1, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
-			{ + half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 0, -1, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
-			{ - half_ext_.x, - half_ext_.y, - half_ext_.z, 0, 0, -1, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ - half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 0, -1, 1.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ + half_ext_.x, - half_ext_.y, - half_ext_.z, 0, 0, -1, 0.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ - half_ext_.x, - half_ext_.y, - half_ext_.z, 0, 0, -1, 1.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 0, -1, 0.0f * unit_uv_.x, 0.0f * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 0, -1, 0.0f * unit_uv_.x, 0.0f * unit_uv_.y },
+			{ - half_ext_.x, - half_ext_.y, - half_ext_.z, 0, 0, -1, 1.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ - half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 0, -1, 1.0f * unit_uv_.x, 0.0f * unit_uv_.y },
 			
 			// top
-			{ - half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 1, 0, 0.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ + half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 1, 0, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ - half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 1, 0, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
-			{ - half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 1, 0, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
-			{ + half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 1, 0, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ + half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 1, 0, 1.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ - half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 1, 0, 0.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 1, 0, 1.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ - half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 1, 0, 0.0f * unit_uv_.x, 0.0f * unit_uv_.y },
+			{ - half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 1, 0, 0.0f * unit_uv_.x, 0.0f * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, + half_ext_.z, 0, 1, 0, 1.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, - half_ext_.z, 0, 1, 0, 1.0f * unit_uv_.x, 0.0f * unit_uv_.y },
 			
 			// bottom
-			{ - half_ext_.x, - half_ext_.y, - half_ext_.z, 0, -1, 0, 0.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ + half_ext_.x, - half_ext_.y, - half_ext_.z, 0, -1, 0, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ - half_ext_.x, - half_ext_.y, + half_ext_.z, 0, -1, 0, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
-			{ - half_ext_.x, - half_ext_.y, + half_ext_.z, 0, -1, 0, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
-			{ + half_ext_.x, - half_ext_.y, - half_ext_.z, 0, -1, 0, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ + half_ext_.x, - half_ext_.y, + half_ext_.z, 0, -1, 0, 1.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ - half_ext_.x, - half_ext_.y, - half_ext_.z, 0, -1, 0, 0.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ + half_ext_.x, - half_ext_.y, - half_ext_.z, 0, -1, 0, 1.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ - half_ext_.x, - half_ext_.y, + half_ext_.z, 0, -1, 0, 0.0f * unit_uv_.x, 0.0f * unit_uv_.y },
+			{ - half_ext_.x, - half_ext_.y, + half_ext_.z, 0, -1, 0, 0.0f * unit_uv_.x, 0.0f * unit_uv_.y },
+			{ + half_ext_.x, - half_ext_.y, - half_ext_.z, 0, -1, 0, 1.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ + half_ext_.x, - half_ext_.y, + half_ext_.z, 0, -1, 0, 1.0f * unit_uv_.x, 0.0f * unit_uv_.y },
 			
 			// right
-			{ + half_ext_.x, - half_ext_.y, + half_ext_.z, 1, 0, 0, 0.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ + half_ext_.x, - half_ext_.y, - half_ext_.z, 1, 0, 0, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ + half_ext_.x, + half_ext_.y, + half_ext_.z, 1, 0, 0, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
-			{ + half_ext_.x, + half_ext_.y, + half_ext_.z, 1, 0, 0, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
-			{ + half_ext_.x, - half_ext_.y, - half_ext_.z, 1, 0, 0, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ + half_ext_.x, + half_ext_.y, - half_ext_.z, 1, 0, 0, 1.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ + half_ext_.x, - half_ext_.y, + half_ext_.z, 1, 0, 0, 0.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ + half_ext_.x, - half_ext_.y, - half_ext_.z, 1, 0, 0, 1.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, + half_ext_.z, 1, 0, 0, 0.0f * unit_uv_.x, 0.0f * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, + half_ext_.z, 1, 0, 0, 0.0f * unit_uv_.x, 0.0f * unit_uv_.y },
+			{ + half_ext_.x, - half_ext_.y, - half_ext_.z, 1, 0, 0, 1.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ + half_ext_.x, + half_ext_.y, - half_ext_.z, 1, 0, 0, 1.0f * unit_uv_.x, 0.0f * unit_uv_.y },
 
 			// left
-			{ - half_ext_.x, - half_ext_.y, - half_ext_.z, -1, 0, 0, 0.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ - half_ext_.x, - half_ext_.y, + half_ext_.z, -1, 0, 0, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ - half_ext_.x, + half_ext_.y, - half_ext_.z, -1, 0, 0, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
-			{ - half_ext_.x, + half_ext_.y, - half_ext_.z, -1, 0, 0, 0.0 * unit_uv_.x, 0.0 * unit_uv_.y },
-			{ - half_ext_.x, - half_ext_.y, + half_ext_.z, -1, 0, 0, 1.0 * unit_uv_.x, 1.0 * unit_uv_.y },
-			{ - half_ext_.x, + half_ext_.y, + half_ext_.z, -1, 0, 0, 1.0 * unit_uv_.x, 0.0 * unit_uv_.y },
+			{ - half_ext_.x, - half_ext_.y, - half_ext_.z, -1, 0, 0, 0.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ - half_ext_.x, - half_ext_.y, + half_ext_.z, -1, 0, 0, 1.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ - half_ext_.x, + half_ext_.y, - half_ext_.z, -1, 0, 0, 0.0f * unit_uv_.x, 0.0f * unit_uv_.y },
+			{ - half_ext_.x, + half_ext_.y, - half_ext_.z, -1, 0, 0, 0.0f * unit_uv_.x, 0.0f * unit_uv_.y },
+			{ - half_ext_.x, - half_ext_.y, + half_ext_.z, -1, 0, 0, 1.0f * unit_uv_.x, 1.0f * unit_uv_.y },
+			{ - half_ext_.x, + half_ext_.y, + half_ext_.z, -1, 0, 0, 1.0f * unit_uv_.x, 0.0f * unit_uv_.y },
 		};
 		
 		render_data_.vertex_type = GL_TRIANGLES;
@@ -972,7 +974,7 @@ namespace ERI {
 		float scroll_u, scroll_v;
 		scroll_u = scroll_v = 0;
 		
-		for (size_t i = 0; i < now_len_; ++i)
+		for (int i = 0; i < now_len_; ++i)
 		{
 			if (number_str[i] >= '0' && number_str[i] <= '9')
 			{
@@ -998,14 +1000,14 @@ namespace ERI {
 			if (is_use_line_)
 			{
 				vertex_2_pos_tex v[] = {
-					{ start_x - 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 0.0 * unit_uv_.x, scroll_v + 1.0 * unit_uv_.y },
-					{ start_x + 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 1.0 * unit_uv_.x, scroll_v + 1.0 * unit_uv_.y },
-					{ start_x + 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 1.0 * unit_uv_.x, scroll_v + 1.0 * unit_uv_.y },
-					{ start_x + 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 1.0 * unit_uv_.x, scroll_v + 0.0 * unit_uv_.y },
-					{ start_x + 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 1.0 * unit_uv_.x, scroll_v + 0.0 * unit_uv_.y },
-					{ start_x - 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 0.0 * unit_uv_.x, scroll_v + 0.0 * unit_uv_.y },
-					{ start_x - 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 0.0 * unit_uv_.x, scroll_v + 0.0 * unit_uv_.y },
-					{ start_x - 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 0.0 * unit_uv_.x, scroll_v + 1.0 * unit_uv_.y }
+					{ start_x - 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 0.0f * unit_uv_.x, scroll_v + 1.0f * unit_uv_.y },
+					{ start_x + 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 1.0f * unit_uv_.x, scroll_v + 1.0f * unit_uv_.y },
+					{ start_x + 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 1.0f * unit_uv_.x, scroll_v + 1.0f * unit_uv_.y },
+					{ start_x + 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 1.0f * unit_uv_.x, scroll_v + 0.0f * unit_uv_.y },
+					{ start_x + 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 1.0f * unit_uv_.x, scroll_v + 0.0f * unit_uv_.y },
+					{ start_x - 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 0.0f * unit_uv_.x, scroll_v + 0.0f * unit_uv_.y },
+					{ start_x - 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 0.0f * unit_uv_.x, scroll_v + 0.0f * unit_uv_.y },
+					{ start_x - 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 0.0f * unit_uv_.x, scroll_v + 1.0f * unit_uv_.y }
 				};
 				
 				memcpy(&vertices_[start_idx], v, sizeof(v));
@@ -1014,12 +1016,12 @@ namespace ERI {
 			else
 			{
 				vertex_2_pos_tex v[] = {
-					{ start_x - 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 0.0 * unit_uv_.x, scroll_v + 1.0 * unit_uv_.y },
-					{ start_x + 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 1.0 * unit_uv_.x, scroll_v + 1.0 * unit_uv_.y },
-					{ start_x - 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 0.0 * unit_uv_.x, scroll_v + 0.0 * unit_uv_.y },
-					{ start_x - 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 0.0 * unit_uv_.x, scroll_v + 0.0 * unit_uv_.y },
-					{ start_x + 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 1.0 * unit_uv_.x, scroll_v + 1.0 * unit_uv_.y },
-					{ start_x + 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 1.0 * unit_uv_.x, scroll_v + 0.0 * unit_uv_.y }
+					{ start_x - 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 0.0f * unit_uv_.x, scroll_v + 1.0f * unit_uv_.y },
+					{ start_x + 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 1.0f * unit_uv_.x, scroll_v + 1.0f * unit_uv_.y },
+					{ start_x - 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 0.0f * unit_uv_.x, scroll_v + 0.0f * unit_uv_.y },
+					{ start_x - 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 0.0f * unit_uv_.x, scroll_v + 0.0f * unit_uv_.y },
+					{ start_x + 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 1.0f * unit_uv_.x, scroll_v + 1.0f * unit_uv_.y },
+					{ start_x + 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 1.0f * unit_uv_.x, scroll_v + 0.0f * unit_uv_.y }
 				};
 				
 				memcpy(&vertices_[start_idx], v, sizeof(v));
@@ -1089,7 +1091,7 @@ namespace ERI {
 		height = font->common_line_height * size_scale;
 		
 		float now_width = 0;
-		for (size_t i = 0; i < len; ++i)
+		for (int i = 0; i < len; ++i)
 		{
 			if (txt[i] == '\n')
 			{
@@ -1153,7 +1155,7 @@ namespace ERI {
 		
 		int invisible_num = 0;
 		
-		for (size_t i = 0; i < now_len_; ++i)
+		for (int i = 0; i < now_len_; ++i)
 		{
 			if (txt_[i] == '\n')
 			{
@@ -1178,14 +1180,14 @@ namespace ERI {
 				if (is_use_line_)
 				{
 					vertex_2_pos_tex v[] = {
-						{ start_x + offset_x,			start_y - offset_y - size_y,	scroll_u + 0.0 * unit_u, scroll_v + 1.0 * unit_v },
-						{ start_x + offset_x + size_x,	start_y - offset_y - size_y,	scroll_u + 1.0 * unit_u, scroll_v + 1.0 * unit_v },
-						{ start_x + offset_x + size_x,	start_y - offset_y - size_y,	scroll_u + 1.0 * unit_u, scroll_v + 1.0 * unit_v },
-						{ start_x + offset_x + size_x,	start_y - offset_y,				scroll_u + 1.0 * unit_u, scroll_v + 0.0 * unit_v },
-						{ start_x + offset_x + size_x,	start_y - offset_y,				scroll_u + 1.0 * unit_u, scroll_v + 0.0 * unit_v },
-						{ start_x + offset_x,			start_y - offset_y,				scroll_u + 0.0 * unit_u, scroll_v + 0.0 * unit_v },
-						{ start_x + offset_x,			start_y - offset_y,				scroll_u + 0.0 * unit_u, scroll_v + 0.0 * unit_v },
-						{ start_x + offset_x,			start_y - offset_y - size_y,	scroll_u + 0.0 * unit_u, scroll_v + 1.0 * unit_v }
+						{ start_x + offset_x,			start_y - offset_y - size_y,	scroll_u + 0.0f * unit_u, scroll_v + 1.0f * unit_v },
+						{ start_x + offset_x + size_x,	start_y - offset_y - size_y,	scroll_u + 1.0f * unit_u, scroll_v + 1.0f * unit_v },
+						{ start_x + offset_x + size_x,	start_y - offset_y - size_y,	scroll_u + 1.0f * unit_u, scroll_v + 1.0f * unit_v },
+						{ start_x + offset_x + size_x,	start_y - offset_y,				scroll_u + 1.0f * unit_u, scroll_v + 0.0f * unit_v },
+						{ start_x + offset_x + size_x,	start_y - offset_y,				scroll_u + 1.0f * unit_u, scroll_v + 0.0f * unit_v },
+						{ start_x + offset_x,			start_y - offset_y,				scroll_u + 0.0f * unit_u, scroll_v + 0.0f * unit_v },
+						{ start_x + offset_x,			start_y - offset_y,				scroll_u + 0.0f * unit_u, scroll_v + 0.0f * unit_v },
+						{ start_x + offset_x,			start_y - offset_y - size_y,	scroll_u + 0.0f * unit_u, scroll_v + 1.0f * unit_v }
 					};
 					
 					memcpy(&vertices_[start_idx], v, sizeof(v));
@@ -1193,12 +1195,12 @@ namespace ERI {
 				else
 				{
 					vertex_2_pos_tex v[] = {
-						{ start_x + offset_x,			start_y - offset_y - size_y,	scroll_u + 0.0 * unit_u, scroll_v + 1.0 * unit_v },
-						{ start_x + offset_x + size_x,	start_y - offset_y - size_y,	scroll_u + 1.0 * unit_u, scroll_v + 1.0 * unit_v },
-						{ start_x + offset_x,			start_y - offset_y,				scroll_u + 0.0 * unit_u, scroll_v + 0.0 * unit_v },
-						{ start_x + offset_x,			start_y - offset_y,				scroll_u + 0.0 * unit_u, scroll_v + 0.0 * unit_v },
-						{ start_x + offset_x + size_x,	start_y - offset_y - size_y,	scroll_u + 1.0 * unit_u, scroll_v + 1.0 * unit_v },
-						{ start_x + offset_x + size_x,	start_y - offset_y,				scroll_u + 1.0 * unit_u, scroll_v + 0.0 * unit_v }
+						{ start_x + offset_x,			start_y - offset_y - size_y,	scroll_u + 0.0f * unit_u, scroll_v + 1.0f * unit_v },
+						{ start_x + offset_x + size_x,	start_y - offset_y - size_y,	scroll_u + 1.0f * unit_u, scroll_v + 1.0f * unit_v },
+						{ start_x + offset_x,			start_y - offset_y,				scroll_u + 0.0f * unit_u, scroll_v + 0.0f * unit_v },
+						{ start_x + offset_x,			start_y - offset_y,				scroll_u + 0.0f * unit_u, scroll_v + 0.0f * unit_v },
+						{ start_x + offset_x + size_x,	start_y - offset_y - size_y,	scroll_u + 1.0f * unit_u, scroll_v + 1.0f * unit_v },
+						{ start_x + offset_x + size_x,	start_y - offset_y,				scroll_u + 1.0f * unit_u, scroll_v + 0.0f * unit_v }
 					};
 					
 					memcpy(&vertices_[start_idx], v, sizeof(v));

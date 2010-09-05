@@ -12,7 +12,7 @@
 
 namespace ERI {
 	
-	class Vector2;
+	struct Vector2;
 	
 	class InputHandler
 	{

@@ -12,6 +12,7 @@
 #include "math_helper.h"
 
 #include <cstdio>
+#include <cstdlib>
 #include <cmath>
 #include <ctime>
 
@@ -81,6 +82,10 @@ namespace ERI {
 	
 	void Matrix4::Multiply(Matrix4& out_m, const Matrix4& m1, const Matrix4& m2)
 	{
+		// TODO: m1/m2 = out_m ?
+
+		ASSERT((&out_m != &m1) && (&out_m != &m2));
+
 		out_m.m[0]  = m1.m[0]  * m2.m[0] + m1.m[1]  * m2.m[4] + m1.m[2]  * m2.m[8]  + m1.m[3]  * m2.m[12];
 		out_m.m[1]  = m1.m[0]  * m2.m[1] + m1.m[1]  * m2.m[5] + m1.m[2]  * m2.m[9]  + m1.m[3]  * m2.m[13];
 		out_m.m[2]  = m1.m[0]  * m2.m[2] + m1.m[1]  * m2.m[6] + m1.m[2]  * m2.m[10] + m1.m[3]  * m2.m[14];
@@ -104,6 +109,10 @@ namespace ERI {
 	
 	void Matrix4::Multiply(Vector3& out_v, const Vector3& v, const Matrix4& m)
 	{
+		// TODO: v = out_v ?
+
+		ASSERT(&out_v != &v);
+
 		out_v.x = m.m[0] * v.x + m.m[4] * v.y + m.m[8]  * v.z + m.m[12];
 		out_v.y = m.m[1] * v.x + m.m[5] * v.y + m.m[9]  * v.z + m.m[13];
 		out_v.z = m.m[2] * v.x + m.m[6] * v.y + m.m[10] * v.z + m.m[14];
@@ -235,7 +244,7 @@ namespace ERI {
 						const Vector3& up)
 	{
 		Vector3 f, up_actual, s, u;
-		Matrix4	t;
+		Matrix4	t1, t2;
 
 		f = at - eye;
 		f.Normalize();
@@ -246,41 +255,41 @@ namespace ERI {
 		s = f.CrossProduct(up_actual);
 		u = s.CrossProduct(f);
 
-		out_m.m[0]  = s.x;
-		out_m.m[1]  = u.x;
-		out_m.m[2]  = -f.x;
-		out_m.m[3]  = 0;
+		t1.m[0]  = s.x;
+		t1.m[1]  = u.x;
+		t1.m[2]  = -f.x;
+		t1.m[3]  = 0;
 		
-		out_m.m[4]  = s.y;
-		out_m.m[5]  = u.y;
-		out_m.m[6]  = -f.y;
-		out_m.m[7]  = 0;
+		t1.m[4]  = s.y;
+		t1.m[5]  = u.y;
+		t1.m[6]  = -f.y;
+		t1.m[7]  = 0;
 		
-		out_m.m[8]  = s.z;
-		out_m.m[9]  = u.z;
-		out_m.m[10] = -f.z;
-		out_m.m[11] = 0;
+		t1.m[8]  = s.z;
+		t1.m[9]  = u.z;
+		t1.m[10] = -f.z;
+		t1.m[11] = 0;
 		
-		out_m.m[12] = 0;
-		out_m.m[13] = 0;
-		out_m.m[14] = 0;
-		out_m.m[15] = 1;
+		t1.m[12] = 0;
+		t1.m[13] = 0;
+		t1.m[14] = 0;
+		t1.m[15] = 1;
 		
-		Matrix4::Translate(t, eye * -1);
-		Matrix4::Multiply(out_m, t, out_m);
+		Matrix4::Translate(t2, eye * -1);
+		Matrix4::Multiply(out_m, t2, t1);
 	}
 	
 	void MatrixPerspectiveFovRH(Matrix4	&out_m,
 								const float	fov_y,
 								const float	aspect,
-								const float	near,
-								const float	far)
+								const float	near_z,
+								const float	far_z)
 	{
 		float f, n;
 		
 		// cotangent(a) == 1.0f / tan(a);
 		f = 1.0f / (float)tan(fov_y * 0.5f);
-		n = 1.0f / (near - far);
+		n = 1.0f / (near_z - far_z);
 		
 		out_m.m[ 0] = f / aspect;
 		out_m.m[ 1] = 0;
@@ -294,20 +303,20 @@ namespace ERI {
 		
 		out_m.m[ 8] = 0;
 		out_m.m[ 9] = 0;
-		out_m.m[10] = (far + near) * n;
+		out_m.m[10] = (far_z + near_z) * n;
 		out_m.m[11] = -1;
 		
 		out_m.m[12] = 0;
 		out_m.m[13] = 0;
-		out_m.m[14] = (2 * far * near) * n;
+		out_m.m[14] = (2 * far_z * near_z) * n;
 		out_m.m[15] = 0;
 	}
 	
 	void MatrixOrthoRH(Matrix4	&out_m,
 					   const float w,
 					   const float h,
-					   const float zn,
-					   const float zf)
+					   const float near_z,
+					   const float far_z)
 	{
 		out_m.m[ 0] = 2 / w;
 		out_m.m[ 1] = 0;
@@ -321,8 +330,8 @@ namespace ERI {
 		
 		out_m.m[ 8] = 0;
 		out_m.m[ 9] = 0;
-		out_m.m[10] = 1 / (zn - zf);
-		out_m.m[11] = zn / (zn - zf);
+		out_m.m[10] = 1 / (near_z - far_z);
+		out_m.m[11] = near_z / (near_z - far_z);
 		
 		out_m.m[12] = 0;
 		out_m.m[13] = 0;
@@ -427,22 +436,14 @@ namespace ERI {
 
 	float UnitRandom()
 	{
-		if (false == Math::is_rand_seed_set)
-		{
-			srand(time(NULL));
-			Math::is_rand_seed_set = true;
-		}
+		SetRandomSeed();
 		
 		return static_cast<float>(rand()) / RAND_MAX;
 	}
 	
 	int RangeRandom(int min, int max)
 	{
-		if (false == Math::is_rand_seed_set)
-		{
-			srand(time(NULL));
-			Math::is_rand_seed_set = true;
-		}
+		SetRandomSeed();
 
 		if (min > max)
 		{
@@ -456,11 +457,7 @@ namespace ERI {
 	
 	float RangeRandom(float min, float max)
 	{
-		if (false == Math::is_rand_seed_set)
-		{
-			srand(time(NULL));
-			Math::is_rand_seed_set = true;
-		}
+		SetRandomSeed();
 		
 		if (min > max)
 		{
@@ -470,6 +467,15 @@ namespace ERI {
 		}
 		
 		return min + UnitRandom() * (max - min);
+	}
+
+	void SetRandomSeed()
+	{
+		if (false == Math::is_rand_seed_set)
+		{
+			srand(static_cast<unsigned int>(time(NULL)));
+			Math::is_rand_seed_set = true;
+		}
 	}
 
 }

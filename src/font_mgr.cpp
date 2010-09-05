@@ -16,7 +16,7 @@
 
 #include <sstream>
 
-#ifdef OS_ANDROID
+#if ERI_PLATFORM == ERI_PLATFORM_ANDROID
 #include <jni.h>
 #include <android/log.h>
 
@@ -48,18 +48,19 @@ namespace ERI {
 		std::map<std::string, Font*>::iterator it = font_map_.find(name);
 		if (it == font_map_.end())
 		{
-			
-#ifdef OS_ANDROID			
-			std::string font_path("media/");
-#else
+			// TODO: default path setting is bad
+
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 			std::string font_path(GetResourcePath());
 			font_path += "/media/";
+#else
+			std::string font_path("media/");
 #endif
 			font_path += (name + ".fnt");
 			
 			std::string content;
 
-#ifdef OS_ANDROID
+#if ERI_PLATFORM == ERI_PLATFORM_ANDROID
 			jmethodID mid = global_env->GetMethodID(global_renderer_cls, "GetTxtFileContent", "(Ljava/lang/String;)Ljava/lang/String;");
 			jstring s = static_cast<jstring>(global_env->CallObjectMethod(global_renderer, mid, global_env->NewStringUTF(font_path.c_str())));
 			
@@ -103,7 +104,7 @@ namespace ERI {
 			
 			content_stream.getline(txt_line, 256);
 			
-			char texture_name[16];
+			char texture_name[32];
 			sscanf(txt_line, "page id=0 file=\"%s", texture_name);
 			texture_name[strlen(texture_name) - 1] = 0;
 			

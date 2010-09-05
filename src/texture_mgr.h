@@ -36,6 +36,8 @@ namespace ERI {
 		int		height;
 		
 		void*	data;
+
+		int		bind_frame_buffer;
 		
 		mutable TextureFilter	filter_min;
 		mutable TextureFilter	filter_mag;
@@ -49,7 +51,7 @@ namespace ERI {
 		const Texture* GetTexture(const std::string& resource_path, bool keep_texture_data = false);
 		const Texture* GetTxtTexture(const std::string& txt, const std::string& font_name, float font_size, float w, float h);
 		
-		const Texture* GenerateRenderToTexture(int width, int height, int& out_frame_buffer);
+		const Texture* GenerateRenderToTexture(int width, int height);
 		
 		void ReleaseTexture(const Texture* texture);
 		
@@ -75,7 +77,6 @@ namespace ERI {
 		
 	private:
 		int				width_, height_;
-		int				frame_buffer_;
 		const Texture*	texture_;
 		
 		CameraActor*	render_cam_;

@@ -32,6 +32,9 @@ namespace ERI {
 		inline InputMgr* input_mgr() { return input_mgr_; }
 		inline TextureMgr* texture_mgr() { return texture_mgr_; }
 		inline FontMgr* font_mgr() { return font_mgr_; }
+
+		void* window_handle() { return window_handle_; }
+		inline void set_window_handle(void* handle) { window_handle_ = handle; }
 	
 		inline static Root& Ins()
 		{
@@ -50,6 +53,8 @@ namespace ERI {
 		InputMgr*		input_mgr_;
 		TextureMgr*		texture_mgr_;
 		FontMgr*		font_mgr_;
+
+		void*			window_handle_;
 		
 		static Root* ins_ptr_;
 	};

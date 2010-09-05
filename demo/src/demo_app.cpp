@@ -35,24 +35,24 @@ DemoApp::DemoApp()
 	hello_txt->AddToScene(ui_layer);
 	hello_txt->SetTextureFilter(ERI::FILTER_LINEAR, ERI::FILTER_LINEAR);
 	hello_txt->SetDepthWrite(false);
-	hello_txt->SetPos(0, 6);
+	hello_txt->SetPos(-50, 6);
 	hello_txt->SetColor(ERI::Color(1.0f, 0.8f, 0.2f));
 	
 	fps_txt = new ERI::TxtActor("current fps is", "nokiafc22", 16, true);
 	fps_txt->AddToScene(ui_layer);
-	fps_txt->SetPos(-60, -30);
+	fps_txt->SetPos(-110, -30);
 	fps_txt->SetColor(ERI::Color(0.4f, 0.4f, 0.4f));
 	
 	fps_number = new ERI::NumberActor(20, 28, "media/num.png", 5, 7);
 	fps_number->AddToScene(ui_layer);
-	fps_number->SetPos(static_cast<int>(fps_txt->width() * 0.5) + 6, -30);
+	fps_number->SetPos(fps_txt->GetPos().x + static_cast<int>(fps_txt->width()), -30);
 	fps_number->SetColor(ERI::Color(1, 0, 0));
-	fps_number->SetNumberFloat(55.67f);
+	fps_number->SetNumberFloat(0.0f);
 	
 	pic = new ERI::SpriteActor(120, 120);
 	pic->SetMaterial("media/eri.png", ERI::FILTER_LINEAR, ERI::FILTER_LINEAR);
 	pic->AddToScene();
-	pic->SetPos(ERI::Vector3(155, -5, -1));
+	pic->SetPos(ERI::Vector3(110, -5, -1));
 	pic->SetRotate(-10);
 	
 	pic_shadow = new ERI::SpriteActor(132 , 132);
@@ -70,7 +70,7 @@ DemoApp::~DemoApp()
 	delete fps_txt;
 	delete fps_number;
 	delete pic;
-	delete pic_shadow;
+	//delete pic_shadow;
 }
 
 void DemoApp::Update(double delta_time)

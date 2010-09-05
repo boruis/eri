@@ -11,7 +11,9 @@
 
 #include "renderer_es1.h"
 
-#ifndef OS_ANDROID
+#if ERI_PLATFORM == ERI_PLATFORM_WIN
+#include "win/render_context_win.h"
+#elif ERI_PLATFORM == ERI_PLATFORM_IOS
 #include "render_context_iphone.h"
 #endif
 
@@ -20,9 +22,9 @@
 #include "render_data.h"
 #include "material_data.h"
 
-#include <cstdio>
-#include <cmath>
-#include <cstring>
+//#include <cstdio>
+//#include <cmath>
+//#include <cstring>
 
 namespace ERI {
 	
@@ -52,7 +54,7 @@ namespace ERI {
 	
 	RendererES1::~RendererES1()
 	{
-#ifndef OS_ANDROID
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		if (depth_buffer_)
 		{
 			glDeleteRenderbuffersOES(1, &depth_buffer_);
@@ -70,24 +72,27 @@ namespace ERI {
 				glDeleteFramebuffersOES(1, &frame_buffers_[i]);
 			}
 		}
-	
-		if (context_) delete context_;
 #endif
+
+		if (context_) delete context_;
 	}
 
 	bool RendererES1::Init(bool use_depth_buffer)
 	{
 		use_depth_buffer_ = use_depth_buffer;
 
-#ifndef OS_ANDROID
+#if ERI_PLATFORM == ERI_PLATFORM_WIN
+		context_ = new RenderContextWin;
+#elif ERI_PLATFORM == ERI_PLATFORM_IOS
 		context_ = new RenderContextIphone;
-		if (!context_->Init(1))
+#endif
+
+		if (context_ && !context_->Init(1))
 		{
 			delete context_;
 			context_ = NULL;
 			return false;
 		}
-#endif
 		
 		clear_bits_ = GL_COLOR_BUFFER_BIT;
 		
@@ -111,13 +116,18 @@ namespace ERI {
 		//glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); // because pre-multiplied alpha?
 		glEnable(GL_COLOR_MATERIAL);
 		glEnableClientState(GL_VERTEX_ARRAY);
+
+		SetBgColor(bg_color_);
 		
 		return true;
 	}
 	
 	void RendererES1::BackingLayer(void* layer)
 	{
-#ifndef OS_ANDROID
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
+
+		ASSERT(context_);
+
 		// Create default framebuffer object. The backing will be allocated for the current layer in -resizeFromLayer
 		glGenFramebuffersOES(1, &frame_buffers_[kDefaultFrameBufferIdx]);
 		glGenRenderbuffersOES(1, &color_render_buffer_);
@@ -155,13 +165,13 @@ namespace ERI {
 		}
 		
 		current_frame_buffer_ = frame_buffers_[kDefaultFrameBufferIdx];
-#endif
 		
 		Resize(backing_width, backing_height);
 		
 		// clear initial display
 		glClear(clear_bits_);
-		context_->Present();
+		if (context_) context_->Present();
+#endif
 	}
 	
 	void RendererES1::Resize(int width, int height)
@@ -179,38 +189,33 @@ namespace ERI {
 
 	void RendererES1::RenderStart()
 	{
-#ifndef OS_ANDROID
 		// This application only creates a single context which is already set current at this point.
 		// This call is redundant, but needed if dealing with multiple contexts.
-		context_->SetAsCurrent();
-		
+		//if (context_) context_->SetAsCurrent();
+
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		// This application only creates a single default framebuffer which is already bound at this point.
 		// This call is redundant, but needed if dealing with multiple framebuffers.
 		glBindFramebufferOES(GL_FRAMEBUFFER_OES, current_frame_buffer_);
 #endif
 		
-		glClearColor(bg_color_.r, bg_color_.g, bg_color_.b, bg_color_.a);
 		glClear(clear_bits_);
 	}
 	
 	void RendererES1::RenderEnd()
 	{
-#ifndef OS_ANDROID
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		// This application only creates a single color renderbuffer which is already bound at this point.
 		// This call is redundant, but needed if dealing with multiple renderbuffers.
 		glBindRenderbufferOES(GL_RENDERBUFFER_OES, color_render_buffer_);
-		
-		context_->Present();
 #endif
+		
+		if (context_) context_->Present();
 	}
 	
 	void RendererES1::Render(const RenderData* data)
 	{
 		glMultMatrixf(data->world_model_matrix.m);
-		
-		//glTranslatef(data->translate.x, data->translate.y, data->translate.z);
-		//glRotatef(data->rotate_degree, data->rotate_axis.x, data->rotate_axis.y, data->rotate_axis.z);
-		//glScalef(data->scale.x, data->scale.y, data->scale.z);
 		
 		if (data->vertex_count > 0)
 		{
@@ -305,8 +310,21 @@ namespace ERI {
 		backing_height_ = height;
 		
 		glViewport(0, 0, backing_width_, backing_height_);
-			
+
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		current_frame_buffer_ = frame_buffer;
+#endif
+	}
+
+	void RendererES1::CopyTexture(unsigned int texture)
+	{
+#if ERI_PLATFORM == ERI_PLATFORM_WIN
+		glBindTexture(GL_TEXTURE_2D, texture);
+		now_texture_ = texture;
+
+		// Copy Our ViewPort To The Blur Texture (From 0,0 To 128,128... No Border)
+		glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, backing_width_, backing_height_, 0);
+#endif
 	}
 	
 	void RendererES1::RestoreRenderToBuffer()
@@ -315,23 +333,10 @@ namespace ERI {
 		backing_height_ = backing_height_backup_;
 		
 		glViewport(0, 0, backing_width_, backing_height_);
-		
+
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		current_frame_buffer_ = frame_buffers_[kDefaultFrameBufferIdx];
-	}
-	
-	void RendererES1::ReleaseFrameBuffer(int frame_buffer)
-	{
-		ASSERT(frame_buffer > 0);
-		
-		for (int i = 0; i < MAX_FRAMEBUFFER; ++i)
-		{
-			if (frame_buffers_[i] == frame_buffer)
-			{
-				glDeleteFramebuffersOES(1, &frame_buffers_[i]);
-				frame_buffers_[i] = 0;
-				return;
-			}
-		}
+#endif
 	}
 	
 	void RendererES1::EnableBlend(bool enable)
@@ -616,10 +621,15 @@ namespace ERI {
 	{
 		// create the framebuffer object
 		int frame_buffer = GenerateFrameBuffer();
+
+#if ERI_PLATFORM != ERI_PLATFORM_WIN
 		if (!frame_buffer)
 			return 0;
-		
+#endif
+
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		glBindFramebufferOES(GL_FRAMEBUFFER_OES, frame_buffer);
+#endif
 		
 		// create the texture
 		GLuint texture;
@@ -632,24 +642,27 @@ namespace ERI {
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		
+
 		// attach the texture to the framebuffer
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		glFramebufferTexture2DOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_TEXTURE_2D, texture, 0);
 		
 		// TODO: use depth buffer?
-//		// allocate and attach a depth buffer
-//		GLuint depth_render_buffer;
-//		glGenRenderbuffersOES(1, &depth_render_buffer);
-//		glBindRenderbufferOES(GL_RENDERBUFFER_OES, depth_render_buffer);
-//		glRenderbufferStorageOES(GL_RENDERBUFFER_OES, GL_DEPTH_COMPONENT16_OES, width, height);
-//		glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_DEPTH_ATTACHMENT_OES, GL_RENDERBUFFER_OES, depth_render_buffer);
-		
+
+		//// allocate and attach a depth buffer
+		//GLuint depth_render_buffer;
+		//glGenRenderbuffersOES(1, &depth_render_buffer);
+		//glBindRenderbufferOES(GL_RENDERBUFFER_OES, depth_render_buffer);
+		//glRenderbufferStorageOES(GL_RENDERBUFFER_OES, GL_DEPTH_COMPONENT16_OES, width, height);
+		//glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_DEPTH_ATTACHMENT_OES, GL_RENDERBUFFER_OES, depth_render_buffer);
+
 		GLenum status = glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) ;
 		if(status != GL_FRAMEBUFFER_COMPLETE_OES)
 		{
 			printf("Failed to make complete framebuffer object %x", status);
 			ASSERT(0);
 		}
+#endif
 		
 		out_frame_buffer = frame_buffer;
 		
@@ -669,6 +682,18 @@ namespace ERI {
 		GLuint id = texture_id;
 		glDeleteTextures(1, &id);
 	}
+
+	void RendererES1::ReleaseRenderToTexture(int texture_id, int frame_buffer)
+	{
+		ReleaseTexture(texture_id);
+		ReleaseFrameBuffer(frame_buffer);
+	}
+
+	void RendererES1::SetBgColor(const Color& color)
+	{
+		bg_color_ = color;
+		glClearColor(bg_color_.r, bg_color_.g, bg_color_.b, bg_color_.a);
+	}
 	
 	void RendererES1::UpdateView(const Vector3& eye, const Vector3& at, const Vector3& up)
 	{
@@ -681,7 +706,7 @@ namespace ERI {
 		UpdateLightTransform();
 	}
 	
-	void RendererES1::UpdateOrthoProjection(float width, float height, float near, float far)
+	void RendererES1::UpdateOrthoProjection(float width, float height, float near_z, float far_z)
 	{
 		GLint original_matrix_mode;
 		glGetIntegerv(GL_MATRIX_MODE, &original_matrix_mode);
@@ -697,7 +722,12 @@ namespace ERI {
 		//glLoadMatrixf(projection.m);
 		
 		glLoadIdentity();
-		glOrthof(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, near, far);
+
+#if ERI_PLATFORM == ERI_PLATFORM_WIN
+		glOrtho(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, near_z, far_z);
+#else
+		glOrthof(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, near_z, far_z);
+#endif
 		
 		AdjustProjectionForViewOrientation();
 		
@@ -708,14 +738,14 @@ namespace ERI {
 		}
 	}
 	
-	void RendererES1::UpdateOrthoProjection(float zoom, float near, float far)
+	void RendererES1::UpdateOrthoProjection(float zoom, float near_z, float far_z)
 	{
 		ASSERT(zoom);
 		
-		UpdateOrthoProjection(backing_width_ / zoom, backing_height_ / zoom, near, far);
+		UpdateOrthoProjection(backing_width_ / zoom, backing_height_ / zoom, near_z, far_z);
 	}
 	
-	void RendererES1::UpdatePerspectiveProjection(float fov_y, float aspect, float near, float far)
+	void RendererES1::UpdatePerspectiveProjection(float fov_y, float aspect, float near_z, float far_z)
 	{
 		GLint original_matrix_mode;
 		glGetIntegerv(GL_MATRIX_MODE, &original_matrix_mode);
@@ -727,7 +757,7 @@ namespace ERI {
 		}
 		
 		static Matrix4 projection;
-		MatrixPerspectiveFovRH(projection, fov_y, aspect, near, far);
+		MatrixPerspectiveFovRH(projection, fov_y, aspect, near_z, far_z);
 		glLoadMatrixf(projection.m);
 		
 		AdjustProjectionForViewOrientation();
@@ -739,9 +769,9 @@ namespace ERI {
 		}
 	}
 
-	void RendererES1::UpdatePerspectiveProjection(float fov_y, float near, float far)
+	void RendererES1::UpdatePerspectiveProjection(float fov_y, float near_z, float far_z)
 	{
-		UpdatePerspectiveProjection(fov_y, static_cast<float>(backing_width_) / backing_height_, near, far);
+		UpdatePerspectiveProjection(fov_y, static_cast<float>(backing_width_) / backing_height_, near_z, far_z);
 	}
 	
 	void RendererES1::SetViewOrientation(ViewOrientation orientaion)
@@ -768,6 +798,7 @@ namespace ERI {
 	
 	int RendererES1::GenerateFrameBuffer()
 	{
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		for (int i = kDefaultFrameBufferIdx + 1; i < MAX_FRAMEBUFFER; ++i)
 		{
 			if (!frame_buffers_[i])
@@ -776,8 +807,26 @@ namespace ERI {
 				return frame_buffers_[i];
 			}
 		}
+#endif
 		
 		return 0;
+	}
+
+	void RendererES1::ReleaseFrameBuffer(int frame_buffer)
+	{
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
+		ASSERT(frame_buffer > 0);
+
+		for (int i = 0; i < MAX_FRAMEBUFFER; ++i)
+		{
+			if (frame_buffers_[i] == frame_buffer)
+			{
+				glDeleteFramebuffersOES(1, &frame_buffers_[i]);
+				frame_buffers_[i] = 0;
+				return;
+			}
+		}
+#endif
 	}
 	
 	void RendererES1::UpdateLightTransform()

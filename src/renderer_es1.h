@@ -12,9 +12,13 @@
 
 #include "renderer.h"
 
-#ifdef OS_ANDROID
+#if ERI_PLATFORM == ERI_PLATFORM_WIN
+#include "GL/glew.h"
+//#include "GL/wglew.h"
+//#include "GLee.h"
+#elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
 #include <GLES/gl.h>
-#else
+#elif ERI_PLATFORM == ERI_PLATFORM_IOS
 #import <OpenGLES/ES1/gl.h>
 #import <OpenGLES/ES1/glext.h>
 #endif
@@ -66,10 +70,9 @@ namespace ERI {
 		virtual void RecoverTransform();
 		
 		virtual void EnableRenderToBuffer(int width, int height, int frame_buffer);
+		virtual void CopyTexture(unsigned int texture);
 		virtual void RestoreRenderToBuffer();
 		
-		virtual void ReleaseFrameBuffer(int frame_buffer);
-
 		virtual void EnableBlend(bool enable);
 		virtual void EnableAlphaTest(bool enable);
 		virtual void EnableMaterial(const MaterialData* data);
@@ -94,20 +97,23 @@ namespace ERI {
 		virtual unsigned int GenerateTexture(void* buffer, int width, int height, PixelFormat format);
 		virtual unsigned int GenerateRenderToTexture(int width, int height, int& out_frame_buffer);
 		virtual void ReleaseTexture(int texture_id);
+		virtual void ReleaseRenderToTexture(int texture_id, int frame_buffer);
 		
-		virtual void SetBgColor(const Color& color) { bg_color_ = color; }
+		virtual void SetBgColor(const Color& color);
 		
 		virtual void UpdateView(const Vector3& eye, const Vector3& at, const Vector3& up);
 		
-		virtual void UpdateOrthoProjection(float width, float height, float near, float far);
-		virtual void UpdateOrthoProjection(float zoom, float near, float far);
-		virtual void UpdatePerspectiveProjection(float fov_y, float aspect, float near, float far);
-		virtual void UpdatePerspectiveProjection(float fov_y, float near, float far);
+		virtual void UpdateOrthoProjection(float width, float height, float near_z, float far_z);
+		virtual void UpdateOrthoProjection(float zoom, float near_z, float far_z);
+		virtual void UpdatePerspectiveProjection(float fov_y, float aspect, float near_z, float far_z);
+		virtual void UpdatePerspectiveProjection(float fov_y, float near_z, float far_z);
 		
 		virtual void SetViewOrientation(ViewOrientation orientaion);
 		
 	private:
 		int GenerateFrameBuffer();
+		void ReleaseFrameBuffer(int frame_buffer);
+
 		void UpdateLightTransform();
 		void AdjustProjectionForViewOrientation();
 		

@@ -13,7 +13,7 @@
 
 #include "renderer_es1.h"
 
-#ifndef OS_ANDROID
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 #include "renderer_es2.h"
 #endif
 
@@ -31,7 +31,8 @@ namespace ERI {
 		scene_mgr_(NULL),
 		input_mgr_(NULL),
 		texture_mgr_(NULL),
-		font_mgr_(NULL)
+		font_mgr_(NULL),
+		window_handle_(NULL)
 	{
 	}
 	
@@ -46,7 +47,7 @@ namespace ERI {
 	
 	void Root::Init(bool use_depth_buffer /*= true*/)
 	{
-#ifndef OS_ANDROID
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		renderer_ = new RendererES2;
 		if (!renderer_->Init(use_depth_buffer))
 		{
@@ -76,7 +77,9 @@ namespace ERI {
 	
 	void Root::Update()
 	{
+		renderer_->RenderStart();
 		scene_mgr_->Render(renderer_);
+		renderer_->RenderEnd();
 	}
 
 }
