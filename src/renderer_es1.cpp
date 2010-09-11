@@ -11,6 +11,8 @@
 
 #include "renderer_es1.h"
 
+#include <cmath>
+
 #if ERI_PLATFORM == ERI_PLATFORM_WIN
 #include "win/render_context_win.h"
 #elif ERI_PLATFORM == ERI_PLATFORM_IOS
@@ -21,10 +23,6 @@
 #include "scene_mgr.h"
 #include "render_data.h"
 #include "material_data.h"
-
-//#include <cstdio>
-//#include <cmath>
-//#include <cstring>
 
 namespace ERI {
 	
@@ -717,9 +715,11 @@ namespace ERI {
 			glMatrixMode(GL_PROJECTION);
 		}
 		
-		//static Matrix4 projection;
-		//MatrixOrthoRH(projection, width, height, near, far);
-		//glLoadMatrixf(projection.m);
+		/*
+		static Matrix4 projection;
+		MatrixOrthoRH(projection, width, height, near_z, far_z);
+		glLoadMatrixf(projection.m);
+		 */
 		
 		glLoadIdentity();
 
@@ -755,10 +755,24 @@ namespace ERI {
 			glPushMatrix();
 			glMatrixMode(GL_PROJECTION);
 		}
-		
+
+		/*
 		static Matrix4 projection;
 		MatrixPerspectiveFovRH(projection, fov_y, aspect, near_z, far_z);
 		glLoadMatrixf(projection.m);
+		 */
+		
+		glLoadIdentity();
+		 
+		float angle = fov_y * 0.5f;
+		float half_height = near_z * tan(angle);
+		float half_width = aspect * half_height;
+		
+#if ERI_PLATFORM == ERI_PLATFORM_WIN
+		glFrustum(-half_width, half_width, -half_height, half_height, near_z, far_z);
+#else
+		glFrustumf(-half_width, half_width, -half_height, half_height, near_z, far_z);
+#endif
 		
 		AdjustProjectionForViewOrientation();
 		

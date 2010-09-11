@@ -21,7 +21,8 @@ namespace ERI {
 	const float Math::PI = 4 * atan(1.0f);
 	const float Math::TWO_PI = PI * 2;
 	const float Math::HALF_PI = PI * 0.5f;
-	bool Math::is_rand_seed_set = false;
+	
+	static bool is_rand_seed_set = false;
 	
 	float Vector2::Length() const
 	{
@@ -73,7 +74,6 @@ namespace ERI {
 		
 		return length;
 	}
-	
 
 	const Matrix4 Matrix4::IDENTITY(1.0f, 0.0f, 0.0f, 0.0f,
 									0.0f, 1.0f, 0.0f, 0.0f,
@@ -82,44 +82,38 @@ namespace ERI {
 	
 	void Matrix4::Multiply(Matrix4& out_m, const Matrix4& m1, const Matrix4& m2)
 	{
-		// TODO: m1/m2 = out_m ?
-
 		ASSERT((&out_m != &m1) && (&out_m != &m2));
-
-		out_m.m[0]  = m1.m[0]  * m2.m[0] + m1.m[1]  * m2.m[4] + m1.m[2]  * m2.m[8]  + m1.m[3]  * m2.m[12];
-		out_m.m[1]  = m1.m[0]  * m2.m[1] + m1.m[1]  * m2.m[5] + m1.m[2]  * m2.m[9]  + m1.m[3]  * m2.m[13];
-		out_m.m[2]  = m1.m[0]  * m2.m[2] + m1.m[1]  * m2.m[6] + m1.m[2]  * m2.m[10] + m1.m[3]  * m2.m[14];
-		out_m.m[3]  = m1.m[0]  * m2.m[3] + m1.m[1]  * m2.m[7] + m1.m[2]  * m2.m[11] + m1.m[3]  * m2.m[15];
 		
-		out_m.m[4]  = m1.m[4]  * m2.m[0] + m1.m[5]  * m2.m[4] + m1.m[6]  * m2.m[8]  + m1.m[7]  * m2.m[12];
-		out_m.m[5]  = m1.m[4]  * m2.m[1] + m1.m[5]  * m2.m[5] + m1.m[6]  * m2.m[9]  + m1.m[7]  * m2.m[13];
-		out_m.m[6]  = m1.m[4]  * m2.m[2] + m1.m[5]  * m2.m[6] + m1.m[6]  * m2.m[10] + m1.m[7]  * m2.m[14];
-		out_m.m[7]  = m1.m[4]  * m2.m[3] + m1.m[5]  * m2.m[7] + m1.m[6]  * m2.m[11] + m1.m[7]  * m2.m[15];
+		out_m.m[_00] = m1.m[_00] * m2.m[_00] + m1.m[_01] * m2.m[_10] + m1.m[_02] * m2.m[_20] + m1.m[_03] * m2.m[_30];
+		out_m.m[_01] = m1.m[_00] * m2.m[_01] + m1.m[_01] * m2.m[_11] + m1.m[_02] * m2.m[_21] + m1.m[_03] * m2.m[_31];
+		out_m.m[_02] = m1.m[_00] * m2.m[_02] + m1.m[_01] * m2.m[_12] + m1.m[_02] * m2.m[_22] + m1.m[_03] * m2.m[_32];
+		out_m.m[_03] = m1.m[_00] * m2.m[_03] + m1.m[_01] * m2.m[_13] + m1.m[_02] * m2.m[_23] + m1.m[_03] * m2.m[_33];
 		
-		out_m.m[8]  = m1.m[8]  * m2.m[0] + m1.m[9]  * m2.m[4] + m1.m[10] * m2.m[8]  + m1.m[11] * m2.m[12];
-		out_m.m[9]  = m1.m[8]  * m2.m[1] + m1.m[9]  * m2.m[5] + m1.m[10] * m2.m[9]  + m1.m[11] * m2.m[13];
-		out_m.m[10] = m1.m[8]  * m2.m[2] + m1.m[9]  * m2.m[6] + m1.m[10] * m2.m[10] + m1.m[11] * m2.m[14];
-		out_m.m[11] = m1.m[8]  * m2.m[3] + m1.m[9]  * m2.m[7] + m1.m[10] * m2.m[11] + m1.m[11] * m2.m[15];
+		out_m.m[_10] = m1.m[_10] * m2.m[_00] + m1.m[_11] * m2.m[_10] + m1.m[_12] * m2.m[_20] + m1.m[_13] * m2.m[_30];
+		out_m.m[_11] = m1.m[_10] * m2.m[_01] + m1.m[_11] * m2.m[_11] + m1.m[_12] * m2.m[_21] + m1.m[_13] * m2.m[_31];
+		out_m.m[_12] = m1.m[_10] * m2.m[_02] + m1.m[_11] * m2.m[_12] + m1.m[_12] * m2.m[_22] + m1.m[_13] * m2.m[_32];
+		out_m.m[_13] = m1.m[_10] * m2.m[_03] + m1.m[_11] * m2.m[_13] + m1.m[_12] * m2.m[_23] + m1.m[_13] * m2.m[_33];
 		
-		out_m.m[12] = m1.m[12] * m2.m[0] + m1.m[13] * m2.m[4] + m1.m[14] * m2.m[8]  + m1.m[15] * m2.m[12];
-		out_m.m[13] = m1.m[12] * m2.m[1] + m1.m[13] * m2.m[5] + m1.m[14] * m2.m[9]  + m1.m[15] * m2.m[13];
-		out_m.m[14] = m1.m[12] * m2.m[2] + m1.m[13] * m2.m[6] + m1.m[14] * m2.m[10] + m1.m[15] * m2.m[14];
-		out_m.m[15] = m1.m[12] * m2.m[3] + m1.m[13] * m2.m[7] + m1.m[14] * m2.m[11] + m1.m[15] * m2.m[15];
+		out_m.m[_20] = m1.m[_20] * m2.m[_00] + m1.m[_21] * m2.m[_10] + m1.m[_22] * m2.m[_20] + m1.m[_23] * m2.m[_30];
+		out_m.m[_21] = m1.m[_20] * m2.m[_01] + m1.m[_21] * m2.m[_11] + m1.m[_22] * m2.m[_21] + m1.m[_23] * m2.m[_31];
+		out_m.m[_22] = m1.m[_20] * m2.m[_02] + m1.m[_21] * m2.m[_12] + m1.m[_22] * m2.m[_22] + m1.m[_23] * m2.m[_32];
+		out_m.m[_23] = m1.m[_20] * m2.m[_03] + m1.m[_21] * m2.m[_13] + m1.m[_22] * m2.m[_23] + m1.m[_23] * m2.m[_33];
+		
+		out_m.m[_30] = m1.m[_30] * m2.m[_00] + m1.m[_31] * m2.m[_10] + m1.m[_32] * m2.m[_20] + m1.m[_33] * m2.m[_30];
+		out_m.m[_31] = m1.m[_30] * m2.m[_01] + m1.m[_31] * m2.m[_11] + m1.m[_32] * m2.m[_21] + m1.m[_33] * m2.m[_31];
+		out_m.m[_32] = m1.m[_30] * m2.m[_02] + m1.m[_31] * m2.m[_12] + m1.m[_32] * m2.m[_22] + m1.m[_33] * m2.m[_32];
+		out_m.m[_33] = m1.m[_30] * m2.m[_03] + m1.m[_31] * m2.m[_13] + m1.m[_32] * m2.m[_23] + m1.m[_33] * m2.m[_33];
 	}
 	
-	void Matrix4::Multiply(Vector3& out_v, const Vector3& v, const Matrix4& m)
+	void Matrix4::Multiply(Vector3& out_v, const Matrix4& m, const Vector3& v)
 	{
-		// TODO: v = out_v ?
-
 		ASSERT(&out_v != &v);
-
-		out_v.x = m.m[0] * v.x + m.m[4] * v.y + m.m[8]  * v.z + m.m[12];
-		out_v.y = m.m[1] * v.x + m.m[5] * v.y + m.m[9]  * v.z + m.m[13];
-		out_v.z = m.m[2] * v.x + m.m[6] * v.y + m.m[10] * v.z + m.m[14];
 		
-		float inv_w = 1.0f / (m.m[3] * v.x + m.m[7] * v.y + m.m[11] * v.z + m.m[15]);
+		float inv_w = 1.0f / (m.m[_30] * v.x + m.m[_31] * v.y + m.m[_32] * v.z + m.m[_33]);
 		
-		out_v *= inv_w;
+		out_v.x = (m.m[_00] * v.x + m.m[_01] * v.y + m.m[_02] * v.z + m.m[_03]) * inv_w;
+		out_v.y = (m.m[_10] * v.x + m.m[_11] * v.y + m.m[_12] * v.z + m.m[_13]) * inv_w;
+		out_v.z = (m.m[_20] * v.x + m.m[_21] * v.y + m.m[_22] * v.z + m.m[_23]) * inv_w;
 	}
 	
 	#define _ABS(a)	((a) < 0 ? -(a) : (a))
@@ -133,17 +127,17 @@ namespace ERI {
 		 the matrix is singular as limited by the double precision
 		 floating-point data representation. */
 		pos = neg = 0.0;
-		temp =  m.m[0] * m.m[5] * m.m[10];
+		temp =  m.m[_00] * m.m[_11] * m.m[_22];
 		if (temp >= 0.0) pos += temp; else neg += temp;
-		temp =  m.m[4] * m.m[9] * m.m[2];
+		temp =  m.m[_01] * m.m[_12] * m.m[_20];
 		if (temp >= 0.0) pos += temp; else neg += temp;
-		temp =  m.m[8] * m.m[1] * m.m[6];
+		temp =  m.m[_02] * m.m[_10] * m.m[_21];
 		if (temp >= 0.0) pos += temp; else neg += temp;
-		temp = -m.m[8] * m.m[5] * m.m[2];
+		temp = -m.m[_02] * m.m[_11] * m.m[_20];
 		if (temp >= 0.0) pos += temp; else neg += temp;
-		temp = -m.m[4] * m.m[1] * m.m[10];
+		temp = -m.m[_01] * m.m[_10] * m.m[_22];
 		if (temp >= 0.0) pos += temp; else neg += temp;
-		temp = -m.m[0] * m.m[9] * m.m[6];
+		temp = -m.m[_00] * m.m[_12] * m.m[_21];
 		if (temp >= 0.0) pos += temp; else neg += temp;
 		det_1 = pos + neg;
 		
@@ -158,35 +152,35 @@ namespace ERI {
 		{
 			/* Calculate inverse(A) = adj(A) / det(A) */
 			det_1 = 1.0 / det_1;
-			out_m.m[0]  =   (m.m[5] * m.m[10] - m.m[9] * m.m[6]) * (float)det_1;
-			out_m.m[1]  = - (m.m[1] * m.m[10] - m.m[9] * m.m[2]) * (float)det_1;
-			out_m.m[2]  =   (m.m[1] * m.m[6]  - m.m[5] * m.m[2]) * (float)det_1;
-			out_m.m[4]  = - (m.m[4] * m.m[10] - m.m[8] * m.m[6]) * (float)det_1;
-			out_m.m[5]  =   (m.m[0] * m.m[10] - m.m[8] * m.m[2]) * (float)det_1;
-			out_m.m[6]  = - (m.m[0] * m.m[6]  - m.m[4] * m.m[2]) * (float)det_1;
-			out_m.m[8]  =   (m.m[4] * m.m[9]  - m.m[8] * m.m[5]) * (float)det_1;
-			out_m.m[9]  = - (m.m[0] * m.m[9]  - m.m[8] * m.m[1]) * (float)det_1;
-			out_m.m[10] =   (m.m[0] * m.m[5]  - m.m[4] * m.m[1]) * (float)det_1;
+			out_m.m[_00] =   (m.m[_11] * m.m[_22] - m.m[_12] * m.m[_21]) * (float)det_1;
+			out_m.m[_10] = - (m.m[_10] * m.m[_22] - m.m[_12] * m.m[_20]) * (float)det_1;
+			out_m.m[_20] =   (m.m[_10] * m.m[_21] - m.m[_11] * m.m[_20]) * (float)det_1;
+			out_m.m[_01] = - (m.m[_01] * m.m[_22] - m.m[_02] * m.m[_21]) * (float)det_1;
+			out_m.m[_11] =   (m.m[_00] * m.m[_22] - m.m[_02] * m.m[_20]) * (float)det_1;
+			out_m.m[_21] = - (m.m[_00] * m.m[_21] - m.m[_01] * m.m[_20]) * (float)det_1;
+			out_m.m[_02] =   (m.m[_01] * m.m[_12] - m.m[_02] * m.m[_11]) * (float)det_1;
+			out_m.m[_12] = - (m.m[_00] * m.m[_12] - m.m[_02] * m.m[_10]) * (float)det_1;
+			out_m.m[_22] =   (m.m[_00] * m.m[_11] - m.m[_01] * m.m[_10]) * (float)det_1;
 			
 			/* Calculate -C * inverse(A) */
-			out_m.m[12] = - (m.m[12] * out_m.m[0] + m.m[13] * out_m.m[4] + m.m[14] * out_m.m[8]);
-			out_m.m[13] = - (m.m[12] * out_m.m[1] + m.m[13] * out_m.m[5] + m.m[14] * out_m.m[9]);
-			out_m.m[14] = - (m.m[12] * out_m.m[2] + m.m[13] * out_m.m[6] + m.m[14] * out_m.m[10]);
+			out_m.m[_03] = - (m.m[_03] * out_m.m[_00] + m.m[_13] * out_m.m[_01] + m.m[_23] * out_m.m[_02]);
+			out_m.m[_13] = - (m.m[_03] * out_m.m[_10] + m.m[_13] * out_m.m[_11] + m.m[_23] * out_m.m[_12]);
+			out_m.m[_23] = - (m.m[_03] * out_m.m[_20] + m.m[_13] * out_m.m[_21] + m.m[_23] * out_m.m[_22]);
 			
 			/* Fill in last row */
-			out_m.m[3]  = 0.0f;
-			out_m.m[7]  = 0.0f;
-			out_m.m[11] = 0.0f;
-			out_m.m[15] = 1.0f;
+			out_m.m[_30]  = 0.0f;
+			out_m.m[_31]  = 0.0f;
+			out_m.m[_32] = 0.0f;
+			out_m.m[_33] = 1.0f;
 		}
 	}
 	
 	void Matrix4::Translate(Matrix4& out_m, const Vector3& translate)
 	{
-		out_m.m[0] = 1.0f; out_m.m[4] = 0.0f; out_m.m[8]  = 0.0f; out_m.m[12]= translate.x;
-		out_m.m[1] = 0.0f; out_m.m[5] = 1.0f; out_m.m[9]  = 0.0f; out_m.m[13]= translate.y;
-		out_m.m[2] = 0.0f; out_m.m[6] = 0.0f; out_m.m[10] = 1.0f; out_m.m[14]= translate.z;
-		out_m.m[3] = 0.0f; out_m.m[7] = 0.0f; out_m.m[11] = 0.0f; out_m.m[15]= 1.0f;
+		out_m.m[_00] = 1.0f; out_m.m[_01] = 0.0f; out_m.m[_02] = 0.0f; out_m.m[_03] = translate.x;
+		out_m.m[_10] = 0.0f; out_m.m[_11] = 1.0f; out_m.m[_12] = 0.0f; out_m.m[_13] = translate.y;
+		out_m.m[_20] = 0.0f; out_m.m[_21] = 0.0f; out_m.m[_22] = 1.0f; out_m.m[_23] = translate.z;
+		out_m.m[_30] = 0.0f; out_m.m[_31] = 0.0f; out_m.m[_32] = 0.0f; out_m.m[_33] = 1.0f;
 	}
 	
 	void Matrix4::RotateAxis(Matrix4& out_m, float degree, const Vector3& axis)
@@ -209,33 +203,33 @@ namespace ERI {
 			z *= inv_length;
 		}
 		
-		out_m.m[0]  = x * x * (1 - c) + c;
-		out_m.m[4]  = x * y * (1 - c) - (z * s);
-		out_m.m[8]  = x * z * (1 - c) + (y * s);
-		out_m.m[12] = 0;
+		out_m.m[_00]  = x * x * (1 - c) + c;
+		out_m.m[_01]  = x * y * (1 - c) - (z * s);
+		out_m.m[_02]  = x * z * (1 - c) + (y * s);
+		out_m.m[_03] = 0;
 		
-		out_m.m[1]  = y * x * (1 - c) + (z * s);
-		out_m.m[5]  = y * y * (1 - c) + c;
-		out_m.m[9]  = y * z * (1 - c) - (x * s);
-		out_m.m[13] = 0;
+		out_m.m[_10]  = y * x * (1 - c) + (z * s);
+		out_m.m[_11]  = y * y * (1 - c) + c;
+		out_m.m[_12]  = y * z * (1 - c) - (x * s);
+		out_m.m[_13] = 0;
 		
-		out_m.m[2]  = z * x * (1 - c) - (y * s);
-		out_m.m[6]  = z * y * (1 - c) + (x * s);
-		out_m.m[10] = z * z * (1 - c) + c;
-		out_m.m[14] = 0.0f;
+		out_m.m[_20]  = z * x * (1 - c) - (y * s);
+		out_m.m[_21]  = z * y * (1 - c) + (x * s);
+		out_m.m[_22] = z * z * (1 - c) + c;
+		out_m.m[_23] = 0.0f;
 		
-		out_m.m[3]  = 0.0f;
-		out_m.m[7]  = 0.0f;
-		out_m.m[11] = 0.0f;
-		out_m.m[15] = 1.0f;
+		out_m.m[_30]  = 0.0f;
+		out_m.m[_31]  = 0.0f;
+		out_m.m[_32] = 0.0f;
+		out_m.m[_33] = 1.0f;
 	}
 	
 	void Matrix4::Scale(Matrix4& out_m, const Vector3& scale)
 	{
-		out_m.m[0] = scale.x;	out_m.m[4] = 0.0f;		out_m.m[8]  = 0.0f;		out_m.m[12] = 0.0f;
-		out_m.m[1] = 0.0f;		out_m.m[5] = scale.y;	out_m.m[9]  = 0.0f;		out_m.m[13] = 0.0f;
-		out_m.m[2] = 0.0f;		out_m.m[6] = 0.0f;		out_m.m[10] = scale.z;	out_m.m[14] = 0.0f;
-		out_m.m[3] = 0.0f;		out_m.m[7] = 0.0f;		out_m.m[11] = 0.0f;		out_m.m[15] = 1.0f;
+		out_m.m[_00] = scale.x;	out_m.m[_01] = 0.0f;	out_m.m[_02] = 0.0f;	out_m.m[_03] = 0.0f;
+		out_m.m[_10] = 0.0f;	out_m.m[_11] = scale.y;	out_m.m[_12] = 0.0f;	out_m.m[_13] = 0.0f;
+		out_m.m[_20] = 0.0f;	out_m.m[_21] = 0.0f;	out_m.m[_22] = scale.z;	out_m.m[_23] = 0.0f;
+		out_m.m[_30] = 0.0f;	out_m.m[_31] = 0.0f;	out_m.m[_32] = 0.0f;	out_m.m[_33] = 1.0f;
 	}
 	
 	void MatrixLookAtRH(Matrix4& out_m,
@@ -244,7 +238,6 @@ namespace ERI {
 						const Vector3& up)
 	{
 		Vector3 f, up_actual, s, u;
-		Matrix4	t1, t2;
 
 		f = at - eye;
 		f.Normalize();
@@ -254,29 +247,16 @@ namespace ERI {
 
 		s = f.CrossProduct(up_actual);
 		u = s.CrossProduct(f);
-
-		t1.m[0]  = s.x;
-		t1.m[1]  = u.x;
-		t1.m[2]  = -f.x;
-		t1.m[3]  = 0;
 		
-		t1.m[4]  = s.y;
-		t1.m[5]  = u.y;
-		t1.m[6]  = -f.y;
-		t1.m[7]  = 0;
+		Matrix4	t1(  s.x,  s.y,  s.z,    0,
+				     u.x,  u.y,  u.z,    0,
+				    -f.x, -f.y, -f.z,    0,
+				       0,    0,    0,    1);
 		
-		t1.m[8]  = s.z;
-		t1.m[9]  = u.z;
-		t1.m[10] = -f.z;
-		t1.m[11] = 0;
-		
-		t1.m[12] = 0;
-		t1.m[13] = 0;
-		t1.m[14] = 0;
-		t1.m[15] = 1;
-		
+		Matrix4	t2;
 		Matrix4::Translate(t2, eye * -1);
-		Matrix4::Multiply(out_m, t2, t1);
+		
+		Matrix4::Multiply(out_m, t1, t2);
 	}
 	
 	void MatrixPerspectiveFovRH(Matrix4	&out_m,
@@ -287,29 +267,28 @@ namespace ERI {
 	{
 		float f, n;
 		
-		// cotangent(a) == 1.0f / tan(a);
 		f = 1.0f / (float)tan(fov_y * 0.5f);
 		n = 1.0f / (near_z - far_z);
 		
-		out_m.m[ 0] = f / aspect;
-		out_m.m[ 1] = 0;
-		out_m.m[ 2] = 0;
-		out_m.m[ 3] = 0;
+		out_m.m[_00] = f / aspect;
+		out_m.m[_10] = 0;
+		out_m.m[_20] = 0;
+		out_m.m[_30] = 0;
 		
-		out_m.m[ 4] = 0;
-		out_m.m[ 5] = f;
-		out_m.m[ 6] = 0;
-		out_m.m[ 7] = 0;
+		out_m.m[_01] = 0;
+		out_m.m[_11] = f;
+		out_m.m[_21] = 0;
+		out_m.m[_31] = 0;
 		
-		out_m.m[ 8] = 0;
-		out_m.m[ 9] = 0;
-		out_m.m[10] = (far_z + near_z) * n;
-		out_m.m[11] = -1;
+		out_m.m[_02] = 0;
+		out_m.m[_12] = 0;
+		out_m.m[_22] = (far_z + near_z) * n;
+		out_m.m[_32] = -1;
 		
-		out_m.m[12] = 0;
-		out_m.m[13] = 0;
-		out_m.m[14] = (2 * far_z * near_z) * n;
-		out_m.m[15] = 0;
+		out_m.m[_03] = 0;
+		out_m.m[_13] = 0;
+		out_m.m[_23] = (2 * far_z * near_z) * n;
+		out_m.m[_33] = 0;
 	}
 	
 	void MatrixOrthoRH(Matrix4	&out_m,
@@ -318,25 +297,25 @@ namespace ERI {
 					   const float near_z,
 					   const float far_z)
 	{
-		out_m.m[ 0] = 2 / w;
-		out_m.m[ 1] = 0;
-		out_m.m[ 2] = 0;
-		out_m.m[ 3] = 0;
+		out_m.m[_00] = 2 / w;
+		out_m.m[_10] = 0;
+		out_m.m[_20] = 0;
+		out_m.m[_30] = 0;
 		
-		out_m.m[ 4] = 0;
-		out_m.m[ 5] = 2 / h;
-		out_m.m[ 6] = 0;
-		out_m.m[ 7] = 0;
+		out_m.m[_01] = 0;
+		out_m.m[_11] = 2 / h;
+		out_m.m[_21] = 0;
+		out_m.m[_31] = 0;
 		
-		out_m.m[ 8] = 0;
-		out_m.m[ 9] = 0;
-		out_m.m[10] = 1 / (near_z - far_z);
-		out_m.m[11] = near_z / (near_z - far_z);
+		out_m.m[_02] = 0;
+		out_m.m[_12] = 0;
+		out_m.m[_22] = -2 / (far_z - near_z);
+		out_m.m[_32] = 0;
 		
-		out_m.m[12] = 0;
-		out_m.m[13] = 0;
-		out_m.m[14] = 0;
-		out_m.m[15] = 1;
+		out_m.m[_03] = 0;
+		out_m.m[_13] = 0;
+		out_m.m[_23] = (far_z + near_z) / (far_z - near_z);
+		out_m.m[_33] = 1;
 	}
 	
 	Quaternion::Quaternion(float degree, const Vector3& axis)
@@ -391,25 +370,25 @@ namespace ERI {
 	
 	void Quaternion::GetRotationMatrix(Matrix4& out_m)
 	{
-		out_m.m[0]  = 1.0f - 2.0f * y * y - 2.0f * z * z;
-		out_m.m[1]  = 2.0f * x * y - 2.0f * z * w;
-		out_m.m[2]  = 2.0f * x * z + 2.0f * y * w;
-		out_m.m[3]  = 0.0f;
+		out_m.m[_00] = 1.0f - 2.0f * y * y - 2.0f * z * z;
+		out_m.m[_10] = 2.0f * x * y - 2.0f * z * w;
+		out_m.m[_20] = 2.0f * x * z + 2.0f * y * w;
+		out_m.m[_30] = 0.0f;
 		
-		out_m.m[4]  = 2.0f * x * y + 2.0f * z * w;
-		out_m.m[5]  = 1.0f - 2.0f * x * x - 2.0f * z * z;
-		out_m.m[6]  = 2.0f * y * z - 2.0f * x * w;
-		out_m.m[7]  = 0.0f;
+		out_m.m[_01] = 2.0f * x * y + 2.0f * z * w;
+		out_m.m[_11] = 1.0f - 2.0f * x * x - 2.0f * z * z;
+		out_m.m[_21] = 2.0f * y * z - 2.0f * x * w;
+		out_m.m[_31] = 0.0f;
 		
-		out_m.m[8]  = 2.0f * x * z - 2.0f * y * w;
-		out_m.m[9]  = 2.0f * y * z + 2.0f * x * w;
-		out_m.m[10] = 1.0f - 2.0f * x * x - 2.0f * y * y;
-		out_m.m[11] = 0.0f;
+		out_m.m[_02] = 2.0f * x * z - 2.0f * y * w;
+		out_m.m[_12] = 2.0f * y * z + 2.0f * x * w;
+		out_m.m[_22] = 1.0f - 2.0f * x * x - 2.0f * y * y;
+		out_m.m[_32] = 0.0f;
 		
-		out_m.m[12] = 0.0f;
-		out_m.m[13] = 0.0f;
-		out_m.m[14] = 0.0f;
-		out_m.m[15] = 1.0f;
+		out_m.m[_03] = 0.0f;
+		out_m.m[_13] = 0.0f;
+		out_m.m[_23] = 0.0f;
+		out_m.m[_33] = 1.0f;
 	}
 	
 	void Quaternion::Multiply(Quaternion& out_q, const Quaternion& q1, const Quaternion& q2)
@@ -432,7 +411,15 @@ namespace ERI {
 		/* Normalize resulting quaternion */
 		out_q.Normalize();
 	}
-	
+
+	static void SetRandomSeed()
+	{
+		if (false == is_rand_seed_set)
+		{
+			srand(static_cast<unsigned int>(time(NULL)));
+			is_rand_seed_set = true;
+		}
+	}
 
 	float UnitRandom()
 	{
@@ -467,15 +454,6 @@ namespace ERI {
 		}
 		
 		return min + UnitRandom() * (max - min);
-	}
-
-	void SetRandomSeed()
-	{
-		if (false == Math::is_rand_seed_set)
-		{
-			srand(static_cast<unsigned int>(time(NULL)));
-			Math::is_rand_seed_set = true;
-		}
 	}
 
 }

@@ -17,7 +17,6 @@ namespace ERI {
 		static const float PI;
 		static const float TWO_PI;
 		static const float HALF_PI;
-		static bool is_rand_seed_set;
 	};
 
 	struct Vector2
@@ -78,6 +77,29 @@ namespace ERI {
 		float x, y, z;
 	};
 	
+	enum Matrix4RowCol	// opengl use column-major
+	{
+		_00 = 0,
+		_10,
+		_20,
+		_30,
+		
+		_01,
+		_11,
+		_21,
+		_31,
+		
+		_02,
+		_12,
+		_22,
+		_32,
+		
+		_03,
+		_13,
+		_23,
+		_33
+	};
+	
 	struct Matrix4
 	{
 		Matrix4() { *this = IDENTITY; }
@@ -86,10 +108,10 @@ namespace ERI {
 				float m20, float m21, float m22, float m23,
 				float m30, float m31, float m32, float m33)
 		{
-			m[0] = m00; m[4] = m01; m[8]  = m02; m[12] = m03;
-			m[1] = m10; m[5] = m11; m[9]  = m12; m[13] = m13;
-			m[2] = m20; m[6] = m21; m[10] = m22; m[14] = m23;
-			m[3] = m30; m[7] = m31; m[11] = m32; m[15] = m33;
+			m[_00] = m00; m[_01] = m01; m[_02] = m02; m[_03] = m03;
+			m[_10] = m10; m[_11] = m11; m[_12] = m12; m[_13] = m13;
+			m[_20] = m20; m[_21] = m21; m[_22] = m22; m[_23] = m23;
+			m[_30] = m30; m[_31] = m31; m[_32] = m32; m[_33] = m33;
 		}
 		
 		inline Matrix4 operator * (const Matrix4& m2) const
@@ -102,14 +124,14 @@ namespace ERI {
 		inline Vector3 operator * (const Vector3 &v) const
 		{
 			Vector3 ret;
-			Multiply(ret, v, *this);
+			Multiply(ret, *this, v);
 			return ret;
 		}
 		
 		float m[16];
 		
 		static void Multiply(Matrix4& out_m, const Matrix4& m1, const Matrix4& m2);
-		static void Multiply(Vector3& out_v, const Vector3& v, const Matrix4& m);
+		static void Multiply(Vector3& out_v, const Matrix4& m, const Vector3& v);
 		static void Inverse(Matrix4& out_m, const Matrix4& m);
 		
 		static void Translate(Matrix4& out_m, const Vector3& translate);
@@ -158,7 +180,6 @@ namespace ERI {
 	float UnitRandom();
 	int RangeRandom(int min, int max);
 	float RangeRandom(float min, float max);
-	void SetRandomSeed();
 	
 	struct Color
 	{

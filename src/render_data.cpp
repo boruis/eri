@@ -32,12 +32,10 @@ namespace ERI {
 		
 		Matrix4 tmp;
 		
-		Matrix4::Scale(model_matrix, scale);
-		
+		Matrix4::Translate(model_matrix, translate);
 		Matrix4::RotateAxis(tmp, rotate_degree, rotate_axis);
 		model_matrix = model_matrix * tmp;
-		
-		Matrix4::Translate(tmp, translate);
+		Matrix4::Scale(tmp, scale);
 		model_matrix = model_matrix * tmp;
 		
 		Matrix4::Inverse(inv_model_matrix, model_matrix);
@@ -50,7 +48,7 @@ namespace ERI {
 		
 		need_update_world_model_matrix = false;
 		
-		world_model_matrix = model_matrix * parent_world_model_matrix;
+		world_model_matrix = parent_world_model_matrix * model_matrix;
 	}
 	
 	void RenderData::UpdateWorldModelMatrix()
