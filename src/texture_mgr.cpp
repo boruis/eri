@@ -12,7 +12,7 @@
 #include "texture_mgr.h"
 
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
-#include "texture_reader_uikit.h"
+#include "ios/texture_reader_uikit.h"
 #elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
 #include "texture_reader_bitmap_factory.h"
 #else
