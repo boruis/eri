@@ -252,6 +252,8 @@ namespace ERI {
 
 		void SetUseLine(bool use_line);
 		
+		inline void set_area_border(float border) { area_border_ = border; }
+		
 	private:
 		virtual bool IsInArea(const Vector3& local_space_pos);
 		
@@ -264,6 +266,8 @@ namespace ERI {
 		Vector2		tex_scale_;
 		Vector2		tex_scroll_;
 		bool		is_use_line_;
+		
+		float		area_border_;
 	};
 	
 #pragma mark BoxActor
@@ -330,7 +334,7 @@ namespace ERI {
 		
 		void SetTxt(const std::string& txt);
 
-		inline void set_area_border(float size) { border_size_ = size; }
+		inline void set_area_border(float size) { area_border_ = size; }
 		
 		inline float width() { return width_; }
 		inline float height() { return height_; }
@@ -351,9 +355,10 @@ namespace ERI {
 		const Font*		font_;
 		int				font_size_;
 		bool			is_use_line_;
+
+		float			area_border_;
 		
 		float			width_, height_;
-		float			border_size_;
 		bool			is_pos_center_;
 		
 		std::string		txt_;

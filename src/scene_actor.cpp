@@ -635,7 +635,8 @@ namespace ERI {
 
 	SpriteActor::SpriteActor(float width, float height, float offset_width, float offset_height) :
 		tex_scale_(Vector2(1.0f, 1.0f)),
-		is_use_line_(false)
+		is_use_line_(false),
+		area_border_(0.0f)
 	{
 		render_data_.vertex_count = 4;
 		SetSizeOffset(width, height, offset_width, offset_height);
@@ -643,7 +644,8 @@ namespace ERI {
 	
 	SpriteActor::SpriteActor(const std::string& txt, const std::string& font_name, float font_size, float width, float height, float offset_width, float offset_height) :
 		tex_scale_(Vector2(1.0f, 1.0f)),
-		is_use_line_(false)
+		is_use_line_(false),
+		area_border_(0.0f)
 	{
 		render_data_.vertex_count = 4;
 		SetSizeOffset(width, height, offset_width, offset_height);
@@ -756,10 +758,10 @@ namespace ERI {
 	
 	bool SpriteActor::IsInArea(const Vector3& local_space_pos)
 	{
-		if (local_space_pos.x >= (offset_.x - 0.5f * size_.x)
-			&& local_space_pos.x <= (offset_.x + 0.5f * size_.x)
-			&& local_space_pos.y >= (offset_.y - 0.5f * size_.y)
-			&& local_space_pos.y <= (offset_.y + 0.5f * size_.y))
+		if (local_space_pos.x >= (offset_.x - 0.5f * size_.x - area_border_)
+			&& local_space_pos.x <= (offset_.x + 0.5f * size_.x + area_border_)
+			&& local_space_pos.y >= (offset_.y - 0.5f * size_.y - area_border_)
+			&& local_space_pos.y <= (offset_.y + 0.5f * size_.y + area_border_))
 		{
 			return true;
 		}
@@ -1049,7 +1051,7 @@ namespace ERI {
 		is_use_line_(false),
 		width_(0.0f),
 		height_(0.0f),
-		border_size_(0.0f),
+		area_border_(0.0f),
 		is_pos_center_(is_pos_center),
 		txt_(txt)
 	{
@@ -1110,10 +1112,10 @@ namespace ERI {
 	
 	bool TxtActor::IsInArea(const Vector3& local_space_pos)
 	{
-		if (local_space_pos.x >= ((is_pos_center_ ? (-width_ / 2) : 0) - border_size_)
-			&& local_space_pos.x <= ((is_pos_center_ ? (width_ / 2) : width_) + border_size_)
-			&& local_space_pos.y >= ((is_pos_center_ ? (-height_ / 2) : -height_) - border_size_)
-			&& local_space_pos.y <= ((is_pos_center_ ? (height_ / 2) : 0) + border_size_))
+		if (local_space_pos.x >= ((is_pos_center_ ? (-width_ / 2) : 0) - area_border_)
+			&& local_space_pos.x <= ((is_pos_center_ ? (width_ / 2) : width_) + area_border_)
+			&& local_space_pos.y >= ((is_pos_center_ ? (-height_ / 2) : -height_) - area_border_)
+			&& local_space_pos.y <= ((is_pos_center_ ? (height_ / 2) : 0) + area_border_))
 		{
 			return true;
 		}
