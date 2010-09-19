@@ -15,6 +15,7 @@
 
 #include "root.h"
 #include "renderer.h"
+#include "input_mgr.h"
 
 namespace ERI {
 
@@ -65,6 +66,51 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case SIZE_RESTORED:
 			win_init_info->is_visible = true;
 			//ReshapeGL (LOWORD (lParam), HIWORD (lParam));		// Reshape Window - LoWord=Width, HiWord=Height
+			return 0;
+		}
+		break;
+
+	case WM_MOUSEMOVE:
+		{
+			if (wParam & MK_LBUTTON)
+			{
+				int screen_x = LOWORD(lParam);
+				int screen_y = win_init_info->height - HIWORD(lParam);
+
+				Root::Ins().input_mgr()->Move(screen_x, screen_y);
+			}
+
+			return 0;
+		}
+		break;
+
+	case WM_LBUTTONDOWN:
+		{
+			int screen_x = LOWORD(lParam);
+			int screen_y = win_init_info->height - HIWORD(lParam);
+			Root::Ins().input_mgr()->Press(screen_x, screen_y);
+			return 0;
+		}
+		break;
+
+	case WM_LBUTTONUP:
+		{
+			int screen_x = LOWORD(lParam);
+			int screen_y = win_init_info->height - HIWORD(lParam);
+			Root::Ins().input_mgr()->Release(screen_x, screen_y);
+
+			// TODO: should do additional check
+			Root::Ins().input_mgr()->Click(screen_x, screen_y);
+
+			return 0;
+		}
+		break;
+
+	case WM_LBUTTONDBLCLK:
+		{
+			int screen_x = LOWORD(lParam);
+			int screen_y = win_init_info->height - HIWORD(lParam);
+			Root::Ins().input_mgr()->DoubleClick(screen_x, screen_y);
 			return 0;
 		}
 		break;
