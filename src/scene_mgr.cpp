@@ -273,8 +273,17 @@ namespace ERI {
 		// TODO: perspective?
 		
 		Vector3 world_pos;
-		world_pos.x = (screen_x - Root::Ins().renderer()->width() / 2) / current_cam_->ortho_zoom() + current_cam_->GetPos().x;
-		world_pos.y = (screen_y - Root::Ins().renderer()->height() / 2) / current_cam_->ortho_zoom() + current_cam_->GetPos().y;
+		
+		Vector2 cam_pos;
+		float cam_zoom = 1.0f;
+		if (current_cam_)
+		{
+			cam_pos = current_cam_->GetPos();
+			cam_zoom = current_cam_->ortho_zoom();
+		}
+		
+		world_pos.x = (screen_x - Root::Ins().renderer()->width() / 2) / cam_zoom + cam_pos.x;
+		world_pos.y = (screen_y - Root::Ins().renderer()->height() / 2) / cam_zoom + cam_pos.y;
 		
 		return world_pos;
 	}
