@@ -37,6 +37,7 @@ namespace ERI {
 		depth_buffer_(0),
 		use_depth_buffer_(true),
 		vertex_normal_enable_(false),
+		vertex_color_enable_(false),
 		light_enable_(false),
 		depth_test_enable_(true),
 		depth_write_enable_(true),
@@ -241,21 +242,63 @@ namespace ERI {
 						vertex_normal_enable_ = false;
 						glDisableClientState(GL_NORMAL_ARRAY);
 					}
+					if (vertex_color_enable_)
+					{
+						vertex_color_enable_ = false;
+						glDisableClientState(GL_COLOR_ARRAY);
+					}
 					if (texture_enable_)
 					{
-						//if (data->is_tex_transform)
-						//{
-						//	glMatrixMode(GL_TEXTURE);
-						//	glTranslatef(data->tex_translate.x, data->tex_translate.y, 0.0f);
-						//	glScalef(data->tex_scale.x, data->tex_scale.y, 1.0f);
-						//}
+						if (data->is_tex_transform)
+						{
+							SaveTransform();
+							
+							glMatrixMode(GL_TEXTURE);
+							glLoadIdentity();
+							glTranslatef(data->tex_translate.x, data->tex_translate.y, 0.0f);
+							glScalef(data->tex_scale.x, data->tex_scale.y, 1.0f);
+						}
 						
 						glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_2_pos_tex), (void*)offsetof(vertex_2_pos_tex, tex_coord));
 					}
 					break;
 					
+				case POS_TEX_COLOR_2:
+					glVertexPointer(2, GL_FLOAT, sizeof(vertex_2_pos_tex_color), (void*)offsetof(vertex_2_pos_tex_color, position));
+					if (vertex_normal_enable_)
+					{
+						vertex_normal_enable_ = false;
+						glDisableClientState(GL_NORMAL_ARRAY);
+					}
+					if (!vertex_color_enable_)
+					{
+						vertex_color_enable_ = true;
+						glEnableClientState(GL_COLOR_ARRAY);
+					}
+					glColorPointer(4, GL_FLOAT, sizeof(vertex_2_pos_tex_color), (void*)offsetof(vertex_2_pos_tex_color, color));
+					if (texture_enable_)
+					{
+						if (data->is_tex_transform)
+						{
+							SaveTransform();
+		
+							glMatrixMode(GL_TEXTURE);
+							glLoadIdentity();
+							glTranslatef(data->tex_translate.x, data->tex_translate.y, 0.0f);
+							glScalef(data->tex_scale.x, data->tex_scale.y, 1.0f);
+						}
+						
+						glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_2_pos_tex_color), (void*)offsetof(vertex_2_pos_tex_color, tex_coord));
+					}
+					break;
+					
 				case POS_NORMAL_TEX_3:
 					glVertexPointer(3, GL_FLOAT, sizeof(vertex_3_pos_normal_tex), (void*)offsetof(vertex_3_pos_normal_tex, position));
+					if (vertex_color_enable_)
+					{
+						vertex_color_enable_ = false;
+						glDisableClientState(GL_COLOR_ARRAY);
+					}
 					if (!vertex_normal_enable_)
 					{
 						vertex_normal_enable_ = true;
@@ -264,6 +307,16 @@ namespace ERI {
 					glNormalPointer(GL_FLOAT, sizeof(vertex_3_pos_normal_tex), (void*)offsetof(vertex_3_pos_normal_tex, normal));
 					if (texture_enable_)
 					{
+						if (data->is_tex_transform)
+						{
+							SaveTransform();
+							
+							glMatrixMode(GL_TEXTURE);
+							glLoadIdentity();
+							glTranslatef(data->tex_translate.x, data->tex_translate.y, 0.0f);
+							glScalef(data->tex_scale.x, data->tex_scale.y, 1.0f);
+						}
+						
 						glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_3_pos_normal_tex), (void*)offsetof(vertex_3_pos_normal_tex, tex_coord));
 					}
 					break;
@@ -282,11 +335,13 @@ namespace ERI {
 				glDrawArrays(data->vertex_type, 0,  data->vertex_count);
 			}
 			
-//			if (data->is_tex_transform)
-//			{
-//				glLoadIdentity();
-//				glMatrixMode(GL_MODELVIEW);
-//			}
+			if (data->is_tex_transform)
+			{
+				glLoadIdentity();
+				glMatrixMode(GL_MODELVIEW);
+				
+				RecoverTransform();
+			}
 		}
 	}
 	

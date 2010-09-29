@@ -136,6 +136,7 @@ namespace ERI {
 		GLbitfield clear_bits_;
 		
 		bool vertex_normal_enable_;
+		bool vertex_color_enable_;
 		bool light_enable_;
 		bool depth_test_enable_;
 		bool depth_write_enable_;

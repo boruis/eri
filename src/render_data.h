@@ -29,6 +29,12 @@ namespace ERI {
 		GLfloat position[2];
 		GLfloat tex_coord[2];
 	};
+
+	struct vertex_2_pos_tex_color {
+		GLfloat position[2];
+		GLfloat tex_coord[2];
+		GLfloat color[4];
+	};
 	
 	struct vertex_3_pos_normal_tex {
 		GLfloat position[3];
@@ -39,6 +45,7 @@ namespace ERI {
 	enum VertexFormat
 	{
 		POS_TEX_2,
+		POS_TEX_COLOR_2,
 		POS_NORMAL_TEX_3
 	};
 
@@ -57,6 +64,7 @@ namespace ERI {
 			need_update_model_matrix(true),
 			need_update_world_model_matrix(true),
 			is_tex_transform(false),
+			tex_scale(Vector2(1, 1)),
 			blend_src_factor(GL_SRC_ALPHA),
 			blend_dst_factor(GL_ONE_MINUS_SRC_ALPHA)
 		{
