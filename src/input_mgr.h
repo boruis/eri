@@ -12,19 +12,28 @@
 
 namespace ERI {
 	
-	struct Vector2;
+	struct Vector3;
+	
+	struct InputEvent
+	{
+		InputEvent() {}
+		InputEvent(unsigned int _uid, int _x, int _y) : uid(_uid), x(_x), y(_y) {}
+		
+		unsigned int	uid;
+		int				x, y;
+	};
 	
 	class InputHandler
 	{
 	public:
-		virtual void Press(int screen_x, int screen_y) {}
-		virtual void Release(int screen_x, int screen_y) {}
-		virtual void Click(int screen_x, int screen_y) {}
-		virtual void DoubleClick(int screen_x, int screen_y) {}
-		virtual void Move(int screen_x, int screen_y) {}
-		virtual void MultiMove(const Vector2* moves, int num, bool is_start) {}
+		virtual void Press(const InputEvent& event) {}
+		virtual void Release(const InputEvent& event) {}
+		virtual void Click(const InputEvent& event) {}
+		virtual void DoubleClick(const InputEvent& event) {}
+		virtual void Move(const InputEvent& event) {}
+		virtual void MultiMove(const InputEvent* events, int num, bool is_start) {}
 		
-		virtual void Accelerate(float g_x, float g_y, float g_z) {}
+		virtual void Accelerate(const Vector3& g) {}
 		virtual void Shake() {}
 	};
 
@@ -34,14 +43,14 @@ namespace ERI {
 		InputMgr();
 		~InputMgr();
 		
-		void Press(int screen_x, int screen_y);
-		void Release(int screen_x, int screen_y);
-		void Click(int screen_x, int screen_y);
-		void DoubleClick(int screen_x, int screen_y);
-		void Move(int screen_x, int screen_y);
-		void MultiMove(const Vector2* moves, int num, bool is_start);
+		void Press(const InputEvent& event);
+		void Release(const InputEvent& event);
+		void Click(const InputEvent& event);
+		void DoubleClick(const InputEvent& event);
+		void Move(const InputEvent& event);
+		void MultiMove(const InputEvent* events, int num, bool is_start);
 
-		void Accelerate(float g_x, float g_y, float g_z);
+		void Accelerate(const Vector3& g);
 		void Shake();
 		
 		void set_handler(InputHandler* handler) { handler_ = handler; }

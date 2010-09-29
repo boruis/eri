@@ -34,6 +34,8 @@ static bool	in_multi_move;
 	{
 		// Enable multipletouch support
 		self.multipleTouchEnabled = YES;
+		
+		//self.contentScaleFactor = 2.0;
 
 		// Get the layer
 		CAEAGLLayer *eaglLayer = (CAEAGLLayer*)self.layer;
@@ -63,12 +65,12 @@ static bool	in_multi_move;
 	
 	for (UITouch *touch in touches)
 	{
-		//printf("touch begin tap %d, timestamp %f\n", touch.tapCount, touch.timestamp);
+		//printf("touch[%x] begin tap %d, timestamp %f\n", (unsigned int)touch, touch.tapCount, touch.timestamp);
 
 		touch_pos = [touch locationInView:touch.view];
 		[self convertPointByViewOrientation:&touch_pos];
 		
-		ERI::Root::Ins().input_mgr()->Press(touch_pos.x, touch_pos.y);
+		ERI::Root::Ins().input_mgr()->Press(ERI::InputEvent((unsigned int)touch, touch_pos.x, touch_pos.y));
 	}
 	
 	//printf("now begin num %d, total num %d\n", [touches count], [[event allTouches] count]);
@@ -80,20 +82,22 @@ static bool	in_multi_move;
 	
 	for (UITouch *touch in touches)
 	{
-		//printf("touch end tap %d, timestamp %f\n", touch.tapCount, touch.timestamp);
+		//printf("touch[%x] end tap %d, timestamp %f\n", (unsigned int)touch, touch.tapCount, touch.timestamp);
 		
 		touch_pos = [touch locationInView:touch.view];
 		[self convertPointByViewOrientation:&touch_pos];
 		
-		ERI::Root::Ins().input_mgr()->Release(touch_pos.x, touch_pos.y);
+		ERI::InputEvent event((unsigned int)touch, touch_pos.x, touch_pos.y);
+		
+		ERI::Root::Ins().input_mgr()->Release(event);
 		
 		if ([touch tapCount] == 1)
 		{
-			ERI::Root::Ins().input_mgr()->Click(touch_pos.x, touch_pos.y);
+			ERI::Root::Ins().input_mgr()->Click(event);
 		}
 		else if ([touch tapCount] == 2)
 		{
-			ERI::Root::Ins().input_mgr()->DoubleClick(touch_pos.x, touch_pos.y);
+			ERI::Root::Ins().input_mgr()->DoubleClick(event);
 		}
 	}
 	
@@ -108,36 +112,40 @@ static bool	in_multi_move;
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
 {
 	int now_touch_num = [[event allTouches] count];
-	//printf("touch move num %d\n", now_touch_num);
 	
 	if (now_touch_num == 1)
 	{
-		UITouch *t = [[touches allObjects] objectAtIndex:0];
-		CGPoint touch_pos = [t locationInView:t.view];
-		CGPoint prev_touch_pos = [t previousLocationInView:t.view];
+		UITouch *touch = [[touches allObjects] objectAtIndex:0];
+		CGPoint touch_pos = [touch locationInView:touch.view];
+		CGPoint prev_touch_pos = [touch previousLocationInView:touch.view];
 
 		[self convertPointByViewOrientation:&touch_pos];
 		[self convertPointByViewOrientation:&prev_touch_pos];
 		
-		ERI::Root::Ins().input_mgr()->Move(touch_pos.x, touch_pos.y);
+		ERI::Root::Ins().input_mgr()->Move(ERI::InputEvent((unsigned int)touch, touch_pos.x, touch_pos.y));
+		
+		//printf("touch[%x] move, timestamp %f\n", (unsigned int)touch, touch.timestamp);
 	}
 	else if (now_touch_num > 1)
 	{
-		static ERI::Vector2 moves[16];
+		static ERI::InputEvent events[16];
 
-		UITouch* t;
+		UITouch* touch;
 		CGPoint touch_pos;
 		for (int i = 0; i < now_touch_num; ++i)
 		{
-			t = [[[event allTouches] allObjects] objectAtIndex:i];
-			touch_pos = [t locationInView:t.view];
+			touch = [[[event allTouches] allObjects] objectAtIndex:i];
+			touch_pos = [touch locationInView:touch.view];
 			[self convertPointByViewOrientation:&touch_pos];
 
-			moves[i].x = touch_pos.x;
-			moves[i].y = touch_pos.y;
+			events[i].uid = (unsigned int)touch;
+			events[i].x = touch_pos.x;
+			events[i].y = touch_pos.y;
+						
+			//printf("touch[%x] move, timestamp %f\n", (unsigned int)touch, touch.timestamp);
 		}
 		
-		ERI::Root::Ins().input_mgr()->MultiMove(moves, now_touch_num, !in_multi_move);
+		ERI::Root::Ins().input_mgr()->MultiMove(events, now_touch_num, !in_multi_move);
 		
 		in_multi_move = true;
 	}
@@ -199,7 +207,7 @@ static bool	in_multi_move;
 - (void)accelerometer:(UIAccelerometer*)accelerometer
 	didAccelerate:(UIAcceleration*)acceleration
 {
-	ERI::Root::Ins().input_mgr()->Accelerate(acceleration.x, acceleration.y, acceleration.z);
+	ERI::Root::Ins().input_mgr()->Accelerate(ERI::Vector3(acceleration.x, acceleration.y, acceleration.z));
 	
 	static CFTimeInterval shake_start_time = 0;
 
