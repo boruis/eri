@@ -23,6 +23,26 @@ namespace ERI {
 		FILTER_LINEAR
 	};
 	
+	enum TextureWrap
+	{
+		WRAP_REPEAT,
+		WRAP_CLAMP_TO_EDGE,
+	};
+	
+	struct TextureParams
+	{
+		TextureParams() :
+		filter_min(FILTER_NEAREST),
+		filter_mag(FILTER_NEAREST),
+		wrap_s(WRAP_REPEAT),
+		wrap_t(WRAP_REPEAT)
+		{
+		}
+		
+		TextureFilter	filter_min, filter_mag;
+		TextureWrap		wrap_s, wrap_t;
+	};
+	
 	struct Texture
 	{
 		Texture(int _id, int _width, int _height);		
@@ -39,8 +59,7 @@ namespace ERI {
 
 		int		bind_frame_buffer;
 		
-		mutable TextureFilter	filter_min;
-		mutable TextureFilter	filter_mag;
+		mutable TextureParams	current_params;
 	};
 	
 	class TextureMgr

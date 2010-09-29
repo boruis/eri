@@ -34,9 +34,7 @@ namespace ERI {
 		width(_width),
 		height(_height),
 		data(NULL),
-		bind_frame_buffer(0),
-		filter_min(FILTER_NEAREST),
-		filter_mag(FILTER_NEAREST)
+		bind_frame_buffer(0)
 	{
 	}
 	

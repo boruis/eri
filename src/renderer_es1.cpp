@@ -363,11 +363,11 @@ namespace ERI {
 		if (data->texture)
 		{
 			EnableTexture(true, data->texture->id);
-			if (data->texture->filter_min != data->tex_filter_min)
+			if (data->texture->current_params.filter_min != data->custom_params.filter_min)
 			{
-				data->texture->filter_min = data->tex_filter_min;
+				data->texture->current_params.filter_min = data->custom_params.filter_min;
 				
-				switch (data->texture->filter_min)
+				switch (data->texture->current_params.filter_min)
 				{
 					case FILTER_NEAREST:
 						glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -381,11 +381,11 @@ namespace ERI {
 				}
 			}
 			
-			if (data->texture->filter_mag != data->tex_filter_mag)
+			if (data->texture->current_params.filter_mag != data->custom_params.filter_mag)
 			{
-				data->texture->filter_mag = data->tex_filter_mag;
+				data->texture->current_params.filter_mag = data->custom_params.filter_mag;
 				
-				switch (data->texture->filter_mag)
+				switch (data->texture->current_params.filter_mag)
 				{
 					case FILTER_NEAREST:
 						glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -595,6 +595,8 @@ namespace ERI {
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		
 		switch (format)
 		{

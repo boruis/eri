@@ -291,21 +291,21 @@ namespace ERI {
 	void SceneActor::SetMaterial(const std::string& texture_path, TextureFilter filter_min /*= FILTER_NEAREST*/, TextureFilter filter_mag /*= FILTER_NEAREST*/)
 	{
 		SetTexture(Root::Ins().texture_mgr()->GetTexture(texture_path));
-		material_data_.tex_filter_min = filter_min;
-		material_data_.tex_filter_mag = filter_mag;
+		material_data_.custom_params.filter_min = filter_min;
+		material_data_.custom_params.filter_mag = filter_mag;
 	}
 	
 	void SceneActor::SetMaterial(const Texture* tex, TextureFilter filter_min /*= FILTER_NEAREST*/, TextureFilter filter_mag /*= FILTER_NEAREST*/)
 	{
 		SetTexture(tex);
-		material_data_.tex_filter_min = filter_min;
-		material_data_.tex_filter_mag = filter_mag;
+		material_data_.custom_params.filter_min = filter_min;
+		material_data_.custom_params.filter_mag = filter_mag;
 	}
 	
 	void SceneActor::SetTextureFilter(TextureFilter filter_min, TextureFilter filter_mag)
 	{
-		material_data_.tex_filter_min = filter_min;
-		material_data_.tex_filter_mag = filter_mag;
+		material_data_.custom_params.filter_min = filter_min;
+		material_data_.custom_params.filter_mag = filter_mag;
 	}
 	
 	void SceneActor::SetOpacityType(OpacityType type)
@@ -1060,8 +1060,8 @@ namespace ERI {
 		ASSERT(font_);
 		
 		SetTexture(font_->texture);
-		material_data_.tex_filter_min = font_->filter_min;
-		material_data_.tex_filter_mag = font_->filter_mag;
+		material_data_.custom_params.filter_min = font_->filter_min;
+		material_data_.custom_params.filter_mag = font_->filter_mag;
 		
 		UpdateVertexBuffer();
 	}

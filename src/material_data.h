@@ -25,8 +25,6 @@ namespace ERI {
 	{
 		MaterialData() :
 			texture(NULL),
-			tex_filter_min(FILTER_NEAREST),
-			tex_filter_mag(FILTER_NEAREST),
 			opacity_type(OPACITY_ALPHA_BLEND),
 			depth_test(true),
 			depth_write(true),
@@ -35,13 +33,11 @@ namespace ERI {
 		}
 		
 		const Texture*	texture;
-		TextureFilter	tex_filter_min;
-		TextureFilter	tex_filter_mag;
+		TextureParams	custom_params;
 
 		OpacityType		opacity_type;
 		bool			depth_test;
 		bool			depth_write;
-		
 		bool			accept_light;
 	};
 	
