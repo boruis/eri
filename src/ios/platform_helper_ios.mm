@@ -46,5 +46,62 @@ namespace ERI {
 				break;
 		}
 	}
+	
+	void GetTextureAtlasArray(const std::string& name, TextureAtlasArray& out_array)
+	{
+		out_array.clear();
+		
+		NSString* path = [[NSBundle mainBundle] pathForResource:[NSString stringWithUTF8String:name.c_str()] ofType:@"plist"];
+		NSDictionary* dict = [[NSDictionary alloc] initWithContentsOfFile:path];
+		NSDictionary* frames = [dict objectForKey:@"frames"];
 
+		NSDictionary* unit;
+		TextureAtlasUnit data;
+		
+		NSMutableArray* keys = [[frames allKeys] mutableCopy];
+		[keys sortUsingSelector:@selector(compare:)];
+
+		int num = [keys count];
+		for (int i = 0; i < num; ++i)
+		{
+			unit = [frames objectForKey:[keys objectAtIndex:i]];
+			
+			data.x = [[unit objectForKey:@"x"] intValue];
+			data.y = [[unit objectForKey:@"y"] intValue];
+			data.width = [[unit objectForKey:@"width"] intValue];
+			data.height = [[unit objectForKey:@"height"] intValue];
+			
+			out_array.push_back(data);
+		}
+		
+		[keys release];
+		[dict release];		
+	}
+
+	void GetTextureAtlasMap(const std::string& name, TextureAtlasMap& out_map)
+	{
+		out_map.clear();
+		
+		NSString* path = [[NSBundle mainBundle] pathForResource:[NSString stringWithUTF8String:name.c_str()] ofType:@"plist"];
+		NSDictionary* dict = [[NSDictionary alloc] initWithContentsOfFile:path];
+		NSDictionary* frames = [dict objectForKey:@"frames"];
+
+		NSDictionary* unit;
+		TextureAtlasUnit data;
+		
+		for (id key in frames)
+		{
+			unit = [frames objectForKey:key];
+			
+			data.x = [[unit objectForKey:@"x"] intValue];
+			data.y = [[unit objectForKey:@"y"] intValue];
+			data.width = [[unit objectForKey:@"width"] intValue];
+			data.height = [[unit objectForKey:@"height"] intValue];
+			
+			out_map.insert(std::make_pair(std::string([key UTF8String]), data));
+		}
+		
+		[dict release];		
+	}
+	
 }
