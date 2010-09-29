@@ -18,6 +18,15 @@ namespace ERI {
 		static const float TWO_PI;
 		static const float HALF_PI;
 	};
+	
+	template<typename T>
+	inline const T& Min(const T& a, const T& b) { return (a > b) ? b : a; }
+	template<typename T>
+	inline const T& Max(const T& a, const T& b) { return (a > b) ? a : b; }
+	template<typename T>
+	inline T Clamp(T a, const T& min_value, const T& max_value) { a = Min(a, max_value); a = Max(a, min_value); return a; }
+	template<typename T>
+	inline T Abs(const T& a) { return (a > 0) ? a : -a; }
 
 	struct Vector2
 	{
@@ -176,6 +185,23 @@ namespace ERI {
 					   const float h,
 					   const float zn,
 					   const float zf);
+	
+	struct Circle2
+	{
+		Vector2	center;
+		float	radius;
+	};
+
+	struct Box2
+	{
+		Vector2	center;
+		Vector2	axis[2];
+		float	extent[2];
+	};
+
+	float GetPointBox2DistanceSquared(const Vector2& point, const Box2& box);
+	bool IsIntersectBoxCircle2(const Box2& box, const Circle2& circle);
+	bool IsIntersectBoxBox2(const Box2& box1, const Box2& box2);
 	
 	float UnitRandom();
 	int RangeRandom(int min, int max);

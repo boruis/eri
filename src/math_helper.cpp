@@ -411,6 +411,94 @@ namespace ERI {
 		/* Normalize resulting quaternion */
 		out_q.Normalize();
 	}
+	
+	float GetPointBox2DistanceSquared(const Vector2& point, const Box2& box)
+	{
+		// Work in the box's coordinate system.
+		Vector2 diff = point - box.center;
+		
+		// Compute squared distance and closest point on box.
+		float sqr_distance = 0.0f;
+		float delta;
+		float closest[2];
+
+		for (int i = 0; i < 2; ++i)
+		{
+			closest[i] = diff.DotProduct(box.axis[i]);
+			if (closest[i] < -box.extent[i])
+			{
+				delta = closest[i] + box.extent[i];
+				sqr_distance += delta*delta;
+				closest[i] = -box.extent[i];
+			}
+			else if (closest[i] > box.extent[i])
+			{
+				delta = closest[i] - box.extent[i];
+				sqr_distance += delta*delta;
+				closest[i] = box.extent[i];
+			}
+		}
+
+		return sqr_distance;
+	}	
+	
+	bool IsIntersectBoxCircle2(const Box2& box, const Circle2& circle)
+	{
+		float distance_squared = GetPointBox2DistanceSquared(circle.center, box);
+		return distance_squared <= (circle.radius * circle.radius);
+	}
+	
+	bool IsIntersectBoxBox2(const Box2& box1, const Box2& box2)
+	{
+		// Convenience variables.
+		const Vector2* A = box1.axis;
+		const Vector2* B = box2.axis;
+		const float* EA = box1.extent;
+		const float* EB = box2.extent;
+		
+		// Compute difference of box centers, D = C1-C0.
+		Vector2 D = box2.center - box1.center;
+		
+		float AbsAdB[2][2], AbsAdD, RSum;
+		
+		// axis C0+t*A0
+		AbsAdB[0][0] = Abs(A[0].DotProduct(B[0]));
+		AbsAdB[0][1] = Abs(A[0].DotProduct(B[1]));
+		AbsAdD = Abs(A[0].DotProduct(D));
+		RSum = EA[0] + EB[0]*AbsAdB[0][0] + EB[1]*AbsAdB[0][1];
+		if (AbsAdD > RSum)
+		{
+			return false;
+		}
+		
+		// axis C0+t*A1
+		AbsAdB[1][0] = Abs(A[1].DotProduct(B[0]));
+		AbsAdB[1][1] = Abs(A[1].DotProduct(B[1]));
+		AbsAdD = Abs(A[1].DotProduct(D));
+		RSum = EA[1] + EB[0]*AbsAdB[1][0] + EB[1]*AbsAdB[1][1];
+		if (AbsAdD > RSum)
+		{
+			return false;
+		}
+		
+		// axis C0+t*B0
+		AbsAdD = Abs(B[0].DotProduct(D));
+		RSum = EB[0] + EA[0]*AbsAdB[0][0] + EA[1]*AbsAdB[1][0];
+		if (AbsAdD > RSum)
+		{
+			return false;
+		}
+		
+		// axis C0+t*B1
+		AbsAdD = Abs(B[1].DotProduct(D));
+		RSum = EB[1] + EA[0]*AbsAdB[0][1] + EA[1]*AbsAdB[1][1];
+		if (AbsAdD > RSum)
+		{
+			return false;
+		}
+		
+		return true;
+	}
 
 	static void SetRandomSeed()
 	{
