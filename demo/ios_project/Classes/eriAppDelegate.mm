@@ -36,23 +36,26 @@ DemoApp* demo_app;
 	ERI::Root::Ins().Update();
 }
 
-- (void)applicationDidFinishLaunching:(UIApplication *)application {    
-
-	// create the OpenGL view and add it to the window
-	//_glView = [[EAGLView alloc] initWithFrame:rect];
-	gl_view = [[EAGLView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-	
-	[window addSubview:gl_view];
-
+- (void)applicationDidFinishLaunching:(UIApplication *)application
+{
 	// init ERI
 	ERI::Root::Ins().Init();
 	ERI::Root::Ins().renderer()->SetViewOrientation(ERI::LANDSCAPE_HOME_RIGHT);
+	
+	if ([UIScreen instancesRespondToSelector:@selector(scale)])
+	{
+		ERI::Root::Ins().renderer()->set_content_scale([[UIScreen mainScreen] scale]);
+	}	
+
+	// create the OpenGL view and add it to the window
+	gl_view = [[EAGLView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];	
+	[window addSubview:gl_view];
 	
 	// init App
 	demo_app = new DemoApp;
 	
 	// create our rendering timer
-	[NSTimer scheduledTimerWithTimeInterval:0/*(1.0 / 60.0)*/ target:self selector:@selector(update) userInfo:nil repeats:YES];	
+	[NSTimer scheduledTimerWithTimeInterval:0 target:self selector:@selector(update) userInfo:nil repeats:YES];	
 	
     // Override point for customization after application launch
     [window makeKeyAndVisible];

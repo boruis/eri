@@ -17,7 +17,6 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-
 static bool	in_multi_move;
 
 @implementation EAGLView
@@ -35,7 +34,10 @@ static bool	in_multi_move;
 		// Enable multipletouch support
 		self.multipleTouchEnabled = YES;
 		
-		//self.contentScaleFactor = 2.0;
+		if ([self respondsToSelector:@selector(setContentScaleFactor:)])
+		{
+			[self setContentScaleFactor: ERI::Root::Ins().renderer()->content_scale()];
+		}
 
 		// Get the layer
 		CAEAGLLayer *eaglLayer = (CAEAGLLayer*)self.layer;
@@ -196,6 +198,10 @@ static bool	in_multi_move;
 			printf("Error! Invalid Orientation Type %d\n", ERI::Root::Ins().renderer()->view_orientation());
 			break;
 	}
+
+	float content_scale = ERI::Root::Ins().renderer()->content_scale();
+	point->x *= content_scale;
+	point->y *= content_scale;
 }
 
 - (void)dealloc {

@@ -35,7 +35,7 @@ namespace ERI {
 	class Renderer
 	{
 	public:
-		Renderer() : view_orientation_(PORTRAIT_HOME_BOTTOM) {}
+		Renderer() : view_orientation_(PORTRAIT_HOME_BOTTOM), content_scale_(1.0f) {}
 		virtual ~Renderer() {}
 		
 		virtual bool Init(bool use_depth_buffer) = 0;
@@ -92,8 +92,14 @@ namespace ERI {
 		
 		inline ViewOrientation view_orientation() { return view_orientation_; }
 		
+		inline void set_content_scale(float scale) { content_scale_ = scale; }
+		inline float content_scale() { return content_scale_; }
+		
 	protected:
-		ViewOrientation		view_orientation_;
+		ViewOrientation	view_orientation_;
+		
+	private:
+		float			content_scale_;
 	};
 
 }
