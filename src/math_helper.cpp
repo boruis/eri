@@ -18,11 +18,24 @@
 
 namespace ERI {
 	
+#pragma mark Geometry
+	
 	const float Math::PI = 4 * atan(1.0f);
 	const float Math::TWO_PI = PI * 2;
 	const float Math::HALF_PI = PI * 0.5f;
 	
-	static bool is_rand_seed_set = false;
+	static const float inverse_degree = 1.0f / 360;
+	static const float inverse_radian = 1.0f / Math::TWO_PI;
+	
+	float Math::ToRadian(float degree)
+	{
+		return degree * inverse_degree * TWO_PI;
+	}
+
+	float Math::ToDegree(float radian)
+	{
+		return radian * inverse_radian * 360;
+	}
 	
 	float Vector2::Length() const
 	{
@@ -47,6 +60,15 @@ namespace ERI {
 		}
 		
 		return length;
+	}
+	
+	void Vector2::Rotate(float degree)
+	{
+		float radian = Math::ToRadian(degree);
+		float cos_value = cos(radian);
+		float sin_value = sin(radian);
+		Vector2 v(x * cos_value - y * sin_value, y * cos_value + x * sin_value);
+		(*this) = v;
 	}
 	
 	float Vector3::Length() const
@@ -116,8 +138,6 @@ namespace ERI {
 		out_v.z = (m.m[_20] * v.x + m.m[_21] * v.y + m.m[_22] * v.z + m.m[_23]) * inv_w;
 	}
 	
-	#define _ABS(a)	((a) < 0 ? -(a) : (a))
-	
 	void Matrix4::Inverse(Matrix4& out_m, const Matrix4& m)
 	{
 		double	det_1;
@@ -142,7 +162,7 @@ namespace ERI {
 		det_1 = pos + neg;
 		
 		/* Is the submatrix A singular? */
-		if ((det_1 == 0.0) || (_ABS(det_1 / (pos - neg)) < 1.0e-15))
+		if ((det_1 == 0.0) || (Abs(det_1 / (pos - neg)) < 1.0e-15))
 		{
 			/* Matrix M has no inverse */
 			printf("Matrix has no inverse : singular matrix\n");
@@ -412,6 +432,8 @@ namespace ERI {
 		out_q.Normalize();
 	}
 	
+#pragma mark Intersection
+	
 	float GetPointBox2DistanceSquared(const Vector2& point, const Box2& box)
 	{
 		// Work in the box's coordinate system.
@@ -499,6 +521,10 @@ namespace ERI {
 		
 		return true;
 	}
+	
+#pragma mark Random
+	
+	static bool is_rand_seed_set = false;
 
 	static void SetRandomSeed()
 	{

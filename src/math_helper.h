@@ -12,11 +12,15 @@
 
 namespace ERI {
 	
+#pragma mark Geometry
+	
 	struct Math
 	{
 		static const float PI;
 		static const float TWO_PI;
 		static const float HALF_PI;
+		static float ToRadian(float degree);
+		static float ToDegree(float radian);
 	};
 	
 	template<typename T>
@@ -27,6 +31,8 @@ namespace ERI {
 	inline T Clamp(T a, const T& min_value, const T& max_value) { a = Min(a, max_value); a = Max(a, min_value); return a; }
 	template<typename T>
 	inline T Abs(const T& a) { return (a > 0) ? a : -a; }
+	
+	inline int Round(float a) { if (a > 0.0f) return static_cast<int>(a + 0.5f); else if (a < 0.0f) return static_cast<int>(a - 0.5f); else return 0; }
 
 	struct Vector2
 	{
@@ -47,9 +53,16 @@ namespace ERI {
             return x * v.x + y * v.y;
         }
 		
+		inline float CrossProduct(const Vector2& v) const
+		{
+			return x * v.y - y * v.x;
+		}
+		
 		float Length() const;
 		float LengthSquared() const;
 		float Normalize();
+		
+		void Rotate(float degree);
 		
 		float x, y;
 	};
@@ -186,6 +199,8 @@ namespace ERI {
 					   const float zn,
 					   const float zf);
 	
+#pragma mark Intersection
+	
 	struct Circle2
 	{
 		Vector2	center;
@@ -202,6 +217,8 @@ namespace ERI {
 	float GetPointBox2DistanceSquared(const Vector2& point, const Box2& box);
 	bool IsIntersectBoxCircle2(const Box2& box, const Circle2& circle);
 	bool IsIntersectBoxBox2(const Box2& box1, const Box2& box2);
+	
+#pragma mark Random
 	
 	float UnitRandom();
 	int RangeRandom(int min, int max);
