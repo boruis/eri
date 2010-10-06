@@ -16,6 +16,7 @@ namespace ERI {
 	
 	struct Math
 	{
+		static const float ZERO_TOLERANCE;
 		static const float PI;
 		static const float TWO_PI;
 		static const float HALF_PI;
@@ -201,6 +202,19 @@ namespace ERI {
 	
 #pragma mark Intersection
 	
+	enum IntersectionType
+	{
+		IT_EMPTY,
+		IT_POINT,
+		IT_COLINEAR
+	};
+	
+	struct Ray2
+	{
+		Vector2	origin;
+		Vector2	dir;
+	};
+	
 	struct Circle2
 	{
 		Vector2	center;
@@ -215,6 +229,7 @@ namespace ERI {
 	};
 
 	float GetPointBox2DistanceSquared(const Vector2& point, const Box2& box);
+	IntersectionType CheckIntersectRayRay2(const Ray2& ray1, const Ray2& ray2, Vector2* out_intersect_pos);
 	bool IsIntersectBoxCircle2(const Box2& box, const Circle2& circle);
 	bool IsIntersectBoxBox2(const Box2& box1, const Box2& box2);
 	

@@ -20,6 +20,8 @@ namespace ERI {
 	
 #pragma mark Geometry
 	
+	const float Math::ZERO_TOLERANCE = 1e-08;
+
 	const float Math::PI = 4 * atan(1.0f);
 	const float Math::TWO_PI = PI * 2;
 	const float Math::HALF_PI = PI * 0.5f;
@@ -52,7 +54,7 @@ namespace ERI {
 		float length = Length();
 		
 		// Will also work for zero-sized vectors, but will change nothing
-		if (length > 1e-08)
+		if (length > Math::ZERO_TOLERANCE)
 		{
 			float inv_length = 1.0f / length;
 			x *= inv_length;
@@ -86,7 +88,7 @@ namespace ERI {
 		float length = Length();
 		
 		// Will also work for zero-sized vectors, but will change nothing
-		if (length > 1e-08)
+		if (length > Math::ZERO_TOLERANCE)
 		{
 			float inv_length = 1.0f / length;
 			x *= inv_length;
@@ -215,7 +217,7 @@ namespace ERI {
 		z = axis.z;
 		
 		float length = axis.Length();
-		if (length > 1e-08)
+		if (length > Math::ZERO_TOLERANCE)
 		{
 			float inv_length = 1.0f / length;
 			x *= inv_length;
@@ -462,7 +464,50 @@ namespace ERI {
 		}
 
 		return sqr_distance;
-	}	
+	}
+	
+	IntersectionType CheckIntersectRayRay2(const Ray2& ray1, const Ray2& ray2, Vector2* out_intersect_pos)
+	{
+		Vector2 origin_diff = ray2.origin - ray1.origin;
+		
+		float dir1_cross_dir2 = ray1.dir.CrossProduct(ray2.dir);
+		if (Abs(dir1_cross_dir2) > Math::ZERO_TOLERANCE)
+		{
+			// Lines intersect in a single point.
+			float inv_cross = 1.0f / dir1_cross_dir2;
+			float diff_cross_dir1 = origin_diff.CrossProduct(ray1.dir);
+			float diff_cross_dir2 = origin_diff.CrossProduct(ray2.dir);
+				
+			float parameter[2];
+			parameter[0] = diff_cross_dir2 * inv_cross;
+			parameter[1] = diff_cross_dir1 * inv_cross;
+				
+			// Test whether the line-line intersection is on the rays.
+			if (parameter[0] >= 0.0f && parameter[1] >= 0.0f)
+			{
+				if (out_intersect_pos)
+				{
+					(*out_intersect_pos) = ray1.origin + ray1.dir * parameter[0];
+				}
+				
+				return IT_POINT;
+			}
+			else
+			{
+				return IT_EMPTY;
+			}
+		}
+		
+		float diff_cross_dir2 = origin_diff.CrossProduct(ray2.dir);
+		if (Abs(diff_cross_dir2) <= Math::ZERO_TOLERANCE)
+		{
+			// Lines are colinear.
+			return IT_COLINEAR;
+		}
+		
+		// Lines are parallel, but distinct.
+		return IT_EMPTY;
+	}
 	
 	bool IsIntersectBoxCircle2(const Box2& box, const Circle2& circle)
 	{
