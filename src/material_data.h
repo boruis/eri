@@ -12,6 +12,8 @@
 
 #include "texture_mgr.h"
 
+#define MAX_TEXTURE_UNIT	4
+
 namespace ERI {
 	
 	enum OpacityType
@@ -21,10 +23,19 @@ namespace ERI {
 		OPACITY_ALPHA_BLEND
 	};
 	
+	struct TextureUnit
+	{
+		TextureUnit() : texture(NULL) {}
+		
+		const Texture*	texture;
+		TextureParams	params;
+		TextureEnvs		envs;
+	};
+	
 	struct MaterialData
 	{
 		MaterialData() :
-			texture(NULL),
+			used_unit(0),
 			opacity_type(OPACITY_ALPHA_BLEND),
 			depth_test(true),
 			depth_write(true),
@@ -32,8 +43,8 @@ namespace ERI {
 		{
 		}
 		
-		const Texture*	texture;
-		TextureParams	custom_params;
+		TextureUnit		texture_units[MAX_TEXTURE_UNIT];
+		int				used_unit;
 
 		OpacityType		opacity_type;
 		bool			depth_test;

@@ -14,7 +14,7 @@
 #include "renderer_es1.h"
 
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
-#include "renderer_es2.h"
+//#include "renderer_es2.h"
 #endif
 
 #include "scene_mgr.h"
@@ -48,12 +48,12 @@ namespace ERI {
 	void Root::Init(bool use_depth_buffer /*= true*/)
 	{
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
-		renderer_ = new RendererES2;
-		if (!renderer_->Init(use_depth_buffer))
-		{
-			delete renderer_;
-			renderer_ = NULL;
-		}
+//		renderer_ = new RendererES2;
+//		if (!renderer_->Init(use_depth_buffer))
+//		{
+//			delete renderer_;
+//			renderer_ = NULL;
+//		}
 #endif
 		
 		if (!renderer_)

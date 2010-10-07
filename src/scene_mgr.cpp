@@ -17,6 +17,26 @@
 
 namespace ERI {
 	
+	static int GetMaterialDataSingleTextureId(const MaterialData& material)
+	{
+		int texture_id = 0;
+		
+		for (int i = 0; i < MAX_TEXTURE_UNIT; ++i)
+		{
+			if (material.texture_units[i].texture)
+			{
+				if (texture_id)
+				{
+					return 0;
+				}
+				
+				texture_id = material.texture_units[i].texture->id;
+			}
+		}
+		
+		return texture_id;
+	}
+	
 	TextureActorGroup::~TextureActorGroup()
 	{
 		for (size_t i = 0; i < groups.size(); ++i)
@@ -47,7 +67,7 @@ namespace ERI {
 		ASSERT(actor);
 		
 		int group_idx = -1;
-		int texture_id = actor->material().texture ? actor->material().texture->id : 0;
+		int texture_id = GetMaterialDataSingleTextureId(actor->material());
 		
 		std::map<int, int>::iterator it = texture_map.find(texture_id);
 		if (it == texture_map.end())
@@ -84,7 +104,7 @@ namespace ERI {
 	
 	void TextureActorGroup::RemoveActor(SceneActor* actor)
 	{
-		int texture_id = actor->material().texture ? actor->material().texture->id : 0;
+		int texture_id = GetMaterialDataSingleTextureId(actor->material());
 		
 		std::map<int, int>::iterator it = texture_map.find(texture_id);
 		

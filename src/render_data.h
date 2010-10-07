@@ -20,7 +20,7 @@
 #include <GLES/gl.h>
 #elif ERI_PLATFORM == ERI_PLATFORM_IOS
 #import <OpenGLES/ES1/gl.h>
-#import <OpenGLES/ES2/gl.h>
+//#import <OpenGLES/ES2/gl.h>
 #endif
 
 namespace ERI {
@@ -30,6 +30,12 @@ namespace ERI {
 		GLfloat tex_coord[2];
 	};
 
+	struct vertex_2_pos_tex2 {
+		GLfloat position[2];
+		GLfloat tex_coord[2];
+		GLfloat tex_coord2[2];
+	};
+	
 	struct vertex_2_pos_tex_color {
 		GLfloat position[2];
 		GLfloat tex_coord[2];
@@ -45,6 +51,7 @@ namespace ERI {
 	enum VertexFormat
 	{
 		POS_TEX_2,
+		POS_TEX2_2,
 		POS_TEX_COLOR_2,
 		POS_NORMAL_TEX_3
 	};

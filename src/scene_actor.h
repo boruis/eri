@@ -21,7 +21,7 @@
 #include <GLES/gl.h>
 #elif ERI_PLATFORM == ERI_PLATFORM_IOS
 #import <OpenGLES/ES1/gl.h>
-#import <OpenGLES/ES2/gl.h>
+//#import <OpenGLES/ES2/gl.h>
 #endif
 
 #include "math_helper.h"
@@ -102,8 +102,12 @@ namespace ERI {
 		
 		void SetMaterial(const std::string& texture_path, TextureFilter filter_min = FILTER_NEAREST, TextureFilter filter_mag = FILTER_NEAREST);
 		void SetMaterial(const Texture* tex, TextureFilter filter_min = FILTER_NEAREST, TextureFilter filter_mag = FILTER_NEAREST);
-		void SetTextureFilter(TextureFilter filter_min, TextureFilter filter_mag);
+		void AddMaterial(const std::string& texture_path, TextureFilter filter_min = FILTER_NEAREST, TextureFilter filter_mag = FILTER_NEAREST);
+		void AddMaterial();
 		
+		void SetTextureFilter(TextureFilter filter_min, TextureFilter filter_mag);
+		void SetTextureEnvs(int idx, const TextureEnvs& envs);
+	
 		void SetOpacityType(OpacityType type);
 		inline OpacityType opacity_type() { return material_data_.opacity_type; }
 		
@@ -111,7 +115,7 @@ namespace ERI {
 		void SetDepthWrite(bool enable);
 
 		inline const MaterialData& material() { return material_data_; }
-
+		
 		//
 
 		inline void set_visible(bool visible) { visible_ = visible; }
@@ -125,11 +129,6 @@ namespace ERI {
 	protected:
 		virtual bool IsInArea(const Vector3& local_space_pos) { return false; }
 		
-		void SetTransformDirty();
-		void SetWorldTransformDirty();
-		
-		void SetTexture(const Texture* tex);
-		
 		RenderData		render_data_;
 		MaterialData	material_data_;
 
@@ -141,6 +140,12 @@ namespace ERI {
 		bool			visible_;
 		
 		UserData*		user_data_;
+		
+	private:
+		void SetTransformDirty();
+		void SetWorldTransformDirty();
+		
+		void SetTexture(int idx, const Texture* tex);
 	};
 	
 #pragma mark CameraActor
@@ -239,19 +244,19 @@ namespace ERI {
 	{
 	public:
 		SpriteActor(float width, float height, float offset_width = 0.0f, float offset_height = 0.0f);
-		SpriteActor(const std::string& txt, const std::string& font_name, float font_size, float width, float height, float offset_width = 0.0f, float offset_height = 0.0f);
-		
 		virtual ~SpriteActor();
 		
 		void SetSizeOffset(float width, float height, float offset_width = 0.0f, float offset_height = 0.0f);
 		
-		void SetTexScale(float u_scale, float v_scale);
-		void SetTexScroll(float u_scroll, float v_scroll);
-		void SetTexArea(int start_x, int start_y, int width, int height);
-		void SetTexAreaUV(float start_u, float start_v, float width, float height);
-
-		void SetUseLine(bool use_line);
+		void SetTexScale(float u_scale, float v_scale, bool is_tex2 = false);
+		void SetTexScroll(float u_scroll, float v_scroll, bool is_tex2 = false);
+		void SetTexArea(int start_x, int start_y, int width, int height, bool is_tex2 = false);
+		void SetTexAreaUV(float start_u, float start_v, float width, float height, bool is_tex2 = false);
 		
+		void SetTxt(const std::string& txt, const std::string& font_name, float font_size);
+		void SetUseLine(bool use_line);
+
+		inline void set_is_dynamic_draw(bool is_dynamic_draw) { is_dynamic_draw_ = is_dynamic_draw; }
 		inline void set_area_border(float border) { area_border_ = border; }
 		
 		inline const Vector2& size() { return size_; }
@@ -262,12 +267,17 @@ namespace ERI {
 		
 		void UpdateVertexBuffer();
 
-		vertex_2_pos_tex	vertices_[4];
-		
 		Vector2		size_;
 		Vector2		offset_;
+		
 		Vector2		tex_scale_;
 		Vector2		tex_scroll_;
+		Vector2		tex_scale2_;
+		Vector2		tex_scroll2_;
+		
+		bool		is_use_tex2_;
+		
+		bool		is_dynamic_draw_;
 		bool		is_use_line_;
 		
 		float		area_border_;

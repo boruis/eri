@@ -23,12 +23,15 @@
 #import <OpenGLES/ES1/glext.h>
 #endif
 
+#include "material_data.h"
+
 #define MAX_FRAMEBUFFER	8
 #define MAX_LIGHT		8
 
 namespace ERI {
 	
 	class RenderContext;
+	class TextureUnit;
 	
 	struct LightInfo
 	{
@@ -80,7 +83,9 @@ namespace ERI {
 		virtual void EnableLight(bool enable);
 		virtual void EnableDepthTest(bool enable);
 		virtual void EnableDepthWrite(bool enable);
-		virtual void EnableTexture(bool enable, unsigned int texture = 0);
+		
+		virtual void EnableTextureUnit(int idx, const TextureUnit& unit);
+		virtual void DisableTextureUnit(int idx);
 		
 		virtual void ObtainLight(int& idx);
 		virtual void ReleaseLight(int idx);
@@ -141,7 +146,10 @@ namespace ERI {
 		bool depth_test_enable_;
 		bool depth_write_enable_;
 		bool blend_enable_;
+		
 		bool texture_enable_;
+		bool texture_unit_enable_[MAX_TEXTURE_UNIT];
+		
 		unsigned int now_texture_;
 		
 		Color bg_color_;

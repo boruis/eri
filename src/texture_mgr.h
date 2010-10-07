@@ -13,6 +13,8 @@
 #include <string>
 #include <map>
 
+#include "math_helper.h"
+
 namespace ERI {
 	
 	struct Color;
@@ -32,15 +34,85 @@ namespace ERI {
 	struct TextureParams
 	{
 		TextureParams() :
-		filter_min(FILTER_NEAREST),
-		filter_mag(FILTER_NEAREST),
-		wrap_s(WRAP_REPEAT),
-		wrap_t(WRAP_REPEAT)
+			filter_min(FILTER_NEAREST),
+			filter_mag(FILTER_NEAREST),
+			wrap_s(WRAP_REPEAT),
+			wrap_t(WRAP_REPEAT)
 		{
 		}
 		
 		TextureFilter	filter_min, filter_mag;
 		TextureWrap		wrap_s, wrap_t;
+	};
+	
+	enum TextureEnvMode
+	{
+		MODE_REPLACE,
+		MODE_MODULATE,
+		MODE_DECAL,
+		MODE_BLEND,
+		MODE_ADD,
+		MODE_COMBINE
+	};
+	
+	enum TextureEnvOp
+	{
+		OP_REPLACE,
+		OP_MODULATE,
+		OP_ADD,
+		OP_ADD_SIGNED,
+		OP_INTERPOLATE,
+		OP_SUBTRACT,
+		
+		OP_DOT3_RGB,
+		OP_DOT3_RGBA
+	};
+	
+	enum TextureEnvSrc
+	{
+		SRC_TEXTURE,
+		//SRC_TEXTUREn, ?
+		SRC_CONSTANT,
+		SRC_PRIMARY_COLOR,
+		SRC_PREVIOUS
+	};
+	
+	enum TextureEnvOperand
+	{
+		OPERAND_SRC_COLOR,
+		OPERAND_ONE_MINUS_SRC_COLOR,
+		OPERAND_SRC_ALPHA,
+		OPERAND_ONE_MINUS_SRC_ALPHA
+	};
+	
+	struct TextureEnvs
+	{
+		TextureEnvs() :
+			mode(MODE_MODULATE),
+			src0_rgb(SRC_PREVIOUS),
+			src1_rgb(SRC_TEXTURE),
+			src2_rgb(SRC_CONSTANT),
+			src0_alpha(SRC_PREVIOUS),
+			src1_alpha(SRC_TEXTURE),
+			src2_alpha(SRC_CONSTANT),
+			operand0_rgb(OPERAND_SRC_COLOR),
+			operand1_rgb(OPERAND_SRC_COLOR),
+			operand2_rgb(OPERAND_SRC_COLOR),
+			operand0_alpha(OPERAND_SRC_ALPHA),
+			operand1_alpha(OPERAND_SRC_ALPHA),
+			operand2_alpha(OPERAND_SRC_ALPHA)
+		{
+		}
+		
+		TextureEnvMode		mode;
+		TextureEnvOp		combine_rgb, combine_alpha;
+		TextureEnvSrc		src0_rgb, src1_rgb, src2_rgb,
+							src0_alpha, src1_alpha, src2_alpha;
+		TextureEnvOperand	operand0_rgb, operand1_rgb, operand2_rgb,
+							operand0_alpha, operand1_alpha, operand2_alpha;
+		
+		bool				is_use_constant_color;
+		Color				constant_color;
 	};
 	
 	struct Texture
