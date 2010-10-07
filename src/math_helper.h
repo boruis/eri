@@ -48,6 +48,8 @@ namespace ERI {
 		inline Vector2& operator += (const Vector2& v) { x += v.x; y += v.y; return *this; }
 		inline Vector2& operator -= (const Vector2& v) { x -= v.x; y -= v.y; return *this; }
 		inline Vector2& operator *= (float value) { x *= value; y *= value; return *this; }
+		inline bool operator == (const Vector2& v) { return (x == v.x && y == v.y); }
+		inline bool operator != (const Vector2& v) { return (x != v.x || y != v.y); }
 		
 		inline float DotProduct(const Vector2& v) const
         {
@@ -81,6 +83,8 @@ namespace ERI {
 		inline Vector3& operator += (const Vector3& v) { x += v.x; y += v.y; z += v.z; return *this; }
 		inline Vector3& operator -= (const Vector3& v) { x -= v.x; y -= v.y; z -= v.z; return *this; }
 		inline Vector3& operator *= (float value) { x *= value; y *= value; z *= value; return *this; }
+		inline bool operator == (const Vector3& v) { return (x == v.x && y == v.y && z == v.z); }
+		inline bool operator != (const Vector3& v) { return (x != v.x || y != v.y || z != v.z); }
 		
 		inline float DotProduct(const Vector3& v) const
         {
