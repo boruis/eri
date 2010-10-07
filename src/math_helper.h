@@ -251,8 +251,8 @@ namespace ERI {
 		inline Color operator + (const Color& c) const { return Color(r + c.r, g + c.g, b + c.b, a + c.a); }
 		inline Color operator - (const Color& c) const { return Color(r - c.r, g - c.g, b - c.b, a - c.a); }
 		inline Color operator * (float value) const { return Color(r * value, g * value, b * value, a * value); }
-		inline Color& operator += (const Color& c) { r += c.r; g += c.g; b + c.b; a + c.a; return *this; }
-		inline Color& operator -= (const Color& c) { r -= c.r; g -= c.g; b - c.b; a - c.a; return *this; }
+		inline Color& operator += (const Color& c) { r += c.r; g += c.g; b += c.b; a += c.a; return *this; }
+		inline Color& operator -= (const Color& c) { r -= c.r; g -= c.g; b -= c.b; a -= c.a; return *this; }
 		inline Color& operator *= (float value) { r *= value; g *= value; b *= value; a *= value; return *this; }
 		inline bool operator == (const Color& c) const { return (r == c.r && g == c.g && b == c.b && a == c.a); }
 		inline bool operator != (const Color& c) const { return (r != c.r || g != c.g || b != c.b || a != c.a); }

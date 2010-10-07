@@ -23,7 +23,7 @@ ERI::SpriteActor*	pic_shadow;
 
 DemoApp::DemoApp()
 {
-	ERI::Root::Ins().renderer()->SetBgColor(ERI::Color(0.2, 0.1, 0.2));
+	ERI::Root::Ins().renderer()->SetBgColor(ERI::Color(0.2f, 0.1f, 0.2f));
 	
 	float content_scale = ERI::Root::Ins().renderer()->content_scale();
 	
@@ -33,14 +33,14 @@ DemoApp::DemoApp()
 	cam->AddToScene(ui_layer);
 	ERI::Root::Ins().scene_mgr()->SetCurrentCam(cam);
 	
-	hello_txt = new ERI::TxtActor("Hello! eri.", "georgia", 32 * content_scale, true);
+	hello_txt = new ERI::TxtActor("Hello! eri.", "georgia", static_cast<int>(32 * content_scale), true);
 	hello_txt->AddToScene(ui_layer);
 	hello_txt->SetTextureFilter(ERI::FILTER_LINEAR, ERI::FILTER_LINEAR);
 	hello_txt->SetDepthWrite(false);
 	hello_txt->SetPos(-50 * content_scale, 6 * content_scale);
 	hello_txt->SetColor(ERI::Color(1.0f, 0.8f, 0.2f));
 	
-	fps_txt = new ERI::TxtActor("current fps is", "nokiafc22", 16 * content_scale, true);
+	fps_txt = new ERI::TxtActor("current fps is", "nokiafc22", static_cast<int>(16 * content_scale), true);
 	fps_txt->AddToScene(ui_layer);
 	fps_txt->SetPos(-110 * content_scale, -30 * content_scale);
 	fps_txt->SetColor(ERI::Color(0.4f, 0.4f, 0.4f));
@@ -84,7 +84,7 @@ void DemoApp::Update(double delta_time)
 	frame_count_timer += delta_time;
 	if (frame_count_timer >= 0.25)
 	{
-		fps_number->SetNumberFloat(frame_count / frame_count_timer);
+		fps_number->SetNumberFloat(static_cast<float>(frame_count / frame_count_timer));
 		frame_count = 0;
 		frame_count_timer = 0;
 	}

@@ -77,7 +77,11 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				int screen_x = LOWORD(lParam);
 				int screen_y = win_init_info->height - HIWORD(lParam);
 
-				Root::Ins().input_mgr()->Move(screen_x, screen_y);
+				InputEvent e;
+				e.x = screen_x;
+				e.y = screen_y;
+
+				Root::Ins().input_mgr()->Move(e);
 			}
 
 			return 0;
@@ -88,7 +92,12 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			int screen_x = LOWORD(lParam);
 			int screen_y = win_init_info->height - HIWORD(lParam);
-			Root::Ins().input_mgr()->Press(screen_x, screen_y);
+
+			InputEvent e;
+			e.x = screen_x;
+			e.y = screen_y;
+
+			Root::Ins().input_mgr()->Press(e);
 			return 0;
 		}
 		break;
@@ -97,10 +106,15 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			int screen_x = LOWORD(lParam);
 			int screen_y = win_init_info->height - HIWORD(lParam);
-			Root::Ins().input_mgr()->Release(screen_x, screen_y);
+
+			InputEvent e;
+			e.x = screen_x;
+			e.y = screen_y;
+
+			Root::Ins().input_mgr()->Release(e);
 
 			// TODO: should do additional check
-			Root::Ins().input_mgr()->Click(screen_x, screen_y);
+			Root::Ins().input_mgr()->Click(e);
 
 			return 0;
 		}
@@ -110,7 +124,12 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			int screen_x = LOWORD(lParam);
 			int screen_y = win_init_info->height - HIWORD(lParam);
-			Root::Ins().input_mgr()->DoubleClick(screen_x, screen_y);
+
+			InputEvent e;
+			e.x = screen_x;
+			e.y = screen_y;
+
+			Root::Ins().input_mgr()->DoubleClick(e);
 			return 0;
 		}
 		break;
