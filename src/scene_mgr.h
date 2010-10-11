@@ -42,6 +42,8 @@ namespace ERI {
 
 	struct SceneLayer
 	{
+		SceneLayer() : is_visible(true) {}
+
 		void Render(Renderer* renderer);
 		void AddActor(SceneActor* actor);
 		void RemoveActor(SceneActor* actor);
@@ -51,6 +53,8 @@ namespace ERI {
 		TextureActorGroup	opaque_actors;
 		TextureActorGroup	alpha_test_actors;
 		TextureActorGroup	alpha_blend_actors;
+
+		bool	is_visible;
 	};
 
 	class SceneMgr
@@ -60,6 +64,8 @@ namespace ERI {
 		~SceneMgr();
 		
 		int AddLayer();
+		void SetLayerVisible(int layer_id, bool visible);
+
 		void AddActor(SceneActor* actor, int layer_id = 0);
 		void RemoveActor(SceneActor* actor, int layer_id);
 		

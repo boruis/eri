@@ -254,6 +254,14 @@ namespace ERI {
 		layers_.push_back(new SceneLayer);
 		return (layers_.size() - 1);
 	}
+
+	void SceneMgr::SetLayerVisible(int layer_id, bool visible)
+	{
+		ASSERT(layer_id < static_cast<int>(layers_.size()));
+
+		layers_[layer_id]->is_visible = visible;
+
+	}
 	
 	void SceneMgr::AddActor(SceneActor* actor, int layer_id /* = 0*/)
 	{
@@ -284,7 +292,10 @@ namespace ERI {
 		
 		for (size_t i = 0; i < layers_.size(); ++i)
 		{
-			layers_[i]->Render(renderer);
+			if (layers_[i]->is_visible)
+			{
+				layers_[i]->Render(renderer);
+			}
 		}
 	}
 

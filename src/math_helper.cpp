@@ -20,7 +20,7 @@ namespace ERI {
 	
 #pragma mark Geometry
 	
-	const float Math::ZERO_TOLERANCE = 1e-08;
+	const double Math::ZERO_TOLERANCE = 1e-08;
 
 	const float Math::PI = 4 * atan(1.0f);
 	const float Math::TWO_PI = PI * 2;

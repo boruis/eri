@@ -16,7 +16,7 @@ namespace ERI {
 	
 	struct Math
 	{
-		static const float ZERO_TOLERANCE;
+		static const double ZERO_TOLERANCE;
 		static const float PI;
 		static const float TWO_PI;
 		static const float HALF_PI;

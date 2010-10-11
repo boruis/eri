@@ -179,6 +179,8 @@ bool FrameworkWin::Init(HINSTANCE hInstance, const char* title, int width, int h
 
 	Root::Ins().Init(use_depth_buffer);
 	Root::Ins().renderer()->Resize(win_init_info_->width, win_init_info_->height);
+
+	return true;
 }
 
 void FrameworkWin::Release()

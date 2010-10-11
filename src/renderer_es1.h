@@ -31,7 +31,7 @@
 namespace ERI {
 	
 	class RenderContext;
-	class TextureUnit;
+	struct TextureUnit;
 	
 	struct LightInfo
 	{

@@ -290,24 +290,45 @@ namespace ERI {
 	
 	void SceneActor::SetMaterial(const std::string& texture_path, TextureFilter filter_min /*= FILTER_NEAREST*/, TextureFilter filter_mag /*= FILTER_NEAREST*/)
 	{
-		SetTexture(0, Root::Ins().texture_mgr()->GetTexture(texture_path));
-		
-		if (material_data_.used_unit < 1)
-			material_data_.used_unit = 1;
-		
-		material_data_.texture_units[0].params.filter_min = filter_min;
-		material_data_.texture_units[0].params.filter_mag = filter_mag;
+		const Texture* tex = NULL;
+
+		if (texture_path.length() > 0)
+		{
+			tex = Root::Ins().texture_mgr()->GetTexture(texture_path);
+		}
+
+		SetTexture(0, tex);
+
+		if (tex)
+		{
+			if (material_data_.used_unit < 1)
+				material_data_.used_unit = 1;
+
+			material_data_.texture_units[0].params.filter_min = filter_min;
+			material_data_.texture_units[0].params.filter_mag = filter_mag;
+		}
+		else if (material_data_.used_unit == 1)
+		{
+			material_data_.used_unit = 0;
+		}
 	}
 	
 	void SceneActor::SetMaterial(const Texture* tex, TextureFilter filter_min /*= FILTER_NEAREST*/, TextureFilter filter_mag /*= FILTER_NEAREST*/)
 	{
 		SetTexture(0, tex);
-		
-		if (material_data_.used_unit < 1)
-			material_data_.used_unit = 1;
 
-		material_data_.texture_units[0].params.filter_min = filter_min;
-		material_data_.texture_units[0].params.filter_mag = filter_mag;
+		if (tex)
+		{
+			if (material_data_.used_unit < 1)
+				material_data_.used_unit = 1;
+
+			material_data_.texture_units[0].params.filter_min = filter_min;
+			material_data_.texture_units[0].params.filter_mag = filter_mag;
+		}
+		else if (material_data_.used_unit == 1)
+		{
+			material_data_.used_unit = 0;
+		}
 	}
 	
 	void SceneActor::AddMaterial(const std::string& texture_path, TextureFilter filter_min /*= FILTER_NEAREST*/, TextureFilter filter_mag /*= FILTER_NEAREST*/)
@@ -392,7 +413,7 @@ namespace ERI {
 	
 	void SceneActor::SetTexture(int idx, const Texture* tex)
 	{
-		if (!material_data_.texture_units[idx].texture || material_data_.texture_units[idx].texture != tex)
+		if (material_data_.texture_units[idx].texture != tex)
 		{
 			if (idx == 0 && layer_id_ != -1)
 			{
