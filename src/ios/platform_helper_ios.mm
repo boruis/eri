@@ -47,13 +47,21 @@ namespace ERI {
 		}
 	}
 	
-	void GetTextureAtlasArray(const std::string& name, TextureAtlasArray& out_array)
+	bool GetTextureAtlasArray(const std::string& name, TextureAtlasArray& out_array)
 	{
 		out_array.clear();
 		
 		NSString* path = [[NSBundle mainBundle] pathForResource:[NSString stringWithUTF8String:name.c_str()] ofType:@"plist"];
+		if (path == nil)
+			return false;
+		
 		NSDictionary* dict = [[NSDictionary alloc] initWithContentsOfFile:path];
+		if (dict == nil)
+			return false;
+		
 		NSDictionary* frames = [dict objectForKey:@"frames"];
+		if (frames == nil)
+			return false;
 
 		NSDictionary* unit;
 		TextureAtlasUnit data;
@@ -75,16 +83,26 @@ namespace ERI {
 		}
 		
 		[keys release];
-		[dict release];		
+		[dict release];
+		
+		return true;
 	}
 
-	void GetTextureAtlasMap(const std::string& name, TextureAtlasMap& out_map)
+	bool GetTextureAtlasMap(const std::string& name, TextureAtlasMap& out_map)
 	{
 		out_map.clear();
 		
 		NSString* path = [[NSBundle mainBundle] pathForResource:[NSString stringWithUTF8String:name.c_str()] ofType:@"plist"];
+		if (path == nil)
+			return false;
+		
 		NSDictionary* dict = [[NSDictionary alloc] initWithContentsOfFile:path];
+		if (dict == nil)
+			return false;
+		
 		NSDictionary* frames = [dict objectForKey:@"frames"];
+		if (frames == nil)
+			return false;
 
 		NSDictionary* unit;
 		TextureAtlasUnit data;
@@ -101,7 +119,9 @@ namespace ERI {
 			out_map.insert(std::make_pair(std::string([key UTF8String]), data));
 		}
 		
-		[dict release];		
+		[dict release];
+		
+		return false;
 	}
 	
 }

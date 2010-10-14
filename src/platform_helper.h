@@ -32,8 +32,8 @@ namespace ERI {
 	typedef std::vector<TextureAtlasUnit> TextureAtlasArray;
 	typedef std::map<std::string, TextureAtlasUnit> TextureAtlasMap;
 
-	void GetTextureAtlasArray(const std::string& name, TextureAtlasArray& out_array);
-	void GetTextureAtlasMap(const std::string& name, TextureAtlasMap& out_map);
+	bool GetTextureAtlasArray(const std::string& name, TextureAtlasArray& out_array);
+	bool GetTextureAtlasMap(const std::string& name, TextureAtlasMap& out_map);
 }
 
 #endif // ERI_PLATFORM_HELPER_H
