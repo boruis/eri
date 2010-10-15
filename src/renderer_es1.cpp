@@ -265,7 +265,8 @@ namespace ERI {
 	
 	void RendererES1::Render(const RenderData* data)
 	{
-		glMultMatrixf(data->world_model_matrix.m);
+		if (data->apply_identity_model_matrix) glLoadIdentity();
+		else glMultMatrixf(data->world_model_matrix.m);
 		
 		if (data->vertex_count > 0)
 		{

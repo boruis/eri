@@ -70,6 +70,7 @@ namespace ERI {
 			rotate_degree(0),
 			need_update_model_matrix(true),
 			need_update_world_model_matrix(true),
+			apply_identity_model_matrix(false),
 			is_tex_transform(false),
 			tex_scale(Vector2(1, 1)),
 			blend_src_factor(GL_SRC_ALPHA),
@@ -103,6 +104,7 @@ namespace ERI {
 		Matrix4	world_model_matrix;
 		bool	need_update_model_matrix;
 		bool	need_update_world_model_matrix;
+		bool	apply_identity_model_matrix;
 		
 		// texture
 		bool	is_tex_transform;

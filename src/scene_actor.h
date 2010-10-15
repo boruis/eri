@@ -84,7 +84,7 @@ namespace ERI {
 		Vector2 GetPos();
 				
 		void SetRotate(float degree);
-		float GetRotate();
+		float GetRotate() const;
 		
 		void SetScale(float x, float y);
 		Vector2 GetScale();
@@ -125,6 +125,8 @@ namespace ERI {
 		inline UserData* user_data() { return user_data_; }
 		
 		inline int layer_id() { return layer_id_; }
+		
+		inline const SceneActor* parent() const { return parent_; }
 			
 	protected:
 		virtual bool IsInArea(const Vector3& local_space_pos) { return false; }
