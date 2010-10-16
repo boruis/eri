@@ -246,7 +246,7 @@ namespace ERI {
 		SetTransformDirty();
 	}
 	
-	float SceneActor::GetRotate()
+	float SceneActor::GetRotate() const
 	{
 		return render_data_.rotate_degree;
 	}
