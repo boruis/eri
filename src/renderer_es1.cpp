@@ -124,7 +124,9 @@ namespace ERI {
 		}
 #endif
 
+#if ERI_PLATFORM != ERI_PLATFORM_MAC
 		if (context_) delete context_;
+#endif
 	}
 
 	bool RendererES1::Init(bool use_depth_buffer)
@@ -137,12 +139,14 @@ namespace ERI {
 		context_ = new RenderContextIphone;
 #endif
 
+#if ERI_PLATFORM != ERI_PLATFORM_MAC
 		if (context_ && !context_->Init(1))
 		{
 			delete context_;
 			context_ = NULL;
 			return false;
 		}
+#endif
 		
 		clear_bits_ = GL_COLOR_BUFFER_BIT;
 		
@@ -260,7 +264,9 @@ namespace ERI {
 		glBindRenderbufferOES(GL_RENDERBUFFER_OES, color_render_buffer_);
 #endif
 		
+#if ERI_PLATFORM != ERI_PLATFORM_MAC
 		if (context_) context_->Present();
+#endif
 	}
 	
 	void RendererES1::Render(const RenderData* data)
@@ -886,7 +892,7 @@ namespace ERI {
 		
 		glLoadIdentity();
 
-#if ERI_PLATFORM == ERI_PLATFORM_WIN
+#if ERI_PLATFORM == ERI_PLATFORM_WIN || ERI_PLATFORM == ERI_PLATFORM_MAC
 		glOrtho(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, near_z, far_z);
 #else
 		glOrthof(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, near_z, far_z);
@@ -931,7 +937,7 @@ namespace ERI {
 		float half_height = near_z * tan(angle);
 		float half_width = aspect * half_height;
 		
-#if ERI_PLATFORM == ERI_PLATFORM_WIN
+#if ERI_PLATFORM == ERI_PLATFORM_WIN || ERI_PLATFORM == ERI_PLATFORM_MAC
 		glFrustum(-half_width, half_width, -half_height, half_height, near_z, far_z);
 #else
 		glFrustumf(-half_width, half_width, -half_height, half_height, near_z, far_z);

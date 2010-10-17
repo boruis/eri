@@ -10,12 +10,17 @@
 #ifndef DEMO_APP_H
 #define DEMO_APP_H
 
-class DemoApp
+#include "input_mgr.h"
+
+class DemoApp : ERI::InputHandler
 	{
 	public:
 		DemoApp();
 		~DemoApp();
+		
 		void Update(double delta_time);
+		
+		virtual void Click(const ERI::InputEvent& event);
 	};
 
 #endif // DEMO_APP_H

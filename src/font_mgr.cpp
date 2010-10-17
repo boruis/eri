@@ -50,7 +50,7 @@ namespace ERI {
 		{
 			// TODO: default path setting is bad
 
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
+#if ERI_PLATFORM == ERI_PLATFORM_IOS || ERI_PLATFORM == ERI_PLATFORM_MAC
 			std::string font_path(GetResourcePath());
 			font_path += "/media/";
 #else

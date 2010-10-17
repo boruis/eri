@@ -9,11 +9,13 @@
 
 #include "pch.h"
 
+#include "texture_reader_freeimage.h"
+
 #include "FreeImage.h"
 
-#include "texture_reader_freeimage.h"
 #include "root.h"
 #include "renderer.h"
+#include "platform_helper.h"
 
 namespace ERI {
 	
@@ -21,22 +23,29 @@ namespace ERI {
 
 	TextureReaderFreeImage::TextureReaderFreeImage(const std::string& path) : texture_data_(NULL)
 	{
+#if ERI_PLATFORM == ERI_PLATFORM_IOS || ERI_PLATFORM == ERI_PLATFORM_MAC
+		std::string real_path(GetResourcePath());
+		real_path += "/" + path;
+#else
+		real_path = path;
+#endif
+		
 		//image format
 		FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
 		FIBITMAP* dib = NULL;
 
 		//check the file signature and deduce its format
-		fif = FreeImage_GetFileType(path.c_str(), 0);
+		fif = FreeImage_GetFileType(real_path.c_str(), 0);
 		//if still unknown, try to guess the file format from the file extension
 		if(fif == FIF_UNKNOWN) 
-			fif = FreeImage_GetFIFFromFilename(path.c_str());
+			fif = FreeImage_GetFIFFromFilename(real_path.c_str());
 		//if still unkown, return failure
 		if(fif == FIF_UNKNOWN)
 			return;
 
 		//check that the plugin has reading capabilities and load the file
 		if(FreeImage_FIFSupportsReading(fif))
-			dib = FreeImage_Load(fif, path.c_str());
+			dib = FreeImage_Load(fif, real_path.c_str());
 		//if the image failed to load, return failure
 		if(!dib)
 			return;

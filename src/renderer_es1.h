@@ -16,6 +16,8 @@
 #include "GL/glew.h"
 //#include "GL/wglew.h"
 //#include "GLee.h"
+#elif ERI_PLATFORM == ERI_PLATFORM_MAC
+#include <OpenGL/gl.h>
 #elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
 #include <GLES/gl.h>
 #elif ERI_PLATFORM == ERI_PLATFORM_IOS
