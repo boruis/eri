@@ -23,11 +23,12 @@ namespace ERI {
 
 	TextureReaderFreeImage::TextureReaderFreeImage(const std::string& path) : texture_data_(NULL)
 	{
+		std::string real_path(path);
 #if ERI_PLATFORM == ERI_PLATFORM_IOS || ERI_PLATFORM == ERI_PLATFORM_MAC
-		std::string real_path(GetResourcePath());
-		real_path += "/" + path;
-#else
-		real_path = path;
+		if (path[0] != '/')
+		{
+			real_path = GetResourcePath() + std::string("/") + path;
+		}
 #endif
 		
 		//image format

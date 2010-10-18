@@ -30,7 +30,10 @@ namespace ERI {
 	{
 		out_array.clear();
 		
-		NSString* path = [[NSBundle mainBundle] pathForResource:[NSString stringWithUTF8String:name.c_str()] ofType:@"plist"];
+		std::string absolute_path = GetResourcePath();
+		absolute_path += "/" + name + ".plist";
+		
+		NSString* path = [NSString stringWithUTF8String:absolute_path.c_str()];
 		if (path == nil)
 			return false;
 		
@@ -71,7 +74,10 @@ namespace ERI {
 	{
 		out_map.clear();
 		
-		NSString* path = [[NSBundle mainBundle] pathForResource:[NSString stringWithUTF8String:name.c_str()] ofType:@"plist"];
+		std::string absolute_path = GetResourcePath();
+		absolute_path += "/" + name + ".plist";
+		
+		NSString* path = [NSString stringWithUTF8String:absolute_path.c_str()];
 		if (path == nil)
 			return false;
 		

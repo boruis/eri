@@ -772,7 +772,11 @@ namespace ERI {
 		}
 		
 		render_data_.vertex_count = 4;
-		render_data_.vertex_format = is_use_tex2_ ? POS_TEX2_2 : POS_TEX_2;
+		
+		if (is_use_tex2_)
+			render_data_.vertex_format = POS_TEX2_2;
+		else
+			render_data_.vertex_format = POS_TEX_2;
 	}
 	
 	void SpriteActor::SetSizeOffset(float width, float height, float offset_width /*= 0.0f*/, float offset_height /*= 0.0f*/)
