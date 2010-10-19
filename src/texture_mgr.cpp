@@ -13,6 +13,7 @@
 
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 #include "ios/texture_reader_uikit.h"
+#include "texture_reader_libpng.h"
 #elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
 #include "texture_reader_bitmap_factory.h"
 #else
@@ -89,6 +90,7 @@ namespace ERI {
 		{
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 			TextureReaderUIImage reader(resource_path);
+			//TextureReaderLibPNG reader(resource_path);
 #elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
 			TextureReaderBitmapFactory reader(resource_path);
 #else
