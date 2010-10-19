@@ -38,6 +38,8 @@ DemoApp* demo_app;
 
 - (void)applicationDidFinishLaunching:(UIApplication *)application
 {
+	//window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+	
 	// init ERI
 	ERI::Root::Ins().Init();
 	ERI::Root::Ins().renderer()->SetViewOrientation(ERI::LANDSCAPE_HOME_RIGHT);
