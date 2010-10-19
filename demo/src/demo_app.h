@@ -20,6 +20,8 @@ class DemoApp : ERI::InputHandler
 		
 		void Update(double delta_time);
 		
+		virtual void Press(const ERI::InputEvent& event);
+		virtual void Release(const ERI::InputEvent& event);
 		virtual void Click(const ERI::InputEvent& event);
 	};
 

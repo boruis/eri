@@ -92,6 +92,20 @@ void DemoApp::Update(double delta_time)
 	}
 }
 
+void DemoApp::Press(const ERI::InputEvent& event)
+{
+	ERI::Vector3 pos = ERI::Root::Ins().scene_mgr()->ScreenToWorldPos(event.x, event.y);
+	
+	printf("press %f %f\n", pos.x, pos.y);
+}
+
+void DemoApp::Release(const ERI::InputEvent& event)
+{
+	ERI::Vector3 pos = ERI::Root::Ins().scene_mgr()->ScreenToWorldPos(event.x, event.y);
+	
+	printf("release %f %f\n", pos.x, pos.y);
+}
+
 void DemoApp::Click(const ERI::InputEvent& event)
 {
 	ERI::Vector3 pos = ERI::Root::Ins().scene_mgr()->ScreenToWorldPos(event.x, event.y);

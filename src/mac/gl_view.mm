@@ -10,24 +10,20 @@
 
 #include "root.h"
 #include "input_mgr.h"
+#include "math_helper.h"
+
+float mouse_down_x, mouse_down_y;
 
 @implementation GLView
 
-
-- (id)initWithFrame:(CGRect)frame {
-    if ((self = [super initWithFrame:frame])) {
+- (id)initWithFrame:(NSRect)frame
+{
+    if ((self = [super initWithFrame:frame]))
+	{
         // Initialization code
     }
     return self;
 }
-
-/*
-// Only override drawRect: if you perform custom drawing.
-// An empty implementation adversely affects performance during animation.
-- (void)drawRect:(CGRect)rect {
-    // Drawing code
-}
-*/
 
 - (BOOL)acceptsFirstResponder
 {
@@ -41,7 +37,8 @@
 	ERI::InputEvent e(0, pos.x, pos.y);
 	ERI::Root::Ins().input_mgr()->Press(e);
 	
-	NSLog(@"mouse down\n");
+	mouse_down_x = pos.x;
+	mouse_down_y = pos.y;
 }
 
 - (void)mouseMoved:(NSEvent *)event
@@ -50,8 +47,6 @@
 
 	ERI::InputEvent e(0, pos.x, pos.y);
 	ERI::Root::Ins().input_mgr()->Move(e);
-	
-	NSLog(@"mouse moved\n");
 }
 
 - (void)mouseDragged:(NSEvent *)event
@@ -60,8 +55,6 @@
 	
 	ERI::InputEvent e(0, pos.x, pos.y);
 	ERI::Root::Ins().input_mgr()->Move(e);
-
-	NSLog(@"mouse dragged\n");
 }
 
 - (void)mouseUp:(NSEvent *)event
@@ -70,11 +63,11 @@
 		
 	ERI::InputEvent e(0, pos.x, pos.y);
 	ERI::Root::Ins().input_mgr()->Release(e);
-
-	// TODO: more precise judgement
-	ERI::Root::Ins().input_mgr()->Click(e);
 	
-	NSLog(@"mouse up\n");
+	if (ERI::Abs(pos.x - mouse_down_x) < 10 && ERI::Abs(pos.y - mouse_down_y) < 10)
+	{
+		ERI::Root::Ins().input_mgr()->Click(e);
+	}
 }
 
 - (void)scrollWheel:(NSEvent *)event
