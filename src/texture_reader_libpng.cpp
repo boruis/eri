@@ -56,12 +56,14 @@ namespace ERI {
 		info_ptr = png_create_info_struct(png_ptr);
 		if (!info_ptr)
 		{
+			png_destroy_read_struct(&png_ptr, NULL, NULL);
 			fclose(f);
 			return;
 		}
 		
 		if (setjmp(png_jmpbuf(png_ptr)))
 		{
+			png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 			fclose(f);
 			return;
 		}
@@ -96,6 +98,7 @@ namespace ERI {
 		
 		if (setjmp(png_jmpbuf(png_ptr)))
 		{
+			png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 			fclose(f);
 			return;
 		}
@@ -110,6 +113,8 @@ namespace ERI {
 		png_read_image(png_ptr, row_pointers);
 
 		free(row_pointers);
+		
+		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 		
         fclose(f);
 		
