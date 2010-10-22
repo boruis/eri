@@ -167,6 +167,8 @@ namespace ERI {
 		void Release();
 		void ProcessRender();
 		
+		void CopyPixels(void* out_copy_pixels);
+		
 		inline const Texture* texture() { return texture_; }
 		
 	private:
@@ -174,6 +176,8 @@ namespace ERI {
 		const Texture*	texture_;
 		
 		CameraActor*	render_cam_;
+		
+		void*			out_copy_pixels_;
 	};
 	
 }

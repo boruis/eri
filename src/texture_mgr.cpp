@@ -231,7 +231,8 @@ namespace ERI {
 		width_(width),
 		height_(height),
 		texture_(NULL),
-		render_cam_(render_cam)
+		render_cam_(render_cam),
+		out_copy_pixels_(NULL)
 	{
 	}
 	
@@ -280,6 +281,13 @@ namespace ERI {
 		renderer->RenderStart();
 		scene_mgr->Render(renderer);
 		renderer->CopyTexture(texture_->id);
+		
+		//
+		
+		if (out_copy_pixels_)
+		{
+			renderer->CopyPixels(out_copy_pixels_, 0, 0, width_, height_);
+		}
 
 		//
 		
@@ -293,6 +301,11 @@ namespace ERI {
 		{
 			scene_mgr->OnRenderResize();
 		}
+	}
+	
+	void RenderToTexture::CopyPixels(void* out_copy_pixels)
+	{
+		out_copy_pixels_ = out_copy_pixels;
 	}
 	
 }
