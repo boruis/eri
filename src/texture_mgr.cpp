@@ -119,6 +119,32 @@ namespace ERI {
 		}
 	}
 	
+	const Texture* TextureMgr::CreateTexture(const std::string& name, int width, int height, const void* data)
+	{
+		ASSERT(!name.empty() && width > 0 && height > 0 && data);
+		
+		std::map<std::string, Texture*>::iterator it = texture_map_.find(name);
+		
+		ASSERT(it == texture_map_.end());
+		
+		unsigned int texture_id = Root::Ins().renderer()->GenerateTexture(data, width, height, RGBA);
+		if (texture_id == 0)
+			return NULL;
+		
+		Texture* tex = new Texture(texture_id, width, height);
+		
+		texture_map_.insert(std::make_pair(name, tex));
+		
+		return tex;
+	}
+	
+	void TextureMgr::UpdateTexture(Texture* tex, const void* data)
+	{
+		ASSERT(tex && tex->id > 0 && data);
+		
+		Root::Ins().renderer()->UpdateTexture(tex->id, data, tex->width, tex->height, RGBA);
+	}
+	
 	const Texture* TextureMgr::GetTxtTexture(const std::string& txt, const std::string& font_name, float font_size, float w, float h)
 	{
 		std::map<std::string, Texture*>::iterator it = texture_map_.find(txt + "_txt");

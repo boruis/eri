@@ -76,6 +76,7 @@ namespace ERI {
 		
 		virtual void EnableRenderToBuffer(int width, int height, int frame_buffer);
 		virtual void CopyTexture(unsigned int texture);
+		virtual void CopyPixels(void* buffer, int x, int y, int width, int height);
 		virtual void RestoreRenderToBuffer();
 		
 		virtual void EnableBlend(bool enable);
@@ -101,8 +102,9 @@ namespace ERI {
 		virtual void SetLightSpotExponent(int idx, float exponent);
 		virtual void SetLightSpotCutoff(int idx, float cutoff);
 
-		virtual unsigned int GenerateTexture(void* buffer, int width, int height, PixelFormat format);
+		virtual unsigned int GenerateTexture(const void* buffer, int width, int height, PixelFormat format);
 		virtual unsigned int GenerateRenderToTexture(int width, int height, int& out_frame_buffer);
+		virtual void UpdateTexture(unsigned int texture_id, const void* buffer, int width, int height, PixelFormat format);
 		virtual void ReleaseTexture(int texture_id);
 		virtual void ReleaseRenderToTexture(int texture_id, int frame_buffer);
 		

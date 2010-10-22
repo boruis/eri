@@ -448,13 +448,18 @@ namespace ERI {
 
 	void RendererES1::CopyTexture(unsigned int texture)
 	{
-#if ERI_PLATFORM == ERI_PLATFORM_WIN
+#if ERI_PLATFORM == ERI_PLATFORM_WIN || ERI_PLATFORM == ERI_PLATFORM_MAC
 		glBindTexture(GL_TEXTURE_2D, texture);
 		now_texture_ = texture;
 
 		// Copy Our ViewPort To The Blur Texture (From 0,0 To 128,128... No Border)
 		glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, backing_width_, backing_height_, 0);
 #endif
+	}
+	
+	void RendererES1::CopyPixels(void* buffer, int x, int y, int width, int height)
+	{
+		glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 	}
 	
 	void RendererES1::RestoreRenderToBuffer()
@@ -751,7 +756,7 @@ namespace ERI {
 		glLightf(GL_LIGHT0 + idx, GL_SPOT_CUTOFF, cutoff);
 	}
 	
-	unsigned int RendererES1::GenerateTexture(void* buffer, int width, int height, PixelFormat format)
+	unsigned int RendererES1::GenerateTexture(const void* buffer, int width, int height, PixelFormat format)
 	{
 		GLuint texture;
 		glGenTextures(1, &texture);
@@ -789,7 +794,7 @@ namespace ERI {
 		// create the framebuffer object
 		int frame_buffer = GenerateFrameBuffer();
 
-#if ERI_PLATFORM != ERI_PLATFORM_WIN
+#if ERI_PLATFORM != ERI_PLATFORM_WIN && ERI_PLATFORM != ERI_PLATFORM_MAC
 		if (!frame_buffer)
 			return 0;
 #endif
@@ -834,6 +839,30 @@ namespace ERI {
 		out_frame_buffer = frame_buffer;
 		
 		return texture;
+	}
+	
+	void RendererES1::UpdateTexture(unsigned int texture_id, const void* buffer, int width, int height, PixelFormat format)
+	{
+		ASSERT(texture_id > 0);
+
+		glBindTexture(GL_TEXTURE_2D, texture_id);
+		now_texture_ = texture_id;
+		
+		switch (format)
+		{
+			case RGBA:
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+				break;
+			case RGB:
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, buffer);
+				break;
+			case ALPHA:
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, buffer);
+				break;
+			default:
+				ASSERT2(0, "invalid pixel format!");
+				break;
+		}
 	}
 	
 	void RendererES1::ReleaseTexture(int texture_id)
