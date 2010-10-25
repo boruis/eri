@@ -7,6 +7,8 @@
  *
  */
 
+#include "pch.h"
+
 #include "particle_system.h"
 
 namespace ERI
