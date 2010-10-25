@@ -216,6 +216,8 @@ namespace ERI
 		ParticleSystem(const ParticleSystemSetup* setup_ref);
 		~ParticleSystem();
 		
+		void RefreshSetup();
+		
 		void SetEmitter(BaseEmitter* emitter);
 		void AddAffector(BaseAffector* affector);
 		
@@ -225,6 +227,8 @@ namespace ERI
 		void Update(float delta_time);
 		
 		void SetTexAreaUV(float start_u, float start_v, float width, float height);
+		
+		inline const ParticleSystemSetup* setup_ref() { return setup_ref_; }
 		
 	private:
 		void EmitParticle();

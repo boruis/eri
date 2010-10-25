@@ -211,13 +211,7 @@ namespace ERI
 		uv_size_(Vector2(1.0f, 1.0f)),
 		lived_time_(-1.0f)
 	{
-		ASSERT(setup_ref_);
-		ASSERT(setup_ref_->particle_life_min <= setup_ref_->particle_life_max);
-		
-		if (!setup_ref_->is_coord_relative)
-		{
-			render_data_.apply_identity_model_matrix = true;
-		}
+		RefreshSetup();
 	}
 
 	ParticleSystem::~ParticleSystem()
@@ -238,6 +232,14 @@ namespace ERI
 		}
 		
 		if (emitter_) delete emitter_;
+	}
+	
+	void ParticleSystem::RefreshSetup()
+	{
+		ASSERT(setup_ref_);
+		ASSERT(setup_ref_->particle_life_min <= setup_ref_->particle_life_max);
+
+		render_data_.apply_identity_model_matrix = !setup_ref_->is_coord_relative;
 	}
 
 	void ParticleSystem::SetEmitter(BaseEmitter* emitter)
