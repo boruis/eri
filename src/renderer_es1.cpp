@@ -334,6 +334,14 @@ namespace ERI {
 					use_vertex_color = true;
 					break;
 					
+				case POS_NORMAL_3:
+					vertex_pos_size = 3;
+					vertex_stride = sizeof(vertex_3_pos_normal);
+					vertex_pos_offset = (void*)offsetof(vertex_3_pos_normal, position);
+					vertex_normal_offset = (void*)offsetof(vertex_3_pos_normal, normal);
+					use_vertex_normal = true;
+					break;
+					
 				case POS_NORMAL_TEX_3:
 					vertex_pos_size = 3;
 					vertex_stride = sizeof(vertex_3_pos_normal_tex);

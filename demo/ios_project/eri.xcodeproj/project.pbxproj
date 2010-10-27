@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1B207ADD1277B02A006D3CDF /* collada_loader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1B207AD71277B02A006D3CDF /* collada_loader.cpp */; };
+		1B207ADE1277B02A006D3CDF /* mesh_actor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1B207AD91277B02A006D3CDF /* mesh_actor.cpp */; };
+		1B207ADF1277B02A006D3CDF /* xml_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1B207ADB1277B02A006D3CDF /* xml_helper.cpp */; };
 		1B956586126545FC00D123AF /* particle_system.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1B956584126545FC00D123AF /* particle_system.cpp */; };
 		1D3623260D0F684500981E51 /* eriAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D3623250D0F684500981E51 /* eriAppDelegate.mm */; };
 		1D60589B0D05DD56006BFB54 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; };
@@ -40,6 +43,17 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1B12F1591275664200F1FD08 /* rapidxml_iterators.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = rapidxml_iterators.hpp; path = ../../../3rd/rapidxml/rapidxml_iterators.hpp; sourceTree = SOURCE_ROOT; };
+		1B12F15A1275664200F1FD08 /* rapidxml_print.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = rapidxml_print.hpp; path = ../../../3rd/rapidxml/rapidxml_print.hpp; sourceTree = SOURCE_ROOT; };
+		1B12F15B1275664200F1FD08 /* rapidxml_utils.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = rapidxml_utils.hpp; path = ../../../3rd/rapidxml/rapidxml_utils.hpp; sourceTree = SOURCE_ROOT; };
+		1B12F15C1275664200F1FD08 /* rapidxml.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = rapidxml.hpp; path = ../../../3rd/rapidxml/rapidxml.hpp; sourceTree = SOURCE_ROOT; };
+		1B207AD71277B02A006D3CDF /* collada_loader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = collada_loader.cpp; path = ../../src/collada_loader.cpp; sourceTree = SOURCE_ROOT; };
+		1B207AD81277B02A006D3CDF /* collada_loader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = collada_loader.h; path = ../../src/collada_loader.h; sourceTree = SOURCE_ROOT; };
+		1B207AD91277B02A006D3CDF /* mesh_actor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mesh_actor.cpp; path = ../../src/mesh_actor.cpp; sourceTree = SOURCE_ROOT; };
+		1B207ADA1277B02A006D3CDF /* mesh_actor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mesh_actor.h; path = ../../src/mesh_actor.h; sourceTree = SOURCE_ROOT; };
+		1B207ADB1277B02A006D3CDF /* xml_helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xml_helper.cpp; path = ../../src/xml_helper.cpp; sourceTree = SOURCE_ROOT; };
+		1B207ADC1277B02A006D3CDF /* xml_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xml_helper.h; path = ../../src/xml_helper.h; sourceTree = SOURCE_ROOT; };
+		1B207BC31277BDAC006D3CDF /* mesh_loader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mesh_loader.h; path = ../../src/mesh_loader.h; sourceTree = SOURCE_ROOT; };
 		1B956584126545FC00D123AF /* particle_system.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = particle_system.cpp; path = ../../src/particle_system.cpp; sourceTree = SOURCE_ROOT; };
 		1B956585126545FC00D123AF /* particle_system.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = particle_system.h; path = ../../src/particle_system.h; sourceTree = SOURCE_ROOT; };
 		1D30AB110D05D00D00671497 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -135,9 +149,21 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		1B12F1581275662B00F1FD08 /* rapidxml */ = {
+			isa = PBXGroup;
+			children = (
+				1B12F1591275664200F1FD08 /* rapidxml_iterators.hpp */,
+				1B12F15A1275664200F1FD08 /* rapidxml_print.hpp */,
+				1B12F15B1275664200F1FD08 /* rapidxml_utils.hpp */,
+				1B12F15C1275664200F1FD08 /* rapidxml.hpp */,
+			);
+			name = rapidxml;
+			sourceTree = "<group>";
+		};
 		29B97314FDCFA39411CA2CEA /* CustomTemplate */ = {
 			isa = PBXGroup;
 			children = (
+				1B12F1581275662B00F1FD08 /* rapidxml */,
 				42C5ECD910C12C160004232B /* ERI */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
@@ -200,21 +226,22 @@
 		42C5ECD910C12C160004232B /* ERI */ = {
 			isa = PBXGroup;
 			children = (
-				F6E559E3126DF2FA00F8BE21 /* texture_reader_libpng.cpp */,
-				F6E559E4126DF2FA00F8BE21 /* texture_reader_libpng.h */,
 				F612B18B126B62EB002C8152 /* apple */,
 				423386C81233C75D0077CD42 /* ios */,
-				1B956584126545FC00D123AF /* particle_system.cpp */,
-				1B956585126545FC00D123AF /* particle_system.h */,
+				423386D31233C75D0077CD42 /* pch.h */,
+				1B207BC31277BDAC006D3CDF /* mesh_loader.h */,
+				1B207AD71277B02A006D3CDF /* collada_loader.cpp */,
+				1B207AD81277B02A006D3CDF /* collada_loader.h */,
+				1B207ADB1277B02A006D3CDF /* xml_helper.cpp */,
+				1B207ADC1277B02A006D3CDF /* xml_helper.h */,
+				423386D11233C75D0077CD42 /* math_helper.cpp */,
+				423386D21233C75D0077CD42 /* math_helper.h */,
+				423386D41233C75D0077CD42 /* platform_helper.h */,
 				423386C41233C75D0077CD42 /* font_mgr.cpp */,
 				423386C51233C75D0077CD42 /* font_mgr.h */,
 				423386C61233C75D0077CD42 /* input_mgr.cpp */,
 				423386C71233C75D0077CD42 /* input_mgr.h */,
 				423386D01233C75D0077CD42 /* material_data.h */,
-				423386D11233C75D0077CD42 /* math_helper.cpp */,
-				423386D21233C75D0077CD42 /* math_helper.h */,
-				423386D31233C75D0077CD42 /* pch.h */,
-				423386D41233C75D0077CD42 /* platform_helper.h */,
 				423386D51233C75D0077CD42 /* render_context.h */,
 				423386D61233C75D0077CD42 /* render_data.cpp */,
 				423386D71233C75D0077CD42 /* render_data.h */,
@@ -225,13 +252,19 @@
 				423386DC1233C75D0077CD42 /* renderer_es2.h */,
 				423386DD1233C75D0077CD42 /* root.cpp */,
 				423386DE1233C75D0077CD42 /* root.h */,
-				423386DF1233C75D0077CD42 /* scene_actor.cpp */,
-				423386E01233C75D0077CD42 /* scene_actor.h */,
 				423386E11233C75D0077CD42 /* scene_mgr.cpp */,
 				423386E21233C75D0077CD42 /* scene_mgr.h */,
+				423386DF1233C75D0077CD42 /* scene_actor.cpp */,
+				423386E01233C75D0077CD42 /* scene_actor.h */,
+				1B207AD91277B02A006D3CDF /* mesh_actor.cpp */,
+				1B207ADA1277B02A006D3CDF /* mesh_actor.h */,
 				423386E31233C75D0077CD42 /* texture_mgr.cpp */,
 				423386E41233C75D0077CD42 /* texture_mgr.h */,
+				1B956584126545FC00D123AF /* particle_system.cpp */,
+				1B956585126545FC00D123AF /* particle_system.h */,
 				423386E51233C75D0077CD42 /* texture_reader.h */,
+				F6E559E3126DF2FA00F8BE21 /* texture_reader_libpng.cpp */,
+				F6E559E4126DF2FA00F8BE21 /* texture_reader_libpng.h */,
 			);
 			name = ERI;
 			path = Classes;
@@ -328,6 +361,9 @@
 				1B956586126545FC00D123AF /* particle_system.cpp in Sources */,
 				F612B190126B62EB002C8152 /* platform_helper_apple.mm in Sources */,
 				F6E559E5126DF2FA00F8BE21 /* texture_reader_libpng.cpp in Sources */,
+				1B207ADD1277B02A006D3CDF /* collada_loader.cpp in Sources */,
+				1B207ADE1277B02A006D3CDF /* mesh_actor.cpp in Sources */,
+				1B207ADF1277B02A006D3CDF /* xml_helper.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
