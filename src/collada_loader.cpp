@@ -84,7 +84,7 @@ namespace ERI
 		doc.parse<0>(buffer);
 		
 		std::string geometry_id;
-		Mesh* geometry;
+		Mesh* geometry = NULL;
 		
 		node = doc.first_node("COLLADA");
 		if (!node)
