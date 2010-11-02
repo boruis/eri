@@ -404,7 +404,7 @@ namespace ERI
 							   &input_srcs[j]->datas[src_idx * src_stride + k],
 							   4);
 						
-						ASSERT((int)&buffer_data[buffer_offset + k * 4] < (int)buffer_data + current_vertex_size_);
+						ASSERT(reinterpret_cast<long>(&buffer_data[buffer_offset + k * 4]) < reinterpret_cast<long>(buffer_data) + current_vertex_size_);
 					}
 					
 					buffer_offset += input_srcs[j]->stride * 4;
