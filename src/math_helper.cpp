@@ -20,7 +20,7 @@ namespace ERI {
 	
 #pragma mark Geometry
 	
-	const double Math::ZERO_TOLERANCE = 1e-08;
+	const double Math::ZERO_TOLERANCE = 1e-06;
 
 	const float Math::PI = 4 * atan(1.0f);
 	const float Math::TWO_PI = PI * 2;
@@ -99,10 +99,145 @@ namespace ERI {
 		return length;
 	}
 
+	const Matrix3 Matrix3::IDENTITY(1.0f, 0.0f, 0.0f,
+									0.0f, 1.0f, 0.0f,
+									0.0f, 0.0f, 1.0f);
+	
+	void Matrix3::QDUDecomposition(Matrix3& mQ, Vector3& vD, Vector3& vU) const
+    {
+        // Factor M = QR = QDU where Q is orthogonal, D is diagonal,
+        // and U is upper triangular with ones on its diagonal.  Algorithm uses
+        // Gram-Schmidt orthogonalization (the QR algorithm).
+        //
+        // If M = [ m0 | m1 | m2 ] and Q = [ q0 | q1 | q2 ], then
+        //
+        //   q0 = m0/|m0|
+        //   q1 = (m1-(q0*m1)q0)/|m1-(q0*m1)q0|
+        //   q2 = (m2-(q0*m2)q0-(q1*m2)q1)/|m2-(q0*m2)q0-(q1*m2)q1|
+        //
+        // where |V| indicates length of vector V and A*B indicates dot
+        // product of vectors A and B.  The matrix R has entries
+        //
+        //   r00 = q0*m0  r01 = q0*m1  r02 = q0*m2
+        //   r10 = 0      r11 = q1*m1  r12 = q1*m2
+        //   r20 = 0      r21 = 0      r22 = q2*m2
+        //
+        // so D = diag(r00,r11,r22) and U has entries u01 = r01/r00,
+        // u02 = r02/r00, and u12 = r12/r11.
+		
+        // Q = rotation
+        // D = scaling
+        // U = shear
+		
+        // D stores the three diagonal entries r00, r11, r22
+        // U stores the entries U[0] = u01, U[1] = u02, U[2] = u12
+		
+        // build orthogonal matrix Q
+        float inv_length = 1.0f / sqrt(m[TRI_00] * m[TRI_00] + m[TRI_10] * m[TRI_10] + m[TRI_20] * m[TRI_20]);
+		
+        mQ.m[TRI_00] = m[TRI_00] * inv_length;
+        mQ.m[TRI_10] = m[TRI_10] * inv_length;
+        mQ.m[TRI_20] = m[TRI_20] * inv_length;
+		
+        float dot = mQ.m[TRI_00] * m[TRI_01] + mQ.m[TRI_10] * m[TRI_11] + mQ.m[TRI_20] * m[TRI_21];
+        mQ.m[TRI_01] = m[TRI_01] - dot * mQ.m[TRI_00];
+        mQ.m[TRI_11] = m[TRI_11] - dot * mQ.m[TRI_10];
+        mQ.m[TRI_21] = m[TRI_21] - dot * mQ.m[TRI_20];
+        inv_length = 1.0f / sqrt(mQ.m[TRI_01] * mQ.m[TRI_01] + mQ.m[TRI_11] * mQ.m[TRI_11] + mQ.m[TRI_21] * mQ.m[TRI_21]);
+        mQ.m[TRI_01] *= inv_length;
+        mQ.m[TRI_11] *= inv_length;
+        mQ.m[TRI_21] *= inv_length;
+		
+        dot = mQ.m[TRI_00] * m[TRI_02] + mQ.m[TRI_10] * m[TRI_12] + mQ.m[TRI_20] * m[TRI_22];
+        mQ.m[TRI_02] = m[TRI_02] - dot * mQ.m[TRI_00];
+        mQ.m[TRI_12] = m[TRI_12] - dot * mQ.m[TRI_10];
+        mQ.m[TRI_22] = m[TRI_22] - dot * mQ.m[TRI_20];
+        dot = mQ.m[TRI_01] * m[TRI_02] + mQ.m[TRI_11] * m[TRI_12] +	mQ.m[TRI_21] * m[TRI_22];
+        mQ.m[TRI_02] -= dot * mQ.m[TRI_01];
+        mQ.m[TRI_12] -= dot * mQ.m[TRI_11];
+        mQ.m[TRI_22] -= dot * mQ.m[TRI_21];
+        inv_length = 1.0f / sqrt(mQ.m[TRI_02] * mQ.m[TRI_02] + mQ.m[TRI_12] * mQ.m[TRI_12] + mQ.m[TRI_22] * mQ.m[TRI_22]);
+        mQ.m[TRI_02] *= inv_length;
+        mQ.m[TRI_12] *= inv_length;
+        mQ.m[TRI_22] *= inv_length;
+		
+        // guarantee that orthogonal matrix has determinant 1 (no reflections)
+        float det = mQ.m[TRI_00] * mQ.m[TRI_11] * mQ.m[TRI_22] + mQ.m[TRI_01] * mQ.m[TRI_12] * mQ.m[TRI_20] +
+			mQ.m[TRI_02] * mQ.m[TRI_10] * mQ.m[TRI_21] - mQ.m[TRI_02] * mQ.m[TRI_11] * mQ.m[TRI_20] -
+			mQ.m[TRI_01] * mQ.m[TRI_10] * mQ.m[TRI_22] - mQ.m[TRI_00] * mQ.m[TRI_12] * mQ.m[TRI_21];
+		
+        if (det < 0.0f)
+        {
+            for (size_t i = 0; i < 9; i++)
+				mQ.m[i] *= -1;
+        }
+		
+        // build "right" matrix R
+        Matrix3 mR;
+        mR.m[TRI_00] = mQ.m[TRI_00] * m[TRI_00] + mQ.m[TRI_10] * m[TRI_10] + mQ.m[TRI_20] * m[TRI_20];
+        mR.m[TRI_01] = mQ.m[TRI_00] * m[TRI_01] + mQ.m[TRI_10] * m[TRI_11] + mQ.m[TRI_20] * m[TRI_21];
+        mR.m[TRI_11] = mQ.m[TRI_01] * m[TRI_01] + mQ.m[TRI_11] * m[TRI_11] + mQ.m[TRI_21] * m[TRI_21];
+        mR.m[TRI_02] = mQ.m[TRI_00] * m[TRI_02] + mQ.m[TRI_10] * m[TRI_12] + mQ.m[TRI_20] * m[TRI_22];
+        mR.m[TRI_12] = mQ.m[TRI_01] * m[TRI_02] + mQ.m[TRI_11] * m[TRI_12] + mQ.m[TRI_21] * m[TRI_22];
+        mR.m[TRI_22] = mQ.m[TRI_02] * m[TRI_02] + mQ.m[TRI_12] * m[TRI_12] + mQ.m[TRI_22] * m[TRI_22];
+		
+        // the scaling component
+        vD.x = mR.m[TRI_00];
+        vD.y = mR.m[TRI_11];
+        vD.z = mR.m[TRI_22];
+		
+        // the shear component
+        float inv_D0 = 1.0f / vD.x;
+        vU.x = mR.m[TRI_01] * inv_D0;
+        vU.y = mR.m[TRI_02] * inv_D0;
+        vU.z = mR.m[TRI_12] / vD.y;
+    }
+	
 	const Matrix4 Matrix4::IDENTITY(1.0f, 0.0f, 0.0f, 0.0f,
 									0.0f, 1.0f, 0.0f, 0.0f,
 									0.0f, 0.0f, 1.0f, 0.0f,
 									0.0f, 0.0f, 0.0f, 1.0f);
+	
+	void Matrix4::ExtractMatrix3(Matrix3& m3)
+	{
+		m3.m[TRI_00] = m[_00]; m3.m[TRI_01] = m[_01]; m3.m[TRI_02] = m[_02];
+		m3.m[TRI_10] = m[_10]; m3.m[TRI_11] = m[_11]; m3.m[TRI_12] = m[_12];
+		m3.m[TRI_20] = m[_20]; m3.m[TRI_21] = m[_21]; m3.m[TRI_22] = m[_22];
+	}
+	
+	void Matrix4::ExtractTransform(Vector3& scale, Quaternion& rotate, Vector3& translate)
+	{
+		ASSERT(is_affine());
+		
+		Matrix3 m3;
+		ExtractMatrix3(m3);
+		
+		Matrix3 mQ;
+		Vector3 vU;
+		m3.QDUDecomposition(mQ, scale, vU);
+		
+		rotate = Quaternion(Matrix4(mQ));
+		translate = Vector3(m[_03], m[_13], m[_23]);
+	}
+	
+	void Matrix4::MakeTransform(const Vector3& scale, const Quaternion& rotate, const Vector3& translate)
+	{
+		// Ordering:
+        //    1. Scale
+        //    2. Rotate
+        //    3. Translate
+		
+        Matrix3 rot3;
+        rotate.ToRotationMatrix(rot3);
+		
+        // Set up final matrix with scale, rotation and translation
+        m[_00] = scale.x * rot3.m[TRI_00]; m[_01] = scale.y * rot3.m[TRI_01]; m[_02] = scale.z * rot3.m[TRI_02]; m[_03] = translate.x;
+        m[_10] = scale.x * rot3.m[TRI_10]; m[_11] = scale.y * rot3.m[TRI_11]; m[_12] = scale.z * rot3.m[TRI_12]; m[_13] = translate.y;
+        m[_20] = scale.x * rot3.m[TRI_20]; m[_21] = scale.y * rot3.m[TRI_21]; m[_22] = scale.z * rot3.m[TRI_22]; m[_23] = translate.z;
+		
+        // No projection term
+        m[_30] = 0; m[_31] = 0; m[_32] = 0; m[_33] = 1;
+	}
 	
 	void Matrix4::Multiply(Matrix4& out_m, const Matrix4& m1, const Matrix4& m2)
 	{
@@ -207,9 +342,9 @@ namespace ERI {
 	
 	void Matrix4::RotateAxis(Matrix4& out_m, float degree, const Vector3& axis)
 	{
-		float angle = degree / 360 * Math::TWO_PI;
-		float s = sin(angle);
-		float c = cos(angle);
+		float radian = Math::ToRadian(degree);
+		float s = sin(radian);
+		float c = cos(radian);
 
 		float x, y, z;
 		x = axis.x;
@@ -225,23 +360,23 @@ namespace ERI {
 			z *= inv_length;
 		}
 		
-		out_m.m[_00]  = x * x * (1 - c) + c;
-		out_m.m[_01]  = x * y * (1 - c) - (z * s);
-		out_m.m[_02]  = x * z * (1 - c) + (y * s);
+		out_m.m[_00] = x * x * (1 - c) + c;
+		out_m.m[_01] = x * y * (1 - c) - (z * s);
+		out_m.m[_02] = x * z * (1 - c) + (y * s);
 		out_m.m[_03] = 0;
 		
-		out_m.m[_10]  = y * x * (1 - c) + (z * s);
-		out_m.m[_11]  = y * y * (1 - c) + c;
-		out_m.m[_12]  = y * z * (1 - c) - (x * s);
+		out_m.m[_10] = y * x * (1 - c) + (z * s);
+		out_m.m[_11] = y * y * (1 - c) + c;
+		out_m.m[_12] = y * z * (1 - c) - (x * s);
 		out_m.m[_13] = 0;
 		
-		out_m.m[_20]  = z * x * (1 - c) - (y * s);
-		out_m.m[_21]  = z * y * (1 - c) + (x * s);
+		out_m.m[_20] = z * x * (1 - c) - (y * s);
+		out_m.m[_21] = z * y * (1 - c) + (x * s);
 		out_m.m[_22] = z * z * (1 - c) + c;
 		out_m.m[_23] = 0.0f;
 		
-		out_m.m[_30]  = 0.0f;
-		out_m.m[_31]  = 0.0f;
+		out_m.m[_30] = 0.0f;
+		out_m.m[_31] = 0.0f;
 		out_m.m[_32] = 0.0f;
 		out_m.m[_33] = 1.0f;
 	}
@@ -342,16 +477,12 @@ namespace ERI {
 	
 	Quaternion::Quaternion(float degree, const Vector3& axis)
 	{
-		float sin_value = static_cast<float>(sin(degree / 360 * Math::TWO_PI * 0.5f));
-		float cos_value = static_cast<float>(cos(degree / 360 * Math::TWO_PI * 0.5f));
-		
-		/* Create quaternion */
-		x = axis.x * sin_value;
-		y = axis.y * sin_value;
-		z = axis.z * sin_value;
-		w = cos_value;
-		
-		Normalize();
+		FromRotationAxis(degree, axis);
+	}
+	
+	Quaternion::Quaternion(const Matrix4& rotate)
+	{
+		FromRotationMatrix(rotate);
 	}
 	
 	void Quaternion::Normalize()
@@ -361,7 +492,7 @@ namespace ERI {
 		float magnitude = static_cast<float>(sqrt(temp));
 		
 		/* Divide each quaternion component by this magnitude */
-		if (magnitude != 0.0f)
+		if (magnitude > Math::ZERO_TOLERANCE)
 		{
 			magnitude = 1.0f / magnitude;
 			x *= magnitude;
@@ -371,46 +502,115 @@ namespace ERI {
 		}
 	}
 	
-	void Quaternion::GetRotationAxis(float& out_degree, Vector3& out_axis)
+	void Quaternion::FromRotationAxis(float degree, const Vector3& axis)
 	{
-		/* Compute some values */
-		float cos_angle	= w;
-		double temp	= 1.0f - cos_angle * cos_angle;
-		float sin_angle	= static_cast<float>(sqrt(temp));
+		// assert:  axis[] is unit length
+        //
+        // The quaternion representing the rotation is
+        //   q = cos(A/2)+sin(A/2)*(x*i+y*j+z*k)
 		
-		/* This is to avoid a division by zero */
-		if (static_cast<float>(fabs(sin_angle)) < 0.0005f)
-			sin_angle = 1.0f;
+		float half_radian = Math::ToRadian(degree) * 0.5f;
+		float sin_value = sin(half_radian);
+		float cos_value = cos(half_radian);
 		
-		/* Get axis vector */
-		out_axis.x = x / sin_angle;
-		out_axis.y = y / sin_angle;
-		out_axis.z = z / sin_angle;
-		
-		out_degree = static_cast<float>(acos(cos_angle) * 2) / Math::TWO_PI * 360;
+		x = axis.x * sin_value;
+		y = axis.y * sin_value;
+		z = axis.z * sin_value;
+		w = cos_value;
 	}
 	
-	void Quaternion::GetRotationMatrix(Matrix4& out_m)
+	void Quaternion::ToRotationAxis(float& out_degree, Vector3& out_axis) const
 	{
-		out_m.m[_00] = 1.0f - 2.0f * y * y - 2.0f * z * z;
-		out_m.m[_10] = 2.0f * x * y - 2.0f * z * w;
-		out_m.m[_20] = 2.0f * x * z + 2.0f * y * w;
-		out_m.m[_30] = 0.0f;
+		// The quaternion representing the rotation is
+        //   q = cos(A/2)+sin(A/2)*(x*i+y*j+z*k)
 		
-		out_m.m[_01] = 2.0f * x * y + 2.0f * z * w;
-		out_m.m[_11] = 1.0f - 2.0f * x * x - 2.0f * z * z;
-		out_m.m[_21] = 2.0f * y * z - 2.0f * x * w;
-		out_m.m[_31] = 0.0f;
+        float sqr_length = x * x + y * y + z * z;
+        if (sqr_length > Math::ZERO_TOLERANCE)
+        {
+			out_degree = Math::ToDegree(2.0f * acos(w));
+            float inv_length = 1.0f / sqrt(sqr_length);
+            out_axis.x = x * inv_length;
+            out_axis.y = y * inv_length;
+            out_axis.z = z * inv_length;
+        }
+        else
+        {
+            // angle is 0 (mod 2*pi), so any axis will do
+            out_degree = 0.0f;
+            out_axis.x = 1.0f;
+            out_axis.y = 0.0f;
+            out_axis.z = 0.0f;
+        }
+	}
+	
+	void Quaternion::FromRotationMatrix(const Matrix4& rotate)
+	{
+		// Algorithm in Ken Shoemake's article in 1987 SIGGRAPH course notes
+		// article "Quaternion Calculus and Fast Animation".
 		
-		out_m.m[_02] = 2.0f * x * z - 2.0f * y * w;
-		out_m.m[_12] = 2.0f * y * z + 2.0f * x * w;
-		out_m.m[_22] = 1.0f - 2.0f * x * x - 2.0f * y * y;
-		out_m.m[_32] = 0.0f;
+		float trace = rotate.m[_00] + rotate.m[_11] + rotate.m[_22];
+		float root;
 		
-		out_m.m[_03] = 0.0f;
-		out_m.m[_13] = 0.0f;
-		out_m.m[_23] = 0.0f;
-		out_m.m[_33] = 1.0f;
+		if (trace > 0.0f)
+		{
+			// |w| > 1/2, may as well choose w > 1/2
+			root = sqrt(trace + 1.0f);  // 2w
+			w = 0.5f * root;
+			root = 0.5f / root;  // 1/(4w)
+			x = (rotate.m[_21] - rotate.m[_12]) * root;
+			y = (rotate.m[_02] - rotate.m[_20]) * root;
+			z = (rotate.m[_10] - rotate.m[_01]) * root;
+		}
+		else
+		{
+			// |w| <= 1/2
+			const int next[3] = { 1, 2, 0 };
+			
+			int i = 0;
+			if (rotate.m[_11] > rotate.m[_00])
+				i = 1;
+			if (rotate.m[_22] > rotate.Get(i, i))
+				i = 2;
+			
+			int j = next[i];
+			int k = next[j];
+			
+			root = sqrt(rotate.Get(i, i) - rotate.Get(j, j) - rotate.Get(k, k) + 1.0f);
+			float* ref_quat[3] = { &x, &y, &z };
+			*ref_quat[i] = 0.5f * root;
+			root = 0.5f / root;
+			w = (rotate.Get(k, j) - rotate.Get(j, k)) * root;
+			*ref_quat[j] = (rotate.Get(j, i) + rotate.Get(i, j)) * root;
+			*ref_quat[k] = (rotate.Get(k, i) + rotate.Get(i, k)) * root;
+		}
+	}
+	
+	void Quaternion::ToRotationMatrix(Matrix3& out_rotate) const
+	{
+		float Tx  = x + x;
+        float Ty  = y + y;
+        float Tz  = z + z;
+        float Twx = Tx * w;
+        float Twy = Ty * w;
+        float Twz = Tz * w;
+        float Txx = Tx * x;
+        float Txy = Ty * x;
+        float Txz = Tz * x;
+        float Tyy = Ty * y;
+        float Tyz = Tz * y;
+        float Tzz = Tz * z;
+		
+        out_rotate.m[TRI_00] = 1.0f - (Tyy + Tzz);
+        out_rotate.m[TRI_01] = Txy - Twz;
+        out_rotate.m[TRI_02] = Txz + Twy;
+		
+        out_rotate.m[TRI_10] = Txy + Twz;
+        out_rotate.m[TRI_11] = 1.0f - (Txx + Tzz);
+        out_rotate.m[TRI_12] = Tyz - Twx;
+		
+        out_rotate.m[TRI_20] = Txz - Twy;
+        out_rotate.m[TRI_21] = Tyz + Twx;
+        out_rotate.m[TRI_22] = 1.0f - (Txx + Tyy);
 	}
 	
 	void Quaternion::Multiply(Quaternion& out_q, const Quaternion& q1, const Quaternion& q2)
@@ -434,6 +634,42 @@ namespace ERI {
 		out_q.Normalize();
 	}
 	
+	void Quaternion::Slerp(Quaternion& out_q, float t, const Quaternion& q1, const Quaternion& q2, bool shortest_path /*= false*/)
+	{
+		float cos_value = q1.DotProduct(q2);
+        Quaternion temp_q = q2;
+		
+        // Do we need to invert rotation?
+        if (cos_value < 0.0f && shortest_path)
+        {
+            cos_value = -cos_value;
+            temp_q *= -1;
+        }
+		
+        if (Abs(cos_value) < 1 - 1e-03)
+        {
+            // Standard case (slerp)
+            float sin_value = sqrt(1 - cos_value * cos_value);
+            float radian = atan2(sin_value, cos_value);
+            float inv_sin = 1.0f / sin_value;
+            float coeff0 = sin((1.0f - t) * radian) * inv_sin;
+            float coeff1 = sin(t * radian) * inv_sin;
+            out_q = q1 * coeff0 + temp_q * coeff1;
+        }
+        else
+        {
+            // There are two situations:
+            // 1. "q1" and "q2" are very close (fCos ~= +1), so we can do a linear
+            //    interpolation safely.
+            // 2. "q1" and "q2" are almost inverse of each other (fCos ~= -1), there
+            //    are an infinite number of possibilities interpolation. but we haven't
+            //    have method to fix this case, so just use linear interpolation here.
+            out_q = q1 * (1.0f - t) + temp_q * t;
+            // taking the complement requires renormalisation
+            out_q.Normalize();
+        }
+	}
+
 #pragma mark Intersection
 	
 	float GetPointBox2DistanceSquared(const Vector2& point, const Box2& box)
