@@ -61,7 +61,8 @@ namespace ERI {
 		POS_TEX2_2,
 		POS_TEX_COLOR_2,
 		POS_NORMAL_3,
-		POS_NORMAL_TEX_3
+		POS_NORMAL_TEX_3,
+		INVALID_VERTEX_FORMAT
 	};
 
 	struct RenderData
