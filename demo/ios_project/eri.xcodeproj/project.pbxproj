@@ -108,7 +108,7 @@
 		42F60B641140D9D900CEA8FC /* demo_app.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = demo_app.cpp; path = ../../src/demo_app.cpp; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* eri-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "eri-Info.plist"; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.iphone.info-plist"; sourceTree = "<group>"; };
 		F612B18E126B62EB002C8152 /* platform_helper_apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = platform_helper_apple.mm; sourceTree = "<group>"; };
-		F66D438B126DF88200199D22 /* libpng.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpng.a; path = /Users/exe/works/3rd/libpng/libpng.a; sourceTree = "<absolute>"; };
+		F66D438B126DF88200199D22 /* libpng.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpng.a; path = ../../../3rd/libpng/libpng.a; sourceTree = SOURCE_ROOT; };
 		F673812F126E15A30033BBC7 /* MainWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainWindow.xib; sourceTree = "<group>"; };
 		F6D04215126DFE2C00FCA4ED /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		F6E559E3126DF2FA00F8BE21 /* texture_reader_libpng.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = texture_reader_libpng.cpp; path = ../../src/texture_reader_libpng.cpp; sourceTree = SOURCE_ROOT; };
@@ -389,7 +389,7 @@
 				INFOPLIST_FILE = "eri-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/../../../../3rd/libpng\"",
+					"\"$(SRCROOT)/../../../3rd/libpng\"",
 				);
 				PRODUCT_NAME = eri;
 			};
@@ -406,7 +406,7 @@
 				INFOPLIST_FILE = "eri-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/../../../../3rd/libpng\"",
+					"\"$(SRCROOT)/../../../3rd/libpng\"",
 				);
 				PRODUCT_NAME = eri;
 			};
@@ -420,11 +420,11 @@
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = ../../../../3rd/libpng;
+				HEADER_SEARCH_PATHS = ../../../3rd/libpng;
 				IPHONEOS_DEPLOYMENT_TARGET = 3.0;
 				PREBINDING = NO;
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "07C30C15-26F6-40AC-B7ED-365F8BBA51DF";
-				SDKROOT = iphoneos4.1;
+				SDKROOT = iphoneos;
 			};
 			name = Debug;
 		};
@@ -436,10 +436,10 @@
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = ../../../../3rd/libpng;
+				HEADER_SEARCH_PATHS = ../../../3rd/libpng;
 				PREBINDING = NO;
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "07C30C15-26F6-40AC-B7ED-365F8BBA51DF";
-				SDKROOT = iphoneos4.1;
+				SDKROOT = iphoneos;
 			};
 			name = Release;
 		};

@@ -267,6 +267,8 @@ namespace ERI {
 #if ERI_PLATFORM != ERI_PLATFORM_MAC
 		if (context_) context_->Present();
 #endif
+		
+		EnableDepthWrite(true);
 	}
 	
 	void RendererES1::Render(const RenderData* data)
@@ -549,9 +551,9 @@ namespace ERI {
 			depth_write_enable_ = enable;
 			
 			if (enable)
-				glEnable(GL_DEPTH_TEST);
+				glDepthMask(GL_TRUE);
 			else
-				glDisable(GL_DEPTH_TEST);
+				glDepthMask(GL_FALSE);
 		}
 	}
 	
