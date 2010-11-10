@@ -152,7 +152,7 @@ namespace ERI
 	
 #pragma mark SkeletonIns
 
-	SkeletonIns::SkeletonIns(SharedSkeleton* resource_ref) :
+	SkeletonIns::SkeletonIns(const SharedSkeleton* resource_ref) :
 		resource_ref_(resource_ref),
 		anim_speed_rate_(1.0f),
 		is_inverse_(false),
@@ -324,7 +324,7 @@ namespace ERI
 
 #pragma mark SkeletonActor
 
-	SkeletonActor::SkeletonActor(SharedSkeleton* resource_ref) :
+	SkeletonActor::SkeletonActor(const SharedSkeleton* resource_ref) :
 		vertex_buffer_(NULL)
 	{
 		skeleton_ins_ = new SkeletonIns(resource_ref);

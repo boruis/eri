@@ -118,7 +118,7 @@ namespace ERI
 	class SkeletonIns
 	{
 	public:
-		SkeletonIns(SharedSkeleton* resource_ref);
+		SkeletonIns(const SharedSkeleton* resource_ref);
 		~SkeletonIns();
 
 		// TODO: should put to another anim class interface ...
@@ -138,7 +138,7 @@ namespace ERI
 	private:
 		void AttachSample();
 		
-		SharedSkeleton*		resource_ref_;
+		const SharedSkeleton*	resource_ref_;
 
 		std::vector<SkeletonNodeIns>	node_ins_array_;
 		
@@ -153,7 +153,7 @@ namespace ERI
 	class SkeletonActor : public SceneActor
 	{
 	public:
-		SkeletonActor(SharedSkeleton* resource_ref);
+		SkeletonActor(const SharedSkeleton* resource_ref);
 		virtual ~SkeletonActor();
 		
 		void Update(float delta_time);
