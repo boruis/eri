@@ -29,7 +29,8 @@ DemoApp::DemoApp()
 	
 	float content_scale = ERI::Root::Ins().renderer()->content_scale();
 	
-	int ui_layer = ERI::Root::Ins().scene_mgr()->AddLayer();
+	ERI::Root::Ins().scene_mgr()->CreateLayer(2);
+	int ui_layer = 1;
 	
 	cam = new ERI::CameraActor;
 	cam->AddToScene(ui_layer);

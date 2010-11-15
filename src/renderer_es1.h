@@ -70,6 +70,7 @@ namespace ERI {
 		virtual void RenderStart();
 		virtual void RenderEnd();
 		virtual void Render(const RenderData* data);
+		virtual void ClearDepth();
 		
 		virtual void SaveTransform();
 		virtual void RecoverTransform();

@@ -37,22 +37,24 @@ namespace ERI {
 		return texture_id;
 	}
 	
+#pragma mark TextureActorGroup
+	
 	TextureActorGroup::~TextureActorGroup()
 	{
-		for (size_t i = 0; i < groups.size(); ++i)
+		for (size_t i = 0; i < actor_arrays_.size(); ++i)
 		{
-			if (groups[i]) delete groups[i];
+			if (actor_arrays_[i]) delete actor_arrays_[i];
 		}
 	}
 	
 	void TextureActorGroup::Render(Renderer* renderer)
 	{
-		size_t num = groups.size();
+		size_t num = actor_arrays_.size();
 		for (size_t i = 0; i < num; ++i)
 		{
-			if (groups[i] != NULL)
+			if (actor_arrays_[i] != NULL)
 			{
-				std::vector<SceneActor*>& actors = groups[i]->actors;
+				ActorArray& actors = *actor_arrays_[i];
 				size_t num = actors.size();
 				for (size_t j = 0; j < num; ++j)
 				{
@@ -66,52 +68,54 @@ namespace ERI {
 	{
 		ASSERT(actor);
 		
-		int group_idx = -1;
+		int array_idx = -1;
 		int texture_id = GetMaterialDataSingleTextureId(actor->material());
 		
-		std::map<int, int>::iterator it = texture_map.find(texture_id);
-		if (it == texture_map.end())
+		std::map<int, int>::iterator it = texture_map_.find(texture_id);
+		if (it == texture_map_.end())
 		{
-			ActorGroup* group = new ActorGroup;
+			ActorArray* array = new ActorArray;
 			
 			// find empty space
 			size_t i = 0;
-			size_t num = groups.size();
+			size_t num = actor_arrays_.size();
 			for (; i < num; ++i)
 			{
-				if (groups[i] == NULL)
+				if (actor_arrays_[i] == NULL)
 				{
-					groups[i] = group;
-					group_idx = i;
+					actor_arrays_[i] = array;
+					array_idx = i;
 					break;
 				}
 			}
 			if (i == num)
 			{
-				groups.push_back(group);
-				group_idx = num;
+				actor_arrays_.push_back(array);
+				array_idx = num;
 			}
 			
-			texture_map.insert(std::make_pair(texture_id, group_idx));
+			texture_map_.insert(std::make_pair(texture_id, array_idx));
 		}
 		else
 		{
-			group_idx = it->second;
+			array_idx = it->second;
 		}
 		
-		groups[group_idx]->actors.push_back(actor);
+		actor_arrays_[array_idx]->push_back(actor);
 	}
 	
 	void TextureActorGroup::RemoveActor(SceneActor* actor)
 	{
+		ASSERT(actor);
+		
 		int texture_id = GetMaterialDataSingleTextureId(actor->material());
 		
-		std::map<int, int>::iterator it = texture_map.find(texture_id);
+		std::map<int, int>::iterator it = texture_map_.find(texture_id);
 		
-		ASSERT(it != texture_map.end());
+		ASSERT(it != texture_map_.end());
 		
 		// find actor
-		std::vector<SceneActor*>& actors = groups[it->second]->actors;
+		ActorArray& actors = *actor_arrays_[it->second];
 		size_t i = 0;
 		size_t num = actors.size();
 		for (; i < num; ++i)
@@ -124,9 +128,9 @@ namespace ERI {
 		
 		if (num <= 1) // no more actor, clear group
 		{
-			delete groups[it->second];
-			groups[it->second] = NULL;
-			texture_map.erase(it);
+			delete actor_arrays_[it->second];
+			actor_arrays_[it->second] = NULL;
+			texture_map_.erase(it);
 		}
 		else
 		{
@@ -138,16 +142,28 @@ namespace ERI {
 		}
 	}
 	
+	bool TextureActorGroup::IsEmpty()
+	{
+		size_t num = actor_arrays_.size();
+		for (size_t i = 0; i < num; ++i)
+		{
+			if (actor_arrays_[i]->size() > 0)
+				return false;
+		}
+		
+		return true;
+	}
+	
 	SceneActor* TextureActorGroup::GetHitActor(const Vector3& pos)
 	{
 		SceneActor* actor;
 		
-		size_t num = groups.size();
+		size_t num = actor_arrays_.size();
 		for (size_t i = 0; i < num; ++i)
 		{
-			if (groups[i] != NULL)
+			if (actor_arrays_[i] != NULL)
 			{
-				std::vector<SceneActor*>& actors = groups[i]->actors;
+				ActorArray& actors = *actor_arrays_[i];
 				size_t num = actors.size();
 				for (size_t j = 0; j < num; ++j)
 				{
@@ -161,21 +177,114 @@ namespace ERI {
 		return NULL;
 	}
 	
+#pragma mark SortActorGroup
+	
+	static bool SortCompareSceneActor(SceneActor* actor1, SceneActor* actor2)
+	{
+		return (actor1->GetViewDepth() < actor2->GetViewDepth());
+	}
+	
+	void SortActorGroup::Render(Renderer* renderer)
+	{
+		if (is_sort_dirty_)
+		{
+			std::sort(actors_.begin(), actors_.end(), SortCompareSceneActor);
+			is_sort_dirty_ = false;
+		}
+		
+		size_t num = actors_.size();
+		for (int i = 0; i < num; ++i)
+		{
+			actors_[i]->Render(renderer);
+		}
+	}
+	
+	void SortActorGroup::AddActor(SceneActor* actor)
+	{
+		ASSERT(actor);
+		
+		actors_.push_back(actor);
+	}
+	
+	void SortActorGroup::RemoveActor(SceneActor* actor)
+	{
+		ASSERT(actor);
+		
+		int num = actors_.size();
+		for (int i = 0; i < num; ++i)
+		{
+			if (actors_[i] == actor)
+			{
+				if (i != num - 1)
+					actors_[i] = actors_[num - 1];
+
+				actors_.pop_back();
+				break;
+			}
+		}
+	}
+	
+	bool SortActorGroup::IsEmpty()
+	{
+		return actors_.empty();
+	}
+
+	SceneActor* SortActorGroup::GetHitActor(const Vector3& pos)
+	{
+		SceneActor* actor;
+		
+		int num = actors_.size();
+		for (int i = num - 1; i >= 0; --i)
+		{
+			actor = actors_[i]->GetHitActor(pos);
+			if (actor)
+				return actor;
+		}
+		
+		return NULL;
+	}
+	
+#pragma mark SceneLayer
+	
+	SceneLayer::SceneLayer(int uid, bool is_sort_alpha, bool is_clear_depth) :
+		id_(uid),
+		is_visible_(true),
+		is_sort_alpha_(is_sort_alpha),
+		is_clear_depth_(is_clear_depth)
+	{
+		opaque_actors_ = new TextureActorGroup;
+		alpha_test_actors_ = new TextureActorGroup;
+		
+		if (is_sort_alpha)
+			alpha_blend_actors_ = new SortActorGroup;
+		else
+			alpha_blend_actors_ = new TextureActorGroup;
+	}
+	
+	SceneLayer::~SceneLayer()
+	{
+		delete opaque_actors_;
+		delete alpha_test_actors_;
+		delete alpha_blend_actors_;
+	}
 	
 	void SceneLayer::Render(Renderer* renderer)
 	{
+		if (is_clear_depth_)
+			renderer->ClearDepth();
+		
 		// opaque
 		renderer->EnableBlend(false);
-		opaque_actors.Render(renderer);
+		opaque_actors_->Render(renderer);
 				
 		// alpha test
 		renderer->EnableBlend(true);
 		renderer->EnableAlphaTest(true);
-		alpha_test_actors.Render(renderer);
+		alpha_test_actors_->Render(renderer);
 		
 		// alpha blend
 		renderer->EnableAlphaTest(false);
-		alpha_blend_actors.Render(renderer);
+		alpha_blend_actors_->Render(renderer);
 	}
 	
 	void SceneLayer::AddActor(SceneActor* actor)
@@ -183,13 +292,13 @@ namespace ERI {
 		switch (actor->opacity_type())
 		{
 			case OPACITY_OPAQUE:
-				opaque_actors.AddActor(actor);
+				opaque_actors_->AddActor(actor);
 				break;
 			case OPACITY_ALPHA_TEST:
-				alpha_test_actors.AddActor(actor);
+				alpha_test_actors_->AddActor(actor);
 				break;
 			case OPACITY_ALPHA_BLEND:
-				alpha_blend_actors.AddActor(actor);
+				alpha_blend_actors_->AddActor(actor);
 				break;
 			default:
 				ASSERT(0);
@@ -202,13 +311,13 @@ namespace ERI {
 		switch (actor->opacity_type())
 		{
 			case OPACITY_OPAQUE:
-				opaque_actors.RemoveActor(actor);
+				opaque_actors_->RemoveActor(actor);
 				break;
 			case OPACITY_ALPHA_TEST:
-				alpha_test_actors.RemoveActor(actor);
+				alpha_test_actors_->RemoveActor(actor);
 				break;
 			case OPACITY_ALPHA_BLEND:
-				alpha_blend_actors.RemoveActor(actor);
+				alpha_blend_actors_->RemoveActor(actor);
 				break;
 			default:
 				ASSERT(0);
@@ -220,47 +329,99 @@ namespace ERI {
 	{
 		SceneActor* actor;
 
-		actor = alpha_blend_actors.GetHitActor(pos);
+		actor = alpha_blend_actors_->GetHitActor(pos);
 		if (actor)
 			return actor;
 
-		actor = alpha_test_actors.GetHitActor(pos);
+		actor = alpha_test_actors_->GetHitActor(pos);
 		if (actor)
 			return actor;
 
-		actor = opaque_actors.GetHitActor(pos);
+		actor = opaque_actors_->GetHitActor(pos);
 		if (actor)
 			return actor;
 		
 		return NULL;
 	}
 	
+	void SceneLayer::SetSortAlpha(bool sort_alpha)
+	{
+		if (is_sort_alpha_ == sort_alpha)
+			return;
+		
+		ASSERT(alpha_blend_actors_);
+		ASSERT(alpha_blend_actors_->IsEmpty());
+		
+		delete alpha_blend_actors_;
+		
+		is_sort_alpha_ = sort_alpha;
+		
+		if (is_sort_alpha_)
+			alpha_blend_actors_ = new SortActorGroup;
+		else
+			alpha_blend_actors_ = new TextureActorGroup;
+	}
+	
+	void SceneLayer::SetSortDirty()
+	{
+		if (is_sort_alpha_)
+		{
+			reinterpret_cast<SortActorGroup*>(alpha_blend_actors_)->set_sort_dirty();
+		}
+	}
+
+#pragma mark SceneMgr
 
 	SceneMgr::SceneMgr() : current_cam_(NULL)
 	{
-		AddLayer(); // default layer
+		CreateLayer(1); // default layer
 	}
 	
 	SceneMgr::~SceneMgr()
 	{
-		for (size_t i = layers_.size() - 1; i >= 0; --i)
+		ClearLayer();
+	}
+	
+	void SceneMgr::CreateLayer(int num)
+	{
+		ASSERT(num > 0);
+		
+		ClearLayer();
+		
+		for (int i = 0; i < num; ++i)
 		{
-			delete layers_[i];
+			layers_.push_back(new SceneLayer(i, false, false));
 		}
 	}
 	
-	int SceneMgr::AddLayer()
-	{
-		layers_.push_back(new SceneLayer);
-		return (layers_.size() - 1);
-	}
-
 	void SceneMgr::SetLayerVisible(int layer_id, bool visible)
 	{
 		ASSERT(layer_id < static_cast<int>(layers_.size()));
 
-		layers_[layer_id]->is_visible = visible;
-
+		layers_[layer_id]->set_is_visible(visible);
+	}
+	
+	void SceneMgr::SetLayerClearDepth(int layer_id, bool clear_depth)
+	{
+		ASSERT(layer_id < static_cast<int>(layers_.size()));
+		
+		layers_[layer_id]->set_is_clear_depth(clear_depth);
+	}
+	
+	void SceneMgr::SetLayerSortAlpha(int layer_id, bool sort_alpha)
+	{
+		ASSERT(layer_id < static_cast<int>(layers_.size()));
+		
+		layers_[layer_id]->SetSortAlpha(sort_alpha);
+	}
+	
+	void SceneMgr::ClearLayer()
+	{
+		for (int i = 0; i < layers_.size(); ++i)
+		{
+			delete layers_[i];
+		}
+		layers_.clear();
 	}
 	
 	void SceneMgr::AddActor(SceneActor* actor, int layer_id /* = 0*/)
@@ -269,6 +430,7 @@ namespace ERI {
 		ASSERT(layer_id < static_cast<int>(layers_.size()));
 		
 		layers_[layer_id]->AddActor(actor);
+		actor->layer_ = layers_[layer_id];
 	}
 	
 	void SceneMgr::RemoveActor(SceneActor* actor, int layer_id)
@@ -277,6 +439,7 @@ namespace ERI {
 		ASSERT(layer_id < static_cast<int>(layers_.size()));
 		
 		layers_[layer_id]->RemoveActor(actor);
+		actor->layer_ = NULL;
 	}
 	
 	void SceneMgr::Render(Renderer* renderer)
@@ -292,7 +455,7 @@ namespace ERI {
 		
 		for (size_t i = 0; i < layers_.size(); ++i)
 		{
-			if (layers_[i]->is_visible)
+			if (layers_[i]->is_visible())
 			{
 				layers_[i]->Render(renderer);
 			}

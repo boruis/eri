@@ -21,40 +21,92 @@ namespace ERI {
 	class CameraActor;
 	class Renderer;
 	
-	struct ActorGroup
+	typedef std::vector<SceneActor*> ActorArray;
+
+	class ActorGroup
 	{
-		std::vector<SceneActor*>	actors;
+	public:
+		virtual ~ActorGroup() {}
+		
+		virtual void Render(Renderer* renderer) = 0;
+		virtual void AddActor(SceneActor* actor) = 0;
+		virtual void RemoveActor(SceneActor* actor) = 0;
+		virtual bool IsEmpty() = 0;
+
+		// TODO: should remove this fuction
+		virtual SceneActor* GetHitActor(const Vector3& pos) = 0;
 	};
 	
-	struct TextureActorGroup
+	class TextureActorGroup : public ActorGroup
 	{
+	public:
 		~TextureActorGroup();
 		
 		void Render(Renderer* renderer);
 		void AddActor(SceneActor* actor);
 		void RemoveActor(SceneActor* actor);
+		bool IsEmpty();
 		
+		// TODO: should remove this fuction
 		SceneActor* GetHitActor(const Vector3& pos);
-
-		std::vector<ActorGroup*>	groups;
-		std::map<int, int>			texture_map;
+		
+	private:
+		std::vector<ActorArray*>	actor_arrays_;
+		std::map<int, int>			texture_map_;
+	};
+	
+	class SortActorGroup : public ActorGroup
+	{
+	public:
+		SortActorGroup() : is_sort_dirty_(true) {}
+		
+		void Render(Renderer* renderer);
+		void AddActor(SceneActor* actor);
+		void RemoveActor(SceneActor* actor);
+		bool IsEmpty();
+		
+		// TODO: should remove this fuction
+		SceneActor* GetHitActor(const Vector3& pos);
+		
+		inline void set_sort_dirty() { is_sort_dirty_ = true; }
+		
+	private:
+		ActorArray	actors_;
+		bool		is_sort_dirty_;
 	};
 
-	struct SceneLayer
+	class SceneLayer
 	{
-		SceneLayer() : is_visible(true) {}
+	public:
+		SceneLayer(int uid, bool is_sort_alpha, bool is_clear_depth);
+		~SceneLayer();
 
 		void Render(Renderer* renderer);
 		void AddActor(SceneActor* actor);
 		void RemoveActor(SceneActor* actor);
 		
+		// TODO: should remove this fuction
 		SceneActor* GetHitActor(const Vector3& pos);
 		
-		TextureActorGroup	opaque_actors;
-		TextureActorGroup	alpha_test_actors;
-		TextureActorGroup	alpha_blend_actors;
+		void SetSortAlpha(bool sort_alpha);
+		void SetSortDirty();
+		
+		inline int id() { return id_; }
+		inline bool is_visible() { return is_visible_; }
 
-		bool	is_visible;
+		inline void set_is_visible(bool visible) { is_visible_ = visible; }
+		inline void set_is_clear_depth(bool claear_depth) { is_clear_depth_ = claear_depth; }
+		
+	private:
+		int		id_;
+		
+		ActorGroup*	opaque_actors_;
+		ActorGroup*	alpha_test_actors_;
+		ActorGroup*	alpha_blend_actors_;
+		
+		bool	is_visible_;
+		bool	is_sort_alpha_;
+		bool	is_clear_depth_;
 	};
 
 	class SceneMgr
@@ -63,8 +115,11 @@ namespace ERI {
 		SceneMgr();
 		~SceneMgr();
 		
-		int AddLayer();
+		void CreateLayer(int num);
 		void SetLayerVisible(int layer_id, bool visible);
+		void SetLayerClearDepth(int layer_id, bool clear_depth);
+		void SetLayerSortAlpha(int layer_id, bool sort_alpha);
+		void ClearLayer();
 
 		void AddActor(SceneActor* actor, int layer_id = 0);
 		void RemoveActor(SceneActor* actor, int layer_id);

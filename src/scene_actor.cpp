@@ -22,9 +22,10 @@ namespace ERI {
 #pragma mark SceneActor
 	
 	SceneActor::SceneActor() :
-		layer_id_(-1),
+		layer_(NULL),
 		parent_(NULL),
 		visible_(true),
+		is_view_depth_dirty_(true),
 		user_data_(NULL)
 	{
 	}
@@ -44,28 +45,24 @@ namespace ERI {
 			parent_->RemoveChild(this);
 		}
 		
-		if (layer_id_ != -1)
+		if (layer_)
 		{
-			Root::Ins().scene_mgr()->RemoveActor(this, layer_id_);
+			RemoveFromScene();
 		}
 	}
 	
 	void SceneActor::AddToScene(int layer_id /*= 0*/)
 	{
-		ASSERT(!parent_);
-		ASSERT(layer_id_ == -1);
+		ASSERT(!layer_);
 			
 		Root::Ins().scene_mgr()->AddActor(this, layer_id);
-		layer_id_ = layer_id;
 	}
 	
 	void SceneActor::RemoveFromScene()
 	{
-		ASSERT(!parent_);
-		ASSERT(layer_id_ != -1);
+		ASSERT(layer_);
 		
-		Root::Ins().scene_mgr()->RemoveActor(this, layer_id_);
-		layer_id_ = -1;
+		Root::Ins().scene_mgr()->RemoveActor(this, layer_->id());
 	}
 	
 	void SceneActor::MoveToLayer(int layer_id)
@@ -218,10 +215,9 @@ namespace ERI {
 		if (render_data_.need_update_world_model_matrix)
 		{
 			if (parent_)
-			{
 				render_data_.UpdateWorldModelMatrix(parent_->GetWorldTransform());
-			}
-			else render_data_.UpdateWorldModelMatrix();
+			else
+				render_data_.UpdateWorldModelMatrix();
 		}
 		
 		return render_data_.world_model_matrix;
@@ -266,8 +262,7 @@ namespace ERI {
 	void SceneActor::SetPos(const Vector3& pos)
 	{
 		render_data_.translate = pos;
-		render_data_.need_update_model_matrix = true;
-		render_data_.need_update_world_model_matrix = true;
+		SetTransformDirty();
 	}
 	
 	const Vector3& SceneActor::GetPos3()
@@ -286,6 +281,20 @@ namespace ERI {
 	{
 		render_data_.scale = scale;
 		SetTransformDirty();
+	}
+	
+	float SceneActor::GetViewDepth()
+	{
+		if (is_view_depth_dirty_)
+		{
+			render_data_.world_view_pos = GetWorldTransform() * Vector3();
+			
+			// TODO: should multiply view matrix in 3d view
+			
+			is_view_depth_dirty_ = false;
+		}
+
+		return render_data_.world_view_pos.z;
 	}
 	
 	void SceneActor::SetMaterial(const std::string& texture_path, TextureFilter filter_min /*= FILTER_NEAREST*/, TextureFilter filter_mag /*= FILTER_NEAREST*/)
@@ -370,11 +379,12 @@ namespace ERI {
 	{
 		if (material_data_.opacity_type != type)
 		{
-			if (layer_id_ != -1)
+			if (layer_)
 			{
-				Root::Ins().scene_mgr()->RemoveActor(this, layer_id_);
+				int layer_id = layer_->id();
+				RemoveFromScene();
 				material_data_.opacity_type = type;
-				Root::Ins().scene_mgr()->AddActor(this, layer_id_);
+				AddToScene(layer_id);
 			}
 			else
 			{
@@ -403,23 +413,27 @@ namespace ERI {
 	void SceneActor::SetWorldTransformDirty()
 	{
 		render_data_.need_update_world_model_matrix = true;
-
+		
 		int child_num = childs_.size();
 		for (int i = 0; i < child_num; ++i)
 		{
 			childs_[i]->SetWorldTransformDirty();
 		}
+		
+		is_view_depth_dirty_ = true;
+		if (layer_) layer_->SetSortDirty();
 	}
 	
 	void SceneActor::SetTexture(int idx, const Texture* tex)
 	{
 		if (material_data_.texture_units[idx].texture != tex)
 		{
-			if (idx == 0 && layer_id_ != -1)
+			if (idx == 0 && layer_)
 			{
-				Root::Ins().scene_mgr()->RemoveActor(this, layer_id_);
+				int layer_id = layer_->id();
+				RemoveFromScene();
 				material_data_.texture_units[idx].texture = tex;
-				Root::Ins().scene_mgr()->AddActor(this, layer_id_);
+				AddToScene(layer_id);
 			}
 			else
 			{

@@ -115,6 +115,8 @@ namespace ERI {
 		bool	need_update_world_model_matrix;
 		bool	apply_identity_model_matrix;
 		
+		Vector3	world_view_pos;
+		
 		// texture
 		bool	is_tex_transform;
 		Vector2	tex_scale;

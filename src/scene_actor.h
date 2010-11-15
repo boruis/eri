@@ -31,6 +31,8 @@
 namespace ERI {
 	
 	class Renderer;
+	class SceneMgr;
+	class SceneLayer;
 	
 	struct UserData
 	{
@@ -95,6 +97,10 @@ namespace ERI {
 		void SetRotate(float degree, const Vector3& axis);
 		void SetScale(const Vector3& scale);
 		
+		//
+		
+		float GetViewDepth();
+		
 		// material
 		// TODO: bad interface, re-design
 		
@@ -124,9 +130,11 @@ namespace ERI {
 		inline void set_user_data(UserData* data) { user_data_ = data; }
 		inline UserData* user_data() { return user_data_; }
 		
-		inline int layer_id() { return layer_id_; }
+		inline SceneLayer* layer() { return layer_; }
 		
 		inline const SceneActor* parent() const { return parent_; }
+		
+		friend class SceneMgr;
 			
 	protected:
 		virtual bool IsInArea(const Vector3& local_space_pos) { return false; }
@@ -134,12 +142,13 @@ namespace ERI {
 		RenderData		render_data_;
 		MaterialData	material_data_;
 
-		int				layer_id_;
+		SceneLayer*		layer_;
 		
 		SceneActor*					parent_;
 		std::vector<SceneActor*>	childs_;
 
 		bool			visible_;
+		bool			is_view_depth_dirty_;
 		
 		UserData*		user_data_;
 		

@@ -252,7 +252,8 @@ namespace ERI {
 		// This call is redundant, but needed if dealing with multiple framebuffers.
 		glBindFramebufferOES(GL_FRAMEBUFFER_OES, current_frame_buffer_);
 #endif
-		
+	
+		EnableDepthWrite(true);
 		glClear(clear_bits_);
 	}
 	
@@ -267,8 +268,15 @@ namespace ERI {
 #if ERI_PLATFORM != ERI_PLATFORM_MAC
 		if (context_) context_->Present();
 #endif
-		
-		EnableDepthWrite(true);
+	}
+	
+	void RendererES1::ClearDepth()
+	{
+		if (use_depth_buffer_)
+		{
+			EnableDepthWrite(true);
+			glClear(GL_DEPTH_BUFFER_BIT);
+		}
 	}
 	
 	void RendererES1::Render(const RenderData* data)
