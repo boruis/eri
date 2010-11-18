@@ -107,27 +107,7 @@ namespace ERI {
 	
 	bool SceneActor::IsHit(const Vector3& world_space_pos)
 	{
-		std::vector<SceneActor*> parent_list;
-		SceneActor* now_parent = parent_;
-		while (now_parent)
-		{
-			parent_list.push_back(now_parent);
-			now_parent = now_parent->parent_;
-		}
-
-		Vector3 local_space_pos = world_space_pos;
-		
-		for (int i = parent_list.size() - 1; i >= 0; --i)
-		{
-			local_space_pos = parent_list[i]->GetInvTransform() * local_space_pos;
-		}
-		
-		if (render_data_.need_update_model_matrix)
-			render_data_.UpdateModelMatrix();
-		
-		local_space_pos = render_data_.inv_model_matrix * local_space_pos;
-		
-		return IsInArea(local_space_pos);
+		return IsInArea(GetLocalSpacePos(world_space_pos));
 	}
 	
 	SceneActor* SceneActor::GetHitActor(const Vector3& parent_space_pos)
@@ -221,6 +201,31 @@ namespace ERI {
 		}
 		
 		return render_data_.world_model_matrix;
+	}
+	
+	Vector3 SceneActor::GetLocalSpacePos(const Vector3& world_space_pos)
+	{
+		std::vector<SceneActor*> parent_list;
+		SceneActor* now_parent = parent_;
+		while (now_parent)
+		{
+			parent_list.push_back(now_parent);
+			now_parent = now_parent->parent_;
+		}
+		
+		Vector3 local_space_pos = world_space_pos;
+		
+		for (int i = parent_list.size() - 1; i >= 0; --i)
+		{
+			local_space_pos = parent_list[i]->GetInvTransform() * local_space_pos;
+		}
+		
+		if (render_data_.need_update_model_matrix)
+			render_data_.UpdateModelMatrix();
+		
+		local_space_pos = render_data_.inv_model_matrix * local_space_pos;
+		
+		return local_space_pos;
 	}
 	
 	void SceneActor::SetPos(float x, float y)
