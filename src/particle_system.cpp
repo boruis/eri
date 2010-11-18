@@ -11,6 +11,10 @@
 
 #include "particle_system.h"
 
+#include "xml_helper.h"
+
+using namespace rapidxml;
+
 namespace ERI
 {
 
@@ -206,6 +210,7 @@ namespace ERI
 
 	ParticleSystem::ParticleSystem(const ParticleSystemSetup* setup_ref) :
 		setup_ref_(setup_ref),
+		custom_life_(-1.0f),
 		emitter_(NULL),
 		vertices_(NULL),
 		indices_(NULL),
@@ -240,6 +245,8 @@ namespace ERI
 	{
 		ASSERT(setup_ref_);
 		ASSERT(setup_ref_->particle_life_min <= setup_ref_->particle_life_max);
+		
+		custom_life_ = setup_ref_->life;
 
 		render_data_.apply_identity_model_matrix = !setup_ref_->is_coord_relative;
 	}
@@ -252,7 +259,7 @@ namespace ERI
 		
 		emitter_ = emitter;
 		
-		int need_particle_num = static_cast<int>(emitter_->rate() * setup_ref_->particle_life_max);
+		int need_particle_num = static_cast<int>(emitter_->rate() * setup_ref_->particle_life_max) * 1.5f;
 		int original_particle_num = particles_.size();
 		
 		for (int i = 0; i < need_particle_num; ++i)
@@ -293,7 +300,7 @@ namespace ERI
 	
 	bool ParticleSystem::IsPlaying()
 	{
-		return (setup_ref_->life < 0.0f || lived_time_ >= 0.0f);
+		return (custom_life_ < 0.0f || lived_time_ >= 0.0f);
 	}
 
 	void ParticleSystem::Update(float delta_time)
@@ -301,16 +308,17 @@ namespace ERI
 		if (!IsPlaying())
 			return;
 		
-		if (setup_ref_->life >= 0.0f)
+		if (custom_life_ >= 0.0f)
 		{
 			lived_time_ += delta_time;
-			if (lived_time_ > (setup_ref_->life + setup_ref_->particle_life_max))
+			if (lived_time_ > (custom_life_ + setup_ref_->particle_life_max))
 				lived_time_ = -1.0f;
 		}
 		
 		Particle* p;
 		int num = particles_.size();
 		int affector_num = affectors_.size();
+		Vector2 delta_pos;
 		
 		for (int i = 0; i < num; ++i)
 		{
@@ -322,7 +330,9 @@ namespace ERI
 				{
 					p->lived_percent = p->lived_time / p->life;
 					
-					p->pos += p->velocity * delta_time;
+					delta_pos = p->velocity * delta_time;
+					p->pos.x += delta_pos.x;
+					p->pos.y += delta_pos.y;
 					
 					for (int affector_idx = 0; affector_idx < affector_num; ++affector_idx)
 					{
@@ -339,7 +349,7 @@ namespace ERI
 			}
 		}
 		
-		if ((setup_ref_->life < 0.0f || (lived_time_ > 0.0f && lived_time_ < setup_ref_->life))
+		if ((custom_life_ < 0.0f || (lived_time_ > 0.0f && lived_time_ < custom_life_))
 			&& emitter_->CheckIsTimeToEmit(delta_time))
 		{
 			// TODO: delta_time need emit mutiple particle
@@ -373,7 +383,7 @@ namespace ERI
 			}
 		}
 		
-		p->pos = Vector2(pos.x, pos.y);
+		p->pos = pos;
 		
 		p->size = setup_ref_->particle_size * RangeRandom(setup_ref_->particle_scale_min, setup_ref_->particle_scale_max);
 		p->rotate_angle = RangeRandom(setup_ref_->particle_rotate_min, setup_ref_->particle_rotate_max);
@@ -441,10 +451,10 @@ namespace ERI
 		int vertex_num = particle_num * 4;
 		
 		if (vertices_) delete [] vertices_;
-		vertices_ = new vertex_2_pos_tex_color[vertex_num];
+		vertices_ = new vertex_3_pos_tex_color[vertex_num];
 		
 		glBindBuffer(GL_ARRAY_BUFFER, render_data_.vertex_buffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_2_pos_tex_color) * vertex_num, vertices_, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_3_pos_tex_color) * vertex_num, vertices_, GL_DYNAMIC_DRAW);
 		
 		if (render_data_.index_buffer == 0)
 		{
@@ -474,7 +484,7 @@ namespace ERI
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short) * index_num, indices_, GL_STATIC_DRAW);
 		
 		render_data_.vertex_type = GL_TRIANGLES;
-		render_data_.vertex_format = POS_TEX_COLOR_2;
+		render_data_.vertex_format = POS_TEX_COLOR_3;
 		render_data_.vertex_count = 0;
 		render_data_.index_count = 0;
 	}
@@ -510,6 +520,7 @@ namespace ERI
 				
 				vertices_[start_idx].position[0] = p->pos.x + up.x - right.x;
 				vertices_[start_idx].position[1] = p->pos.y + up.y - right.y;
+				vertices_[start_idx].position[2] = p->pos.z;
 				vertices_[start_idx].tex_coord[0] = uv_start_.x;
 				vertices_[start_idx].tex_coord[1] = uv_start_.y;
 				vertices_[start_idx].color[0] = p->color.r;
@@ -521,6 +532,7 @@ namespace ERI
 				
 				vertices_[start_idx].position[0] = p->pos.x + up.x + right.x;
 				vertices_[start_idx].position[1] = p->pos.y + up.y + right.y;
+				vertices_[start_idx].position[2] = p->pos.z;
 				vertices_[start_idx].tex_coord[0] = uv_start_.x + uv_size_.x;
 				vertices_[start_idx].tex_coord[1] = uv_start_.y;
 				vertices_[start_idx].color[0] = p->color.r;
@@ -532,6 +544,7 @@ namespace ERI
 				
 				vertices_[start_idx].position[0] = p->pos.x - up.x - right.x;
 				vertices_[start_idx].position[1] = p->pos.y - up.y - right.y;
+				vertices_[start_idx].position[2] = p->pos.z;
 				vertices_[start_idx].tex_coord[0] = uv_start_.x;
 				vertices_[start_idx].tex_coord[1] = uv_start_.y + uv_size_.y;
 				vertices_[start_idx].color[0] = p->color.r;
@@ -543,6 +556,7 @@ namespace ERI
 				
 				vertices_[start_idx].position[0] = p->pos.x - up.x + right.x;
 				vertices_[start_idx].position[1] = p->pos.y - up.y + right.y;
+				vertices_[start_idx].position[2] = p->pos.z;
 				vertices_[start_idx].tex_coord[0] = uv_start_.x + uv_size_.x;
 				vertices_[start_idx].tex_coord[1] = uv_start_.y + uv_size_.y;
 				vertices_[start_idx].color[0] = p->color.r;
@@ -555,7 +569,7 @@ namespace ERI
 		}
 		
 		glBindBuffer(GL_ARRAY_BUFFER, render_data_.vertex_buffer);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex_2_pos_tex_color) * in_use_num * 4, vertices_);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex_3_pos_tex_color) * in_use_num * 4, vertices_);
 		
 		render_data_.vertex_count = in_use_num * 4;
 		render_data_.index_count = in_use_num * 6;
@@ -567,6 +581,217 @@ namespace ERI
 		uv_start_.y = start_v;
 		uv_size_.x = width;
 		uv_size_.y = height;
+	}
+	
+#pragma mark script loader function
+	
+	ParticleSystem* CreateParticleSystemByScriptFile(const std::string& path)
+	{
+		XmlParseData parse_data;
+		ParseFile(path, parse_data);
+		
+		ParticleSystemSetup* ps_setup = new ParticleSystemSetup;
+		ParticleSystem* ps = new ParticleSystem(ps_setup);
+		
+		xml_node<>* node;
+		std::string s;
+		
+		node = parse_data.doc.first_node("particle_system");
+		if (node)
+		{
+			GetAttrBool(node, "coord_related", ps_setup->is_coord_relative);
+			GetAttrFloat(node, "life", ps_setup->life);
+			
+			BaseEmitter* emitter = NULL;
+			
+			node = node->first_node();
+			while (node)
+			{
+				if (strcmp(node->name(), "particle") == 0)
+				{
+					xml_node<>* node2 = node->first_node();
+					while (node2)
+					{
+						if (strcmp(node2->name(), "size") == 0)
+						{
+							GetAttrFloat(node2, "x", ps_setup->particle_size.x);
+							GetAttrFloat(node2, "y", ps_setup->particle_size.y);
+						}
+						else if (strcmp(node2->name(), "life") == 0)
+						{
+							GetAttrFloat(node2, "min", ps_setup->particle_life_min);
+							GetAttrFloat(node2, "max", ps_setup->particle_life_max);
+						}
+						else if (strcmp(node2->name(), "speed") == 0)
+						{
+							GetAttrFloat(node2, "min", ps_setup->particle_speed_min);
+							GetAttrFloat(node2, "max", ps_setup->particle_speed_max);
+						}
+						else if (strcmp(node2->name(), "rotate") == 0)
+						{
+							GetAttrFloat(node2, "min", ps_setup->particle_rotate_min);
+							GetAttrFloat(node2, "max", ps_setup->particle_rotate_max);
+						}
+						else if (strcmp(node2->name(), "scale") == 0)
+						{
+							GetAttrFloat(node2, "min", ps_setup->particle_scale_min);
+							GetAttrFloat(node2, "max", ps_setup->particle_scale_max);
+						}
+						else if (strcmp(node2->name(), "rotate_affector") == 0)
+						{
+							float speed, acceleration;
+							speed = acceleration = 0.0f;
+							GetAttrFloat(node2, "speed", speed);
+							GetAttrFloat(node2, "acceleration", acceleration);
+							if (speed != 0.0f || acceleration != 0.0f)
+							{
+								ps->AddAffector(new RotateAffector(speed, acceleration));
+							}
+						}
+						else if (strcmp(node2->name(), "force_affector") == 0)
+						{
+							Vector2 acceleration;
+							GetAttrFloat(node2, "acceleration_x", acceleration.x);
+							GetAttrFloat(node2, "acceleration_y", acceleration.y);
+							if (acceleration.x != 0.0f || acceleration.y != 0.0f)
+							{
+								ps->AddAffector(new ForceAffector(acceleration));
+							}					
+						}
+						else if (strcmp(node2->name(), "acceleration_affector") == 0)
+						{
+							float acceleration = 0.0f;
+							GetAttrFloat(node2, "acceleration", acceleration);
+							if (acceleration != 0.0f)
+							{
+								ps->AddAffector(new AccelerationAffector(acceleration));
+							}
+						}
+						else if (strcmp(node2->name(), "scale_affector") == 0)
+						{
+							Vector2 speed;
+							GetAttrFloat(node2, "speed_x", speed.x);
+							GetAttrFloat(node2, "speed_y", speed.y);
+							if (speed.x != 0.0f || speed.y != 0.0f)
+							{
+								ps->AddAffector(new ScaleAffector(speed));
+							}
+						}
+						else if (strcmp(node2->name(), "color_affector") == 0)
+						{
+							Color start, end;
+							GetAttrColor(node2, "start", start);
+							GetAttrColor(node2, "end", end);
+							if (start != end)
+							{
+								ps->AddAffector(new ColorAffector(start, end));
+							}
+						}
+						else if (strcmp(node2->name(), "color_interval_affector") == 0)
+						{
+							ColorIntervalAffector* affector = new ColorIntervalAffector;
+							
+							bool is_got_interval = false;
+							
+							xml_node<>* node3 = node2->first_node("interval");
+							while (node3)
+							{
+								float lived_time = 0.0f;
+								Color color;
+								GetAttrFloat(node3, "lived_time", lived_time);
+								GetAttrColor(node3, "color", color);
+								affector->AddInterval(lived_time, color);
+								
+								is_got_interval = true;
+								
+								node3 = node3->next_sibling("interval");
+							}
+							
+							if (is_got_interval)
+								ps->AddAffector(affector);
+							else
+								delete affector;
+						}
+						
+						node2 = node2->next_sibling();
+					}
+				}
+				else if (strcmp(node->name(), "box_emitter") == 0)
+				{
+					Vector3 size;
+					float rate = 1.0f;
+					float angle_min = 0.0f;
+					float angle_max = 0.0f;
+					GetAttrFloat(node, "size_x", size.x);
+					GetAttrFloat(node, "size_y", size.y);
+					GetAttrFloat(node, "rate", rate);
+					GetAttrFloat(node, "angle_min", angle_min);
+					GetAttrFloat(node, "angle_max", angle_max);
+					
+					if (emitter) delete emitter;
+					emitter = new BoxEmitter(size * 0.5f, rate, angle_min, angle_max);
+				}
+				else if (strcmp(node->name(), "material") == 0)
+				{
+					std::string s;
+					xml_attribute<>* attr;
+					
+					attr = GetAttrStr(node, "tex", s);
+					if (attr && s.length() > 0)
+					{
+						// TODO: find path
+						
+						std::string real_path("media/Effect/");
+						real_path += s;
+						
+						ps->SetMaterial(real_path, FILTER_LINEAR, FILTER_LINEAR);
+						
+						if (ps->material().texture_units[0].texture)
+						{
+							float u, v, w, h;
+							u = v = 0.0f;
+							w = h = 1.0f;
+							GetAttrFloat(node, "tex_u", u);
+							GetAttrFloat(node, "tex_v", v);
+							GetAttrFloat(node, "tex_w", w);
+							GetAttrFloat(node, "tex_h", h);						
+							ps->SetTexAreaUV(u, v, w, h);
+						}
+					}
+					bool depth_writh;
+					if (GetAttrBool(node, "depth_write", depth_writh))
+					{
+						ps->SetDepthWrite(depth_writh);
+					}
+					if (GetAttrStr(node, "blend", s))
+					{
+						if (s.compare("add") == 0)
+							ps->BlendAdd();
+					}
+				}
+				
+				node = node->next_sibling();
+			}
+			
+			if (emitter)
+			{
+				ps->SetEmitter(emitter);
+			}
+			else
+			{
+				delete ps;
+				ps = NULL;
+			}
+		}
+		else
+		{
+			delete ps;
+			ps = NULL;
+		}
+		
+		if (ps) ps->RefreshSetup();
+
+		return ps;
 	}
 	
 }

@@ -27,7 +27,7 @@ namespace ERI
 			scale = Vector2(1.0f, 1.0f);
 		}
 		
-		Vector2	pos;
+		Vector3	pos;
 		Vector2	velocity;
 		Vector2	size;
 		Vector2 scale;
@@ -189,7 +189,7 @@ namespace ERI
 	{
 		ParticleSystemSetup() :
 			is_coord_relative(false),
-			life(-1),
+			life(-1.0f),
 			particle_size(Vector2(1.0f, 1.0f)),
 			particle_life_min(1.0f), particle_life_max(1.0f),
 			particle_speed_min(0.0f), particle_speed_max(0.0f),
@@ -230,6 +230,8 @@ namespace ERI
 		
 		inline const ParticleSystemSetup* setup_ref() { return setup_ref_; }
 		
+		inline void set_custom_life(float life) { custom_life_ = life; }
+		
 	private:
 		void EmitParticle();
 		Particle* ObtainParticle();
@@ -238,6 +240,7 @@ namespace ERI
 		void UpdateBuffer();
 		
 		const ParticleSystemSetup*	setup_ref_;
+		float						custom_life_;
 		
 		BaseEmitter*				emitter_;
 		std::vector<BaseAffector*>	affectors_;
@@ -245,13 +248,17 @@ namespace ERI
 		std::vector<Particle*>		particles_;
 		int							first_available_particle_idx_;
 		
-		vertex_2_pos_tex_color*		vertices_;
+		vertex_3_pos_tex_color*		vertices_;
 		unsigned short*				indices_;
 		
 		Vector2		uv_start_, uv_size_;
 		
 		float		lived_time_;
 	};
+	
+#pragma mark script loader function
+	
+	ParticleSystem* CreateParticleSystemByScriptFile(const std::string& path);
 
 }
 
