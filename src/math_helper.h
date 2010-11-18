@@ -213,6 +213,12 @@ namespace ERI {
 			return ret;
 		}
 		
+		inline Vector3 GetTranslate() const
+		{
+			ASSERT(is_affine());
+			return Vector3(m[_03], m[_13], m[_23]);
+		}
+		
 		inline bool is_affine() const
         {
             return m[_30] == 0 && m[_31] == 0 && m[_32] == 0 && m[_33] == 1;

@@ -292,7 +292,7 @@ namespace ERI {
 	{
 		if (is_view_depth_dirty_)
 		{
-			render_data_.world_view_pos = GetWorldTransform() * Vector3();
+			render_data_.world_view_pos = GetWorldTransform().GetTranslate();
 			
 			// TODO: should multiply view matrix in 3d view
 			
