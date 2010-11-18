@@ -55,6 +55,12 @@ namespace ERI {
 		GLfloat tex_coord[2];
 	};
 	
+	struct vertex_3_pos_tex_color {
+		GLfloat position[3];
+		GLfloat tex_coord[2];
+		GLfloat color[4];
+	};
+	
 	enum VertexFormat
 	{
 		POS_TEX_2,
@@ -62,6 +68,7 @@ namespace ERI {
 		POS_TEX_COLOR_2,
 		POS_NORMAL_3,
 		POS_NORMAL_TEX_3,
+		POS_TEX_COLOR_3,
 		INVALID_VERTEX_FORMAT
 	};
 

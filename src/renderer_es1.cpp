@@ -363,6 +363,18 @@ namespace ERI {
 					}
 					use_vertex_normal = true;
 					break;
+					
+				case POS_TEX_COLOR_3:
+					vertex_pos_size = 3;
+					vertex_stride = sizeof(vertex_3_pos_tex_color);
+					vertex_pos_offset = (void*)offsetof(vertex_3_pos_tex_color, position);
+					vertex_tex_coord_offset[0] = (void*)offsetof(vertex_3_pos_tex_color, tex_coord);
+					for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
+						vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
+					}
+					vertex_color_offset = (void*)offsetof(vertex_3_pos_tex_color, color);
+					use_vertex_color = true;
+					break;
 
 				default:
 					ASSERT(0);
