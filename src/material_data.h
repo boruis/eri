@@ -43,6 +43,26 @@ namespace ERI {
 		{
 		}
 		
+		int GetSingleTextureId() const
+		{
+			int texture_id = 0;
+			
+			for (int i = 0; i < MAX_TEXTURE_UNIT; ++i)
+			{
+				if (texture_units[i].texture)
+				{
+					if (texture_id)
+					{
+						return 0; // if have multiple texture, no single texture id
+					}
+					
+					texture_id = texture_units[i].texture->id;
+				}
+			}
+			
+			return texture_id;
+		}
+		
 		TextureUnit		texture_units[MAX_TEXTURE_UNIT];
 		int				used_unit;
 

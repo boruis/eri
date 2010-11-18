@@ -31,6 +31,7 @@ namespace ERI {
 		virtual void Render(Renderer* renderer) = 0;
 		virtual void AddActor(SceneActor* actor) = 0;
 		virtual void RemoveActor(SceneActor* actor) = 0;
+		virtual void AdjustActorMaterial(SceneActor* actor, int original_texture_id) {}
 		virtual bool IsEmpty() = 0;
 
 		// TODO: should remove this fuction
@@ -45,12 +46,15 @@ namespace ERI {
 		void Render(Renderer* renderer);
 		void AddActor(SceneActor* actor);
 		void RemoveActor(SceneActor* actor);
+		void AdjustActorMaterial(SceneActor* actor, int original_texture_id);
 		bool IsEmpty();
 		
 		// TODO: should remove this fuction
 		SceneActor* GetHitActor(const Vector3& pos);
 		
 	private:
+		void RemoveActorByTextureId(SceneActor* actor, int texture_id);
+		
 		std::vector<ActorArray*>	actor_arrays_;
 		std::map<int, int>			texture_map_;
 	};
@@ -84,6 +88,7 @@ namespace ERI {
 		void Render(Renderer* renderer);
 		void AddActor(SceneActor* actor);
 		void RemoveActor(SceneActor* actor);
+		void AdjustActorMaterial(SceneActor* actor, int original_texture_id);
 		
 		// TODO: should remove this fuction
 		SceneActor* GetHitActor(const Vector3& pos);

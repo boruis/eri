@@ -433,12 +433,11 @@ namespace ERI {
 	{
 		if (material_data_.texture_units[idx].texture != tex)
 		{
-			if (idx == 0 && layer_)
+			if (layer_)
 			{
-				int layer_id = layer_->id();
-				RemoveFromScene();
+				int original_texture_id = material_data_.GetSingleTextureId();
 				material_data_.texture_units[idx].texture = tex;
-				AddToScene(layer_id);
+				layer_->AdjustActorMaterial(this, original_texture_id);
 			}
 			else
 			{

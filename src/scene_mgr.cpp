@@ -17,26 +17,6 @@
 
 namespace ERI {
 	
-	static int GetMaterialDataSingleTextureId(const MaterialData& material)
-	{
-		int texture_id = 0;
-		
-		for (int i = 0; i < MAX_TEXTURE_UNIT; ++i)
-		{
-			if (material.texture_units[i].texture)
-			{
-				if (texture_id)
-				{
-					return 0;
-				}
-				
-				texture_id = material.texture_units[i].texture->id;
-			}
-		}
-		
-		return texture_id;
-	}
-	
 #pragma mark TextureActorGroup
 	
 	TextureActorGroup::~TextureActorGroup()
@@ -69,7 +49,7 @@ namespace ERI {
 		ASSERT(actor);
 		
 		int array_idx = -1;
-		int texture_id = GetMaterialDataSingleTextureId(actor->material());
+		int texture_id = actor->material().GetSingleTextureId();
 		
 		std::map<int, int>::iterator it = texture_map_.find(texture_id);
 		if (it == texture_map_.end())
@@ -108,38 +88,13 @@ namespace ERI {
 	{
 		ASSERT(actor);
 		
-		int texture_id = GetMaterialDataSingleTextureId(actor->material());
-		
-		std::map<int, int>::iterator it = texture_map_.find(texture_id);
-		
-		ASSERT(it != texture_map_.end());
-		
-		// find actor
-		ActorArray& actors = *actor_arrays_[it->second];
-		size_t i = 0;
-		size_t num = actors.size();
-		for (; i < num; ++i)
-		{
-			if (actors[i] == actor)
-				break;
-		}
-		
-		ASSERT(i < num);
-		
-		if (num <= 1) // no more actor, clear group
-		{
-			delete actor_arrays_[it->second];
-			actor_arrays_[it->second] = NULL;
-			texture_map_.erase(it);
-		}
-		else
-		{
-			if (i < num - 1) // copy final actor to removed empty space
-			{
-				actors[i] = actors[num - 1];
-			}
-			actors.pop_back();
-		}
+		RemoveActorByTextureId(actor, actor->material().GetSingleTextureId());
+	}
+	
+	void TextureActorGroup::AdjustActorMaterial(SceneActor* actor, int original_texture_id)
+	{
+		RemoveActorByTextureId(actor, original_texture_id);
+		AddActor(actor);
 	}
 	
 	bool TextureActorGroup::IsEmpty()
@@ -177,6 +132,42 @@ namespace ERI {
 		return NULL;
 	}
 	
+	void TextureActorGroup::RemoveActorByTextureId(SceneActor* actor, int texture_id)
+	{
+		ASSERT(actor);
+		
+		std::map<int, int>::iterator it = texture_map_.find(texture_id);
+		
+		ASSERT(it != texture_map_.end());
+		
+		// find actor
+		ActorArray& actors = *actor_arrays_[it->second];
+		size_t i = 0;
+		size_t num = actors.size();
+		for (; i < num; ++i)
+		{
+			if (actors[i] == actor)
+				break;
+		}
+		
+		ASSERT(i < num);
+		
+		if (num <= 1) // no more actor, clear group
+		{
+			delete actor_arrays_[it->second];
+			actor_arrays_[it->second] = NULL;
+			texture_map_.erase(it);
+		}
+		else
+		{
+			if (i < num - 1) // copy final actor to removed empty space
+			{
+				actors[i] = actors[num - 1];
+			}
+			actors.pop_back();
+		}
+	}
+
 #pragma mark SortActorGroup
 	
 	static bool SortCompareSceneActor(SceneActor* actor1, SceneActor* actor2)
@@ -299,6 +290,7 @@ namespace ERI {
 				break;
 			case OPACITY_ALPHA_BLEND:
 				alpha_blend_actors_->AddActor(actor);
+				SetSortDirty();
 				break;
 			default:
 				ASSERT(0);
@@ -318,6 +310,25 @@ namespace ERI {
 				break;
 			case OPACITY_ALPHA_BLEND:
 				alpha_blend_actors_->RemoveActor(actor);
+				break;
+			default:
+				ASSERT(0);
+				break;
+		}
+	}
+	
+	void SceneLayer::AdjustActorMaterial(SceneActor* actor, int original_texture_id)
+	{
+		switch (actor->opacity_type())
+		{
+			case OPACITY_OPAQUE:
+				opaque_actors_->AdjustActorMaterial(actor, original_texture_id);
+				break;
+			case OPACITY_ALPHA_TEST:
+				alpha_test_actors_->AdjustActorMaterial(actor, original_texture_id);
+				break;
+			case OPACITY_ALPHA_BLEND:
+				alpha_blend_actors_->AdjustActorMaterial(actor, original_texture_id);
 				break;
 			default:
 				ASSERT(0);
