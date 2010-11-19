@@ -191,6 +191,8 @@ namespace ERI
 		
 		int FindMatchJointIdx(Skin* skin, const std::string& joint_name);
 		
+		rapidxml::xml_node<>* FindNode(rapidxml::xml_node<>* node, const char* name);
+		
 		//
 		
 		std::map<std::string, Mesh*>	geometry_map_;

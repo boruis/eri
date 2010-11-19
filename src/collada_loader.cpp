@@ -1034,6 +1034,8 @@ namespace ERI
 		if (!node)
 			return;
 		
+		xml_node<>* root_node = node;
+		
 		xml_node<>* node2;
 		xml_node<>* node3;
 		std::string s;
@@ -1041,10 +1043,10 @@ namespace ERI
 		Skeleton* skeletion;
 		Skin* skin;
 		
-		node = node->first_node("node");
+		node = root_node->first_node("node");
 		while (node)
 		{
-			node2 = node->first_node("instance_controller");
+			node2 = FindNode(node, "instance_controller");
 			if (node2)
 			{
 				if (GetAttrStr(node2, "url", s))
@@ -1059,7 +1061,7 @@ namespace ERI
 					skin = skin_it->second;
 					
 					node3 = node2->first_node("skeleton");
-					if (node3)
+					while (node3)
 					{
 						s = node3->value();
 						if (!s.empty())
@@ -1081,17 +1083,39 @@ namespace ERI
 
 							skeletion->skin_refs.push_back(skin);
 						}
+						
+						node3 = node3->next_sibling("skeleton");
 					}
 				}
 			}
-			else if (GetAttrStr(node, "id", s))
+			
+			node = node->next_sibling("node");
+		}
+		
+		node = root_node->first_node("node");
+		while (node)
+		{
+			if (GetAttrStr(node, "id", s))
 			{
-				std::map<std::string, Skeleton*>::iterator skel_it = skeleton_map_.find(s);
-				
-				if (skel_it != skeleton_map_.end())
+				node2 = node;
+				while (node2)
 				{
-					skeletion = skel_it->second;
-					ParseSkeletonNode(node, skeletion, -1);
+					if (GetAttrStr(node2, "id", s))
+					{
+						std::map<std::string, Skeleton*>::iterator skel_it = skeleton_map_.find(s);
+						
+						if (skel_it != skeleton_map_.end())
+						{
+							skeletion = skel_it->second;
+							//skeletion = skeleton_map_.begin()->second;
+							
+							ParseSkeletonNode(node2, skeletion, -1);
+							
+							break;
+						}
+					}
+					
+					node2 = node2->first_node("node");
 				}
 			}
 			
@@ -1484,6 +1508,28 @@ namespace ERI
 		}
 		
 		return -1;
+	}
+	
+	rapidxml::xml_node<>* ColladaLoader::FindNode(rapidxml::xml_node<>* node, const char* name)
+	{
+		if (!node)
+			return NULL;
+		
+		if (strcmp(node->name(), name) == 0)
+			return node;
+		
+		rapidxml::xml_node<>* node2;
+		node = node->first_node();
+		while (node)
+		{
+			node2 = FindNode(node, name);
+			if (node2)
+				return node2;
+			
+			node = node->next_sibling();
+		}
+		
+		return NULL;
 	}
 
 }
