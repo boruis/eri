@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1B9DA954129681D100285E72 /* collada_loader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1B9DA94B129681D100285E72 /* collada_loader.cpp */; };
+		1B9DA955129681D100285E72 /* mesh_actor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1B9DA94D129681D100285E72 /* mesh_actor.cpp */; };
+		1B9DA956129681D100285E72 /* skeleton_actor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1B9DA950129681D100285E72 /* skeleton_actor.cpp */; };
+		1B9DA957129681D100285E72 /* xml_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1B9DA952129681D100285E72 /* xml_helper.cpp */; };
 		1DDD58160DA1D0A300B32029 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DDD58140DA1D0A300B32029 /* MainMenu.xib */; };
 		256AC3DA0F4B6AC300CF3369 /* eriAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 256AC3D90F4B6AC300CF3369 /* eriAppDelegate.mm */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
@@ -35,6 +39,19 @@
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
+		1B9DA9471296819300285E72 /* rapidxml_iterators.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = rapidxml_iterators.hpp; path = ../../../3rd/rapidxml/rapidxml_iterators.hpp; sourceTree = SOURCE_ROOT; };
+		1B9DA9481296819300285E72 /* rapidxml_print.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = rapidxml_print.hpp; path = ../../../3rd/rapidxml/rapidxml_print.hpp; sourceTree = SOURCE_ROOT; };
+		1B9DA9491296819300285E72 /* rapidxml_utils.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = rapidxml_utils.hpp; path = ../../../3rd/rapidxml/rapidxml_utils.hpp; sourceTree = SOURCE_ROOT; };
+		1B9DA94A1296819300285E72 /* rapidxml.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = rapidxml.hpp; path = ../../../3rd/rapidxml/rapidxml.hpp; sourceTree = SOURCE_ROOT; };
+		1B9DA94B129681D100285E72 /* collada_loader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = collada_loader.cpp; path = ../../src/collada_loader.cpp; sourceTree = SOURCE_ROOT; };
+		1B9DA94C129681D100285E72 /* collada_loader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = collada_loader.h; path = ../../src/collada_loader.h; sourceTree = SOURCE_ROOT; };
+		1B9DA94D129681D100285E72 /* mesh_actor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mesh_actor.cpp; path = ../../src/mesh_actor.cpp; sourceTree = SOURCE_ROOT; };
+		1B9DA94E129681D100285E72 /* mesh_actor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mesh_actor.h; path = ../../src/mesh_actor.h; sourceTree = SOURCE_ROOT; };
+		1B9DA94F129681D100285E72 /* mesh_loader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mesh_loader.h; path = ../../src/mesh_loader.h; sourceTree = SOURCE_ROOT; };
+		1B9DA950129681D100285E72 /* skeleton_actor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = skeleton_actor.cpp; path = ../../src/skeleton_actor.cpp; sourceTree = SOURCE_ROOT; };
+		1B9DA951129681D100285E72 /* skeleton_actor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = skeleton_actor.h; path = ../../src/skeleton_actor.h; sourceTree = SOURCE_ROOT; };
+		1B9DA952129681D100285E72 /* xml_helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xml_helper.cpp; path = ../../src/xml_helper.cpp; sourceTree = SOURCE_ROOT; };
+		1B9DA953129681D100285E72 /* xml_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xml_helper.h; path = ../../src/xml_helper.h; sourceTree = SOURCE_ROOT; };
 		1DDD58150DA1D0A300B32029 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		256AC3D80F4B6AC300CF3369 /* eriAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = eriAppDelegate.h; sourceTree = "<group>"; };
 		256AC3D90F4B6AC300CF3369 /* eriAppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = eriAppDelegate.mm; sourceTree = "<group>"; };
@@ -78,7 +95,7 @@
 		F6B3AB671269CD0F009303FA /* demo_app.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = demo_app.h; path = ../src/demo_app.h; sourceTree = SOURCE_ROOT; };
 		F6B3AB8D1269D224009303FA /* texture_reader_freeimage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = texture_reader_freeimage.cpp; path = ../../src/texture_reader_freeimage.cpp; sourceTree = SOURCE_ROOT; };
 		F6B3AB8E1269D224009303FA /* texture_reader_freeimage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = texture_reader_freeimage.h; path = ../../src/texture_reader_freeimage.h; sourceTree = SOURCE_ROOT; };
-		F6B3ABA61269D966009303FA /* libfreeimage.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libfreeimage.a; path = /Users/exe/works/3rd/FreeImage/Dist/libfreeimage.a; sourceTree = "<absolute>"; };
+		F6B3ABA61269D966009303FA /* libfreeimage.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libfreeimage.a; path = ../../../3rd/FreeImage/libfreeimage.a; sourceTree = SOURCE_ROOT; };
 		F6B3ACB11269DB52009303FA /* media */ = {isa = PBXFileReference; lastKnownFileType = folder; name = media; path = ../media; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -133,9 +150,21 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		1B9DA9461296817F00285E72 /* rapidxml */ = {
+			isa = PBXGroup;
+			children = (
+				1B9DA9471296819300285E72 /* rapidxml_iterators.hpp */,
+				1B9DA9481296819300285E72 /* rapidxml_print.hpp */,
+				1B9DA9491296819300285E72 /* rapidxml_utils.hpp */,
+				1B9DA94A1296819300285E72 /* rapidxml.hpp */,
+			);
+			name = rapidxml;
+			sourceTree = "<group>";
+		};
 		29B97314FDCFA39411CA2CEA /* eri */ = {
 			isa = PBXGroup;
 			children = (
+				1B9DA9461296817F00285E72 /* rapidxml */,
 				F6B3AB0D1269CBC4009303FA /* ERI */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
@@ -201,6 +230,15 @@
 			children = (
 				F6327601126B520D005C23B6 /* apple */,
 				F612B1A2126B6374002C8152 /* mac */,
+				1B9DA94B129681D100285E72 /* collada_loader.cpp */,
+				1B9DA94C129681D100285E72 /* collada_loader.h */,
+				1B9DA94D129681D100285E72 /* mesh_actor.cpp */,
+				1B9DA94E129681D100285E72 /* mesh_actor.h */,
+				1B9DA94F129681D100285E72 /* mesh_loader.h */,
+				1B9DA950129681D100285E72 /* skeleton_actor.cpp */,
+				1B9DA951129681D100285E72 /* skeleton_actor.h */,
+				1B9DA952129681D100285E72 /* xml_helper.cpp */,
+				1B9DA953129681D100285E72 /* xml_helper.h */,
 				F6B3AB8D1269D224009303FA /* texture_reader_freeimage.cpp */,
 				F6B3AB8E1269D224009303FA /* texture_reader_freeimage.h */,
 				F6B3AB311269CC2E009303FA /* font_mgr.cpp */,
@@ -315,6 +353,10 @@
 				F6B3AB8F1269D224009303FA /* texture_reader_freeimage.cpp in Sources */,
 				F6327603126B520D005C23B6 /* platform_helper_apple.mm in Sources */,
 				F612B1A5126B6374002C8152 /* gl_view.mm in Sources */,
+				1B9DA954129681D100285E72 /* collada_loader.cpp in Sources */,
+				1B9DA955129681D100285E72 /* mesh_actor.cpp in Sources */,
+				1B9DA956129681D100285E72 /* skeleton_actor.cpp in Sources */,
+				1B9DA957129681D100285E72 /* xml_helper.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -355,7 +397,7 @@
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/../../../../3rd/FreeImage/Dist\"",
+					"\"$(SRCROOT)/../../../3rd/FreeImage\"",
 				);
 				PRODUCT_NAME = eri;
 			};
@@ -373,7 +415,7 @@
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/../../../../3rd/FreeImage/Dist\"",
+					"\"$(SRCROOT)/../../../3rd/FreeImage\"",
 				);
 				PRODUCT_NAME = eri;
 			};
@@ -387,7 +429,7 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = ../../../../3rd/FreeImage/Dist;
+				HEADER_SEARCH_PATHS = ../../../3rd/FreeImage;
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
 				SDKROOT = macosx10.6;
@@ -401,7 +443,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = ../../../../3rd/FreeImage/Dist;
+				HEADER_SEARCH_PATHS = ../../../3rd/FreeImage;
 				PREBINDING = NO;
 				SDKROOT = macosx10.6;
 			};
