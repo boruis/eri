@@ -51,6 +51,16 @@ namespace ERI {
 		if (handler_) handler_->MultiMove(events, num, is_start);
 	}
 	
+	void InputMgr::OverMove(const InputEvent& event)
+	{
+		if (handler_) handler_->OverMove(event);
+	}
+
+	void InputMgr::KeyDown(const std::string& characters, InputKeyCode code /*= KEY_NONE*/)
+	{
+		if (handler_) handler_->KeyDown(characters, code);
+	}
+	
 	void InputMgr::Accelerate(const Vector3& g)
 	{
 		if (handler_) handler_->Accelerate(g);

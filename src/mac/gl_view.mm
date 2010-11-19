@@ -46,7 +46,7 @@ float mouse_down_x, mouse_down_y;
 	NSPoint pos = [self convertPoint:[event locationInWindow] fromView:nil];
 
 	ERI::InputEvent e(0, pos.x, pos.y);
-	ERI::Root::Ins().input_mgr()->Move(e);
+	ERI::Root::Ins().input_mgr()->OverMove(e);
 }
 
 - (void)mouseDragged:(NSEvent *)event
@@ -79,6 +79,21 @@ float mouse_down_x, mouse_down_y;
 {
     NSString *characters = [event characters];
 	NSLog(@"key %@\n", characters);
+	
+	ERI::InputKeyCode code = ERI::KEY_NONE;
+	switch ([event keyCode])
+	{
+		case 0x33:
+			code = ERI::KEY_DELETE;
+			NSLog(@"key delete!");
+			break;
+		case 0x35:
+			code = ERI::KEY_ESCAPE;
+			NSLog(@"key escape!");
+			break;
+	}
+	
+	ERI::Root::Ins().input_mgr()->KeyDown([characters UTF8String], code);
 }
 
 - (void)dealloc {

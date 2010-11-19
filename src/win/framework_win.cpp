@@ -33,6 +33,9 @@ struct WinInitInfo
 	bool		is_visible;
 };
 
+static int mouse_down_x = 0;
+static int mouse_down_y = 0;
+
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	WinInitInfo* win_init_info = reinterpret_cast<WinInitInfo*>(GetWindowLong(hWnd, GWL_USERDATA));
@@ -72,17 +75,17 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_MOUSEMOVE:
 		{
+			int screen_x = LOWORD(lParam);
+			int screen_y = win_init_info->height - HIWORD(lParam);
+
+			InputEvent e;
+			e.x = screen_x;
+			e.y = screen_y;
+
 			if (wParam & MK_LBUTTON)
-			{
-				int screen_x = LOWORD(lParam);
-				int screen_y = win_init_info->height - HIWORD(lParam);
-
-				InputEvent e;
-				e.x = screen_x;
-				e.y = screen_y;
-
 				Root::Ins().input_mgr()->Move(e);
-			}
+			else
+				Root::Ins().input_mgr()->OverMove(e);
 
 			return 0;
 		}
@@ -96,6 +99,9 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			InputEvent e;
 			e.x = screen_x;
 			e.y = screen_y;
+
+			mouse_down_x = screen_x;
+			mouse_down_y = screen_y;
 
 			Root::Ins().input_mgr()->Press(e);
 			return 0;
@@ -113,8 +119,10 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			Root::Ins().input_mgr()->Release(e);
 
-			// TODO: should do additional check
-			Root::Ins().input_mgr()->Click(e);
+			if (ERI::Abs(screen_x - mouse_down_x) < 10 && ERI::Abs(screen_y - mouse_down_y) < 10)
+			{
+				Root::Ins().input_mgr()->Click(e);
+			}
 
 			return 0;
 		}
@@ -131,6 +139,35 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			Root::Ins().input_mgr()->DoubleClick(e);
 			return 0;
+		}
+		break;
+
+	case WM_CHAR:
+		{
+			std::string characters;
+
+			ERI::InputKeyCode code = ERI::KEY_NONE;
+			if (wParam == VK_BACK)
+			{
+				code = ERI::KEY_DELETE;
+			}
+			else if (wParam == VK_ESCAPE)
+			{
+				code = ERI::KEY_ESCAPE;
+			}
+			else if (wParam == VK_RETURN)
+			{
+				characters = "\r";
+			}
+			else
+			{
+				char str[2];
+				str[1] = 0;
+				str[0] = wParam;
+				characters = str;
+			}
+
+			ERI::Root::Ins().input_mgr()->KeyDown(characters, code);
 		}
 		break;
 	}
@@ -207,6 +244,7 @@ float FrameworkWin::PreUpdate()
 	{
 		if (msg.message != WM_QUIT)
 		{
+			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
 		else

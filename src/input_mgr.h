@@ -10,6 +10,8 @@
 #ifndef ERI_INPUT_MGR_H
 #define ERI_INPUT_MGR_H
 
+#include <string>
+
 namespace ERI {
 	
 	struct Vector3;
@@ -23,6 +25,13 @@ namespace ERI {
 		int				x, y;
 	};
 	
+	enum InputKeyCode
+	{
+		KEY_NONE,
+		KEY_DELETE,
+		KEY_ESCAPE
+	};
+	
 	class InputHandler
 	{
 	public:
@@ -32,6 +41,9 @@ namespace ERI {
 		virtual void DoubleClick(const InputEvent& event) {}
 		virtual void Move(const InputEvent& event) {}
 		virtual void MultiMove(const InputEvent* events, int num, bool is_start) {}
+		
+		virtual void OverMove(const InputEvent& event) {}
+		virtual void KeyDown(const std::string& characters, InputKeyCode code) {}
 		
 		virtual void Accelerate(const Vector3& g) {}
 		virtual void Shake() {}
@@ -49,6 +61,9 @@ namespace ERI {
 		void DoubleClick(const InputEvent& event);
 		void Move(const InputEvent& event);
 		void MultiMove(const InputEvent* events, int num, bool is_start);
+
+		void OverMove(const InputEvent& event);
+		void KeyDown(const std::string& characters, InputKeyCode code = KEY_NONE);
 
 		void Accelerate(const Vector3& g);
 		void Shake();
