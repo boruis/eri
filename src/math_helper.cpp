@@ -73,6 +73,28 @@ namespace ERI {
 		(*this) = v;
 	}
 	
+	float Vector2::GetRotateToDegree(const Vector2& target)
+	{
+		Vector2 start = *this;
+		Vector2 end = target;
+
+		start.Normalize();
+		end.Normalize();
+		float cos_value = start.DotProduct(end);
+		
+		if (Abs(cos_value) > Math::ZERO_TOLERANCE)
+		{
+			float radian = acos(cos_value);
+			if (start.CrossProduct(end) < 0) radian *= -1;
+			
+			return Math::ToDegree(radian);
+		}
+		else
+		{
+			return (start.CrossProduct(end) < 0) ? -90.0f : 90.0f;
+		}
+	}
+	
 	float Vector3::Length() const
 	{
 		return sqrt(x * x + y * y + z * z);

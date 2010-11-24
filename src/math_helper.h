@@ -71,6 +71,7 @@ namespace ERI {
 		float Normalize();
 		
 		void Rotate(float degree);
+		float GetRotateToDegree(const Vector2& target);
 		
 		float x, y;
 	};
@@ -79,6 +80,7 @@ namespace ERI {
 	{
 		Vector3() : x(0), y(0), z(0) {}
 		Vector3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
+		explicit Vector3(const Vector2& v) : x(v.x), y(v.y), z(0) {}
 		
 		inline Vector3 operator + (const Vector3& v) const { return Vector3(x + v.x, y + v.y, z + v.z); }
 		inline Vector3 operator - (const Vector3& v) const { return Vector3(x - v.x, y - v.y, z - v.z); }
