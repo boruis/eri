@@ -58,13 +58,17 @@ namespace ERI
 		BaseEmitter(float rate, float angle_min, float angle_max);
 		virtual ~BaseEmitter();
 		
-		bool CheckIsTimeToEmit(float delta_time);
+		bool CheckIsTimeToEmit(float delta_time, int& out_emit_num);
 		
 		float GetEmitAngle();
 		
 		virtual void GetEmitPos(Vector3& pos) = 0;
 		
+		virtual BaseEmitter* Clone() = 0;
+		
 		inline float rate() { return rate_; }
+		inline float angle_min() { return angle_min_; }
+		inline float angle_max() { return angle_max_; }
 	
 	private:
 		float	rate_;
@@ -80,11 +84,28 @@ namespace ERI
 		BoxEmitter(Vector3 half_size, float rate, float angle_min, float angle_max);
 		virtual ~BoxEmitter();
 		
+		virtual BaseEmitter* Clone();
+		
 	protected:
 		virtual void GetEmitPos(Vector3& pos);
 		
 	private:
 		Vector3	half_size_;
+	};
+	
+	class CircleEmitter : public BaseEmitter
+	{
+	public:
+		CircleEmitter(float radius, float rate, float angle_min, float angle_max);
+		virtual ~CircleEmitter();
+		
+		virtual BaseEmitter* Clone();
+		
+	protected:
+		virtual void GetEmitPos(Vector3& pos);
+		
+	private:
+		float	radius_;
 	};
 	
 #pragma mark Affector
@@ -97,6 +118,8 @@ namespace ERI
 		
 		virtual void InitSetup(Particle* p) {}
 		virtual void Update(float delta_time, Particle* p) = 0;
+		
+		virtual BaseAffector* Clone() = 0;
 	};
 	
 	class RotateAffector : public BaseAffector
@@ -107,6 +130,8 @@ namespace ERI
 
 		virtual void InitSetup(Particle* p);
 		virtual void Update(float delta_time, Particle* p);
+		
+		virtual BaseAffector* Clone() { return new RotateAffector(speed_, acceleration_); }
 		
 	private:
 		float	speed_, acceleration_;
@@ -120,6 +145,8 @@ namespace ERI
 		
 		virtual void Update(float delta_time, Particle* p);
 		
+		virtual BaseAffector* Clone() { return new ForceAffector(acceleration_); }
+		
 	private:
 		Vector2	acceleration_;
 	};
@@ -132,6 +159,8 @@ namespace ERI
 		
 		virtual void Update(float delta_time, Particle* p);
 		
+		virtual BaseAffector* Clone() { return new AccelerationAffector(acceleration_); }
+		
 	private:
 		float	acceleration_;
 	};
@@ -143,6 +172,8 @@ namespace ERI
 		virtual ~ScaleAffector();
 		
 		virtual void Update(float delta_time, Particle* p);
+		
+		virtual BaseAffector* Clone() { return new ScaleAffector(speed_); }
 		
 	private:
 		Vector2	speed_;
@@ -157,6 +188,8 @@ namespace ERI
 		virtual void InitSetup(Particle* p);
 		virtual void Update(float delta_time, Particle* p);
 		
+		virtual BaseAffector* Clone() { return new ColorAffector(start_, end_); }
+		
 	private:
 		Color	start_, end_;
 	};
@@ -169,6 +202,8 @@ namespace ERI
 		
 		virtual void InitSetup(Particle* p);
 		virtual void Update(float delta_time, Particle* p);
+		
+		virtual BaseAffector* Clone();
 		
 		void AddInterval(float lived_percent, const Color& color);
 		
@@ -231,9 +266,10 @@ namespace ERI
 		inline const ParticleSystemSetup* setup_ref() { return setup_ref_; }
 		
 		inline void set_custom_life(float life) { custom_life_ = life; }
+		inline float custom_life() { return custom_life_; }
 		
 	private:
-		void EmitParticle();
+		void EmitParticle(int num);
 		Particle* ObtainParticle();
 		
 		void CreateBuffer();
@@ -251,14 +287,49 @@ namespace ERI
 		vertex_3_pos_tex_color*		vertices_;
 		unsigned short*				indices_;
 		
+		Vector2		system_scale_;
 		Vector2		uv_start_, uv_size_;
 		
 		float		lived_time_;
 	};
 	
+#pragma mark ParticleSystemCreator
+	
+	struct ParticleMaterialSetup
+	{
+		ParticleMaterialSetup() :
+			u_start(0.0f),
+			v_start(0.0f),
+			u_width(1.0f),
+			v_height(1.0f),
+			depth_write(true),
+			blend_add(false)
+		{
+		}
+		
+		std::string					tex_path;
+		float						u_start, v_start, u_width, v_height;
+		bool						depth_write;
+		bool						blend_add;
+	};
+	
+	struct ParticleSystemCreator
+	{
+		ParticleSystemCreator() : emitter(NULL) {}
+		~ParticleSystemCreator();
+		
+		ParticleSystemSetup*		setup;
+		BaseEmitter*				emitter;
+		std::vector<BaseAffector*>	affectors;
+		
+		ParticleMaterialSetup		material_setup;
+		
+		ParticleSystem*	Create();
+	};
+	
 #pragma mark script loader function
 	
-	ParticleSystem* CreateParticleSystemByScriptFile(const std::string& path);
+	ParticleSystemCreator* LoadParticleSystemCreatorByScriptFile(const std::string& path);
 
 }
 

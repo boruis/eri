@@ -24,7 +24,7 @@ namespace ERI
 		angle_max_(angle_max),
 		emit_remain_time_(0.0f)
 	{
-		ASSERT(rate_ > 0);
+		ASSERT(rate_ > 0.0f);
 		
 		emit_interval_ = 1.0f / rate_;
 	}
@@ -33,11 +33,13 @@ namespace ERI
 	{
 	}
 
-	bool BaseEmitter::CheckIsTimeToEmit(float delta_time)
+	bool BaseEmitter::CheckIsTimeToEmit(float delta_time, int& out_emit_num)
 	{
 		emit_remain_time_ -= delta_time;
 		if (emit_remain_time_ <= 0.0f)
 		{
+			out_emit_num = static_cast<int>(-emit_remain_time_ / emit_interval_) + 1;
+			
 			emit_remain_time_ = emit_interval_;
 			return true;
 		}
@@ -59,12 +61,53 @@ namespace ERI
 	BoxEmitter::~BoxEmitter()
 	{
 	}
+	
+	BaseEmitter* BoxEmitter::Clone()
+	{
+		return new BoxEmitter(half_size_, rate(), angle_min(), angle_max());
+	}
 
 	void BoxEmitter::GetEmitPos(Vector3& pos)
 	{
 		pos.x = RangeRandom(-half_size_.x, half_size_.x);
 		pos.y = RangeRandom(-half_size_.y, half_size_.y);
 		pos.z = RangeRandom(-half_size_.z, half_size_.z);
+	}
+	
+	CircleEmitter::CircleEmitter(float radius, float rate, float angle_min, float angle_max) :
+		radius_(radius),
+		BaseEmitter(rate, angle_min, angle_max)
+	{
+	}
+	
+	CircleEmitter::~CircleEmitter()
+	{
+	}
+	
+	BaseEmitter* CircleEmitter::Clone()
+	{
+		return new CircleEmitter(radius_, rate(), angle_min(), angle_max());
+	}
+	
+	void CircleEmitter::GetEmitPos(Vector3& pos)
+	{
+		pos.x = RangeRandom(-radius_, radius_);
+		pos.y = RangeRandom(-radius_, radius_);
+		
+		float radius_squared = radius_ * radius_;
+		while (pos.LengthSquared() > radius_squared)
+		{
+			pos.x = RangeRandom(-radius_, radius_);
+			pos.y = RangeRandom(-radius_, radius_);
+		}
+		
+//		Vector2 r;
+//		r.y = RangeRandom(0.0f, radius_);
+//		r.Rotate(RangeRandom(0.0f, 360.0f));
+//		pos.x = r.x;
+//		pos.y = r.y;
+		
+		pos.z = 0.0f;
 	}
 	
 #pragma mark Affector
@@ -132,8 +175,8 @@ namespace ERI
 	void ScaleAffector::Update(float delta_time, Particle* p)
 	{
 		p->scale += speed_ * delta_time;
-		if (p->scale.x < 0) p->scale.x = 0;
-		if (p->scale.y < 0) p->scale.y = 0;
+		if (p->scale.x < 0.0f) p->scale.x = 0.0f;
+		if (p->scale.y < 0.0f) p->scale.y = 0.0f;
 	}
 	
 	ColorAffector::ColorAffector(const Color& start, const Color& end) :
@@ -196,6 +239,18 @@ namespace ERI
 			float diff_percent = diff / total;
 			p->color = intervals_[p->color_interval].color * (1.0f - diff_percent) + intervals_[p->color_interval + 1].color * diff_percent;
 		}
+	}
+	
+	BaseAffector* ColorIntervalAffector::Clone()
+	{
+		ColorIntervalAffector* affector = new ColorIntervalAffector;
+		
+		for (int i = 0; i < intervals_.size(); ++i)
+		{
+			affector->intervals_.push_back(intervals_[i]);
+		}
+		
+		return affector;
 	}
 	
 	void ColorIntervalAffector::AddInterval(float lived_percent, const Color& color)
@@ -320,6 +375,20 @@ namespace ERI
 		int affector_num = affectors_.size();
 		Vector2 delta_pos;
 		
+		system_scale_.x = 1.0f;
+		system_scale_.y = 1.0f;
+		if (!setup_ref_->is_coord_relative)
+		{
+			// TODO: 3D scale?
+			
+			const SceneActor* inherit_actor = this;
+			while (inherit_actor)
+			{
+				system_scale_ *= inherit_actor->GetScale();
+				inherit_actor = inherit_actor->parent();
+			}
+		}
+		
 		for (int i = 0; i < num; ++i)
 		{
 			p = particles_[i];
@@ -330,7 +399,7 @@ namespace ERI
 				{
 					p->lived_percent = p->lived_time / p->life;
 					
-					delta_pos = p->velocity * delta_time;
+					delta_pos = p->velocity * system_scale_ * delta_time;
 					p->pos.x += delta_pos.x;
 					p->pos.y += delta_pos.y;
 					
@@ -349,57 +418,65 @@ namespace ERI
 			}
 		}
 		
+		int emit_num = 0;
 		if ((custom_life_ < 0.0f || (lived_time_ > 0.0f && lived_time_ < custom_life_))
-			&& emitter_->CheckIsTimeToEmit(delta_time))
+			&& emitter_->CheckIsTimeToEmit(delta_time, emit_num))
 		{
-			// TODO: delta_time need emit mutiple particle
-			
-			EmitParticle();
+			EmitParticle(emit_num);
 		}
 		
 		UpdateBuffer();
 	}
 		
-	void ParticleSystem::EmitParticle()
+	void ParticleSystem::EmitParticle(int num)
 	{
-		Particle* p = ObtainParticle();
-
+		Particle* p;
 		Vector3 pos;
-		Vector2 v(0, 1);
-		emitter_->GetEmitPos(pos);
-		float rotate = emitter_->GetEmitAngle();
-		
-		if (!setup_ref_->is_coord_relative)
-		{
-			pos = GetWorldTransform() * pos;
-
-			// TODO: 3D rotate?
-
-			const SceneActor* inherit_actor = this;
-			while (inherit_actor)
-			{
-				rotate += inherit_actor->GetRotate();
-				inherit_actor = inherit_actor->parent();
-			}
-		}
-		
-		p->pos = pos;
-		
-		p->size = setup_ref_->particle_size * RangeRandom(setup_ref_->particle_scale_min, setup_ref_->particle_scale_max);
-		p->rotate_angle = RangeRandom(setup_ref_->particle_rotate_min, setup_ref_->particle_rotate_max);
-		p->life = RangeRandom(setup_ref_->particle_life_min, setup_ref_->particle_life_max);
-		
-		v.Rotate(rotate);
-		p->velocity = v * RangeRandom(setup_ref_->particle_speed_min, setup_ref_->particle_speed_max);
-		
+		Vector2 v;
+		float rotate;
+		const SceneActor* inherit_actor;
 		int affector_num = affectors_.size();
-		for (int i = 0; i < affector_num; ++i)
+
+		for (int i = 0; i < num; ++i)
 		{
-			affectors_[i]->InitSetup(p);
+			p = ObtainParticle();
+			
+			emitter_->GetEmitPos(pos);
+			rotate = emitter_->GetEmitAngle();
+			
+			if (!setup_ref_->is_coord_relative)
+			{
+				pos = GetWorldTransform() * pos;
+				
+				// TODO: 3D rotate?
+				
+				inherit_actor = this;
+				while (inherit_actor)
+				{
+					rotate += inherit_actor->GetRotate();
+					inherit_actor = inherit_actor->parent();
+				}
+			}
+			
+			p->pos = pos;
+			
+			p->size = setup_ref_->particle_size * RangeRandom(setup_ref_->particle_scale_min, setup_ref_->particle_scale_max);
+			p->rotate_angle = RangeRandom(setup_ref_->particle_rotate_min, setup_ref_->particle_rotate_max);
+			p->life = RangeRandom(setup_ref_->particle_life_min, setup_ref_->particle_life_max);
+
+			v.x = 0.0f;
+			v.y = 1.0f;
+			v.Rotate(rotate);
+			p->velocity = v * RangeRandom(setup_ref_->particle_speed_min, setup_ref_->particle_speed_max);
+			
+			for (int j = 0; j < affector_num; ++j)
+			{
+				affectors_[j]->InitSetup(p);
+			}
+			
+			p->lived_time = 0.0f;
+			p->in_use = true;
 		}
-		
-		p->lived_time = 0.0f;
-		p->in_use = true;
 	}
 
 	Particle* ParticleSystem::ObtainParticle()
@@ -509,10 +586,10 @@ namespace ERI
 			if (p->in_use)
 			{
 				up.x = 0.0f;
-				up.y = p->size.y * p->scale.y * 0.5f;
+				up.y = p->size.y * p->scale.y * 0.5f * system_scale_.y;
 				up.Rotate(p->rotate_angle);
 				
-				right.x = p->size.x * p->scale.x * 0.5f;
+				right.x = p->size.x * p->scale.x * 0.5f * system_scale_.x;
 				right.y = 0.0f;
 				right.Rotate(p->rotate_angle);
 				
@@ -583,15 +660,57 @@ namespace ERI
 		uv_size_.y = height;
 	}
 	
+#pragma mark ParticleSystemCreator
+	
+	ParticleSystemCreator::~ParticleSystemCreator()
+	{
+		if (setup) delete setup;
+		if (emitter) delete emitter;
+		for (int i = 0; i < affectors.size(); ++i)
+		{
+			delete affectors[i];
+		}
+	}
+	
+	ParticleSystem*	ParticleSystemCreator::Create()
+	{
+		ParticleSystem* ps = new ParticleSystem(setup);
+		if (material_setup.tex_path.length() > 0)
+		{
+			ps->SetMaterial(material_setup.tex_path, FILTER_LINEAR, FILTER_LINEAR);
+			ps->SetTexAreaUV(material_setup.u_start,
+							 material_setup.v_start,
+							 material_setup.u_width,
+							 material_setup.v_height);
+		}
+		
+		ps->SetDepthWrite(material_setup.depth_write);
+		if (material_setup.blend_add)
+			ps->BlendAdd();
+		
+		ASSERT(emitter);
+		
+		ps->SetEmitter(emitter->Clone());
+		
+		for (int i = 0; i < affectors.size(); ++i)
+		{
+			ps->AddAffector(affectors[i]->Clone());
+		}
+
+		ps->RefreshSetup();
+		
+		return ps;
+	}
+	
 #pragma mark script loader function
 	
-	ParticleSystem* CreateParticleSystemByScriptFile(const std::string& path)
+	ParticleSystemCreator* LoadParticleSystemCreatorByScriptFile(const std::string& path)
 	{
 		XmlParseData parse_data;
 		ParseFile(path, parse_data);
 		
-		ParticleSystemSetup* ps_setup = new ParticleSystemSetup;
-		ParticleSystem* ps = new ParticleSystem(ps_setup);
+		ParticleSystemCreator* creator = new ParticleSystemCreator;
+		creator->setup = new ParticleSystemSetup;
 		
 		xml_node<>* node;
 		std::string s;
@@ -599,10 +718,8 @@ namespace ERI
 		node = parse_data.doc.first_node("particle_system");
 		if (node)
 		{
-			GetAttrBool(node, "coord_related", ps_setup->is_coord_relative);
-			GetAttrFloat(node, "life", ps_setup->life);
-			
-			BaseEmitter* emitter = NULL;
+			GetAttrBool(node, "coord_related", creator->setup->is_coord_relative);
+			GetAttrFloat(node, "life", creator->setup->life);
 			
 			node = node->first_node();
 			while (node)
@@ -614,28 +731,28 @@ namespace ERI
 					{
 						if (strcmp(node2->name(), "size") == 0)
 						{
-							GetAttrFloat(node2, "x", ps_setup->particle_size.x);
-							GetAttrFloat(node2, "y", ps_setup->particle_size.y);
+							GetAttrFloat(node2, "x", creator->setup->particle_size.x);
+							GetAttrFloat(node2, "y", creator->setup->particle_size.y);
 						}
 						else if (strcmp(node2->name(), "life") == 0)
 						{
-							GetAttrFloat(node2, "min", ps_setup->particle_life_min);
-							GetAttrFloat(node2, "max", ps_setup->particle_life_max);
+							GetAttrFloat(node2, "min", creator->setup->particle_life_min);
+							GetAttrFloat(node2, "max", creator->setup->particle_life_max);
 						}
 						else if (strcmp(node2->name(), "speed") == 0)
 						{
-							GetAttrFloat(node2, "min", ps_setup->particle_speed_min);
-							GetAttrFloat(node2, "max", ps_setup->particle_speed_max);
+							GetAttrFloat(node2, "min", creator->setup->particle_speed_min);
+							GetAttrFloat(node2, "max", creator->setup->particle_speed_max);
 						}
 						else if (strcmp(node2->name(), "rotate") == 0)
 						{
-							GetAttrFloat(node2, "min", ps_setup->particle_rotate_min);
-							GetAttrFloat(node2, "max", ps_setup->particle_rotate_max);
+							GetAttrFloat(node2, "min", creator->setup->particle_rotate_min);
+							GetAttrFloat(node2, "max", creator->setup->particle_rotate_max);
 						}
 						else if (strcmp(node2->name(), "scale") == 0)
 						{
-							GetAttrFloat(node2, "min", ps_setup->particle_scale_min);
-							GetAttrFloat(node2, "max", ps_setup->particle_scale_max);
+							GetAttrFloat(node2, "min", creator->setup->particle_scale_min);
+							GetAttrFloat(node2, "max", creator->setup->particle_scale_max);
 						}
 						else if (strcmp(node2->name(), "rotate_affector") == 0)
 						{
@@ -645,7 +762,7 @@ namespace ERI
 							GetAttrFloat(node2, "acceleration", acceleration);
 							if (speed != 0.0f || acceleration != 0.0f)
 							{
-								ps->AddAffector(new RotateAffector(speed, acceleration));
+								creator->affectors.push_back(new RotateAffector(speed, acceleration));
 							}
 						}
 						else if (strcmp(node2->name(), "force_affector") == 0)
@@ -655,7 +772,7 @@ namespace ERI
 							GetAttrFloat(node2, "acceleration_y", acceleration.y);
 							if (acceleration.x != 0.0f || acceleration.y != 0.0f)
 							{
-								ps->AddAffector(new ForceAffector(acceleration));
+								creator->affectors.push_back(new ForceAffector(acceleration));
 							}					
 						}
 						else if (strcmp(node2->name(), "acceleration_affector") == 0)
@@ -664,7 +781,7 @@ namespace ERI
 							GetAttrFloat(node2, "acceleration", acceleration);
 							if (acceleration != 0.0f)
 							{
-								ps->AddAffector(new AccelerationAffector(acceleration));
+								creator->affectors.push_back(new AccelerationAffector(acceleration));
 							}
 						}
 						else if (strcmp(node2->name(), "scale_affector") == 0)
@@ -674,7 +791,7 @@ namespace ERI
 							GetAttrFloat(node2, "speed_y", speed.y);
 							if (speed.x != 0.0f || speed.y != 0.0f)
 							{
-								ps->AddAffector(new ScaleAffector(speed));
+								creator->affectors.push_back(new ScaleAffector(speed));
 							}
 						}
 						else if (strcmp(node2->name(), "color_affector") == 0)
@@ -684,7 +801,7 @@ namespace ERI
 							GetAttrColor(node2, "end", end);
 							if (start != end)
 							{
-								ps->AddAffector(new ColorAffector(start, end));
+								creator->affectors.push_back(new ColorAffector(start, end));
 							}
 						}
 						else if (strcmp(node2->name(), "color_interval_affector") == 0)
@@ -708,7 +825,7 @@ namespace ERI
 							}
 							
 							if (is_got_interval)
-								ps->AddAffector(affector);
+								creator->affectors.push_back(affector);
 							else
 								delete affector;
 						}
@@ -728,8 +845,22 @@ namespace ERI
 					GetAttrFloat(node, "angle_min", angle_min);
 					GetAttrFloat(node, "angle_max", angle_max);
 					
-					if (emitter) delete emitter;
-					emitter = new BoxEmitter(size * 0.5f, rate, angle_min, angle_max);
+					if (creator->emitter) delete creator->emitter;
+					creator->emitter = new BoxEmitter(size * 0.5f, rate, angle_min, angle_max);
+				}
+				else if (strcmp(node->name(), "circle_emitter") == 0)
+				{
+					float radius = 1.0f;
+					float rate = 1.0f;
+					float angle_min = 0.0f;
+					float angle_max = 0.0f;
+					GetAttrFloat(node, "radius", radius);
+					GetAttrFloat(node, "rate", rate);
+					GetAttrFloat(node, "angle_min", angle_min);
+					GetAttrFloat(node, "angle_max", angle_max);
+					
+					if (creator->emitter) delete creator->emitter;
+					creator->emitter = new CircleEmitter(radius, rate, angle_min, angle_max);
 				}
 				else if (strcmp(node->name(), "material") == 0)
 				{
@@ -739,59 +870,48 @@ namespace ERI
 					attr = GetAttrStr(node, "tex", s);
 					if (attr && s.length() > 0)
 					{
-						// TODO: find path
+						size_t pos = s.rfind('/');
+						if (pos == std::string::npos)
+							pos = s.rfind('\\');
+						if (pos != std::string::npos)
+							s = s.substr(pos + 1);
 						
 						std::string real_path("media/Effect/");
 						real_path += s;
 						
-						ps->SetMaterial(real_path, FILTER_LINEAR, FILTER_LINEAR);
+						creator->material_setup.tex_path = real_path;
 						
-						if (ps->material().texture_units[0].texture)
-						{
-							float u, v, w, h;
-							u = v = 0.0f;
-							w = h = 1.0f;
-							GetAttrFloat(node, "tex_u", u);
-							GetAttrFloat(node, "tex_v", v);
-							GetAttrFloat(node, "tex_w", w);
-							GetAttrFloat(node, "tex_h", h);						
-							ps->SetTexAreaUV(u, v, w, h);
-						}
+						GetAttrFloat(node, "tex_u", creator->material_setup.u_start);
+						GetAttrFloat(node, "tex_v", creator->material_setup.v_start);
+						GetAttrFloat(node, "tex_w", creator->material_setup.u_width);
+						GetAttrFloat(node, "tex_h", creator->material_setup.v_height);
 					}
-					bool depth_writh;
-					if (GetAttrBool(node, "depth_write", depth_writh))
-					{
-						ps->SetDepthWrite(depth_writh);
-					}
+					
+					GetAttrBool(node, "depth_write", creator->material_setup.depth_write);
+					
 					if (GetAttrStr(node, "blend", s))
 					{
 						if (s.compare("add") == 0)
-							ps->BlendAdd();
+							creator->material_setup.blend_add = true;
 					}
 				}
 				
 				node = node->next_sibling();
 			}
 			
-			if (emitter)
+			if (!creator->emitter)
 			{
-				ps->SetEmitter(emitter);
-			}
-			else
-			{
-				delete ps;
-				ps = NULL;
+				delete creator;
+				creator = NULL;
 			}
 		}
 		else
 		{
-			delete ps;
-			ps = NULL;
+			delete creator;
+			creator = NULL;
 		}
-		
-		if (ps) ps->RefreshSetup();
 
-		return ps;
+		return creator;
 	}
 	
 }
