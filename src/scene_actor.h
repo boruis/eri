@@ -67,7 +67,7 @@ namespace ERI {
 		virtual void Render(Renderer* renderer);
 
 		void SetColor(const Color& color);
-		const Color& GetColor();
+		const Color& GetColor() const;
 		
 		void BlendAdd();
 		
@@ -84,17 +84,17 @@ namespace ERI {
 		
 		// 2D
 		virtual void SetPos(float x, float y);
-		Vector2 GetPos();
+		Vector2 GetPos() const;
 				
 		void SetRotate(float degree);
 		float GetRotate() const;
 		
 		void SetScale(float x, float y);
-		Vector2 GetScale();
+		Vector2 GetScale() const;
 		
 		// 3D
 		virtual void SetPos(const Vector3& pos);
-		const Vector3& GetPos3();
+		const Vector3& GetPos3() const;
 		void SetRotate(float degree, const Vector3& axis);
 		void SetScale(const Vector3& scale);
 		

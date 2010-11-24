@@ -160,7 +160,7 @@ namespace ERI {
 		render_data_.color = color;
 	}
 	
-	const Color& SceneActor::GetColor()
+	const Color& SceneActor::GetColor() const
 	{
 		return render_data_.color;
 	}
@@ -235,7 +235,7 @@ namespace ERI {
 		SetTransformDirty();
 	}
 	
-	Vector2 SceneActor::GetPos()
+	Vector2 SceneActor::GetPos() const
 	{
 		return Vector2(render_data_.translate.x, render_data_.translate.y);
 	}
@@ -259,7 +259,7 @@ namespace ERI {
 		SetTransformDirty();
 	}
 	
-	Vector2 SceneActor::GetScale()
+	Vector2 SceneActor::GetScale() const
 	{
 		return Vector2(render_data_.scale.x, render_data_.scale.y);
 	}
@@ -270,7 +270,7 @@ namespace ERI {
 		SetTransformDirty();
 	}
 	
-	const Vector3& SceneActor::GetPos3()
+	const Vector3& SceneActor::GetPos3() const
 	{
 		return render_data_.translate;
 	}
