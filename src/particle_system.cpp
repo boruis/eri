@@ -380,13 +380,7 @@ namespace ERI
 		if (!setup_ref_->is_coord_relative)
 		{
 			// TODO: 3D scale?
-			
-			const SceneActor* inherit_actor = this;
-			while (inherit_actor)
-			{
-				system_scale_ *= inherit_actor->GetScale();
-				inherit_actor = inherit_actor->parent();
-			}
+			system_scale_ = GetScale();
 		}
 		
 		for (int i = 0; i < num; ++i)
