@@ -118,7 +118,7 @@ namespace ERI {
 		
 		[dict release];
 		
-		return false;
+		return true;
 	}
 	
 }
