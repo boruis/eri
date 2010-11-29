@@ -10,6 +10,8 @@
 #ifndef ERI_MATH_HELPER_H
 #define ERI_MATH_HELPER_H
 
+#include "pch.h"
+
 namespace ERI {
 	
 #pragma mark Geometry
