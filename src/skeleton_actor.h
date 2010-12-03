@@ -87,6 +87,27 @@ namespace ERI
 		std::vector<AnimClip*>		anim_refs;
 	};
 	
+	struct AnimSetting
+	{
+		AnimSetting(int _idx = -1,
+					float _speed_rate = 1.0f,
+					bool _is_loop = true,
+					bool _is_blend_begin = true,
+					bool _is_inverse = false)
+		:
+			idx(_idx),
+			speed_rate(_speed_rate),
+			is_loop(_is_loop),
+			is_blend_begin(_is_blend_begin),
+			is_inverse(_is_inverse)
+		{
+		}
+		
+		int		idx;
+		float	speed_rate;
+		bool	is_loop, is_blend_begin, is_inverse;
+	};
+	
 	class SkeletonNodeIns
 	{
 	public:
@@ -94,8 +115,7 @@ namespace ERI
 		
 		// TODO: should put to another anim class interface ...
 		
-		void AddTime(float add_time, bool is_loop, bool is_inverse);
-		void SetTime(float time);
+		void SetTime(float current_time, const AnimSetting& setting);
 		
 		//
 		
@@ -108,11 +128,10 @@ namespace ERI
 		
 		// TODO: should put to another anim class interface ...
 		
-		void UpdateKey(bool is_loop);
-		void UpdateLocalPose();
+		void UpdateKey(float current_time, const AnimSetting& setting);
+		void UpdateLocalPose(float current_time);
 
 		int				current_start_key_, next_start_key_;
-		float			current_time_;
 	};
 	
 	class SkeletonIns
@@ -123,9 +142,14 @@ namespace ERI
 
 		// TODO: should put to another anim class interface ...
 		
-		void SetAnim(int idx, float speed_rate, bool is_inverse, bool is_loop);
-		void AddTime(float add_time);
+		void SetAnim(const AnimSetting& setting);
+		void GetAnim(AnimSetting& out_setting);
 		void SetTimePercent(float time_percent);
+		float GetTimePercent();
+		void AddTime(float add_time);
+		float GetTime();
+		bool IsAnimEnd();
+		void CancelLoop();
 		
 		//
 		
@@ -144,10 +168,9 @@ namespace ERI
 		
 		// TODO: should put to another anim class interface ...
 		
-		int		anim_idx_;
-		float	anim_duration_;
-		float	anim_speed_rate_;
-		bool	is_inverse_, is_loop_;
+		AnimSetting		anim_setting_;
+		float			anim_duration_;
+		float			anim_current_time_;
 	};
 	
 	class SkeletonActor : public SceneActor
@@ -156,10 +179,14 @@ namespace ERI
 		SkeletonActor(const SharedSkeleton* resource_ref);
 		virtual ~SkeletonActor();
 		
+		void ChangeResource(const SharedSkeleton* resource_ref);
+		
 		void Update(float delta_time);
 		
-		void SetAnim(int idx, float speed_rate = 1.0f, bool is_inverse = false, bool is_loop = true);
+		void SetAnim(const AnimSetting& setting);
 		void SetTimePercent(float time_percent);
+		
+		void PlayAnimOnce(int idx, float speed_rate = 1.0f, bool is_inverse = false);
 		
 	private:
 		void UpdateVertexBuffer();
@@ -168,6 +195,8 @@ namespace ERI
 		
 		void*			vertex_buffer_;
 		int				vertex_buffer_size_;
+
+		AnimSetting		next_anim_;
 	};
 	
 }

@@ -42,7 +42,7 @@ namespace ERI {
 		
 		if (parent_)
 		{
-			parent_->RemoveChild(this);
+			RemoveFromParent();
 		}
 		
 		if (layer_)
@@ -103,6 +103,13 @@ namespace ERI {
 		ASSERT(i < num);
 		
 		actor->parent_ = NULL;
+	}
+	
+	void SceneActor::RemoveFromParent()
+	{
+		ASSERT(parent_);
+		
+		parent_->RemoveChild(this);
 	}
 	
 	bool SceneActor::IsHit(const Vector3& world_space_pos)

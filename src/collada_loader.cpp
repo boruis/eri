@@ -356,7 +356,7 @@ namespace ERI
 		vertex_format = current_vertex_format_;
 	}
 	
-	SharedSkeleton* ColladaLoader::CreateSharedSkeleton()
+	SharedSkeleton* ColladaLoader::CreateSharedSkeleton(std::vector<int>* anim_sections /*= NULL*/)
 	{
 		if (skeleton_map_.empty())
 			return NULL;
@@ -442,15 +442,36 @@ namespace ERI
 			
 			share_skeleton->mesh_refs.push_back(mesh);
 		}
-		
+
+		AnimClip* anim;
 		int anim_num = animation_array_.size();
 		for (int i = 0; i < anim_num; ++i)
 		{
-			AnimClip* anim = CreateAnimClip(animation_array_[i], skeleton->nodes);
-			
-			ASSERT(anim);
-			
-			share_skeleton->anim_refs.push_back(anim);
+			if (anim_sections)
+			{
+				int start_idx = 0;
+				int section_frame_num;
+				int section_num = anim_sections->size();
+				for (int j = 0; j < section_num; ++j)
+				{
+					section_frame_num = (*anim_sections)[j];
+					anim = CreateAnimClip(animation_array_[i], skeleton->nodes, start_idx, section_frame_num);
+					
+					ASSERT(anim);
+					
+					share_skeleton->anim_refs.push_back(anim);
+					
+					start_idx += section_frame_num;
+				}
+			}
+			else
+			{
+				AnimClip* anim = CreateAnimClip(animation_array_[i], skeleton->nodes);
+				
+				ASSERT(anim);
+				
+				share_skeleton->anim_refs.push_back(anim);
+			}
 		}
 		
 		return share_skeleton;
@@ -551,7 +572,10 @@ namespace ERI
 		return mesh;
 	}
 	
-	ERI::AnimClip* ColladaLoader::CreateAnimClip(Animation* anim, const std::vector<SkeletonNode*> nodes)
+	ERI::AnimClip* ColladaLoader::CreateAnimClip(Animation* anim,
+												 const std::vector<SkeletonNode*>& nodes,
+												 int start_frame /*= -1*/,
+												 int frame_count /*= -1*/)
 	{
 		ASSERT(anim);
 		
@@ -571,15 +595,30 @@ namespace ERI
 			pose_sample = new PoseSample;
 			
 			int key_num = sampler->times.size();
+			int start_key = 0;
+			float time_offset = 0;
+			
+			if (start_frame != -1 && frame_count != -1)
+			{
+				ASSERT(start_frame >= 0 && start_frame < key_num && frame_count > 0 && (start_frame + frame_count) <= key_num);
+				
+				key_num = frame_count;
+				start_key = start_frame;
+				if (start_key > 0)
+				{
+					time_offset = -sampler->times[start_key - 1];
+				}
+			}
+			
 			pose_sample->transforms.resize(key_num);
 			
-			for (int j = 0; j < key_num; ++j)
+			for (int j = start_key; j < (start_key + key_num); ++j)
 			{
-				pose_sample->times.push_back(sampler->times[j]);
+				pose_sample->times.push_back(sampler->times[j] + time_offset);
 				
-				sampler->transforms[j].ExtractTransform(pose_sample->transforms[j].scale,
-														pose_sample->transforms[j].rotate,
-														pose_sample->transforms[j].translate);
+				sampler->transforms[j].ExtractTransform(pose_sample->transforms[j - start_key].scale,
+														pose_sample->transforms[j - start_key].rotate,
+														pose_sample->transforms[j - start_key].translate);
 			}
 			
 			// find corresponding node idx
@@ -1109,7 +1148,7 @@ namespace ERI
 							skeletion = skel_it->second;
 							//skeletion = skeleton_map_.begin()->second;
 							
-							ParseSkeletonNode(node2, skeletion, -1);
+							ParseSkeletonNode(node, skeletion, -1);
 							
 							break;
 						}

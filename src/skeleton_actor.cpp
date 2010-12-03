@@ -71,64 +71,48 @@ namespace ERI
 #pragma mark SkeletonNodeIns
 	
 	SkeletonNodeIns::SkeletonNodeIns() :
-		current_start_key_(0),
-		current_time_(0.0f)
+		current_start_key_(0)
 	{
 	}
 	
-	void SkeletonNodeIns::AddTime(float add_time, bool is_loop, bool is_inverse_)
-	{
-		if (!attached_sample)
-			return;
-		
-		if (is_inverse_)
-			current_time_ -= add_time;
-		else
-			current_time_ += add_time;
-
-		UpdateKey(is_loop);
-		UpdateLocalPose();
-	}
-	
-	void SkeletonNodeIns::SetTime(float time)
+	void SkeletonNodeIns::SetTime(float current_time, const AnimSetting& setting)
 	{
 		if (!attached_sample)
 			return;
 		
-		current_time_ = time;
-		
-		UpdateKey(false);
-		UpdateLocalPose();
+		UpdateKey(current_time, setting);
+		UpdateLocalPose(current_time);
 	}
 	
-	void SkeletonNodeIns::UpdateKey(bool is_loop)
+	void SkeletonNodeIns::UpdateKey(float current_time, const AnimSetting& setting)
 	{
 		ASSERT(attached_sample);
 		
 		int key_num = attached_sample->times.size();
-		
-		if (is_loop)
-		{
-			float duration = attached_sample->times[key_num - 1];
-			while (current_time_ > duration) current_time_ -= duration;
-			while (current_time_ < 0) current_time_ += duration;
-		}
-
 		int i = 0;
 		for (; i < key_num; ++i)
 		{
-			if (current_time_ < attached_sample->times[i])
+			if (current_time < attached_sample->times[i])
 				break;
 		}
 		
-		current_start_key_ = i - 1;
-		next_start_key_ = i;
+		current_start_key_ = i;
+		next_start_key_ = i + 1;
 		
-		if (current_start_key_ < 0) current_start_key_ = 0;
-		if (next_start_key_ >= key_num) next_start_key_ = current_start_key_;
+		if (current_start_key_ >= key_num)
+		{
+			ASSERT(!setting.is_loop);
+			
+			current_start_key_ = key_num - 1;
+			next_start_key_ = setting.is_blend_begin ? 0 : current_start_key_;
+		}
+		if (next_start_key_ >= key_num)
+		{
+			next_start_key_ = setting.is_blend_begin ? 0 : current_start_key_;
+		}
 	}
 	
-	void SkeletonNodeIns::UpdateLocalPose()
+	void SkeletonNodeIns::UpdateLocalPose(float current_time)
 	{
 		ASSERT(attached_sample);
 		
@@ -140,10 +124,13 @@ namespace ERI
 		
 		Transform& start = attached_sample->transforms[current_start_key_];
 		Transform& end = attached_sample->transforms[next_start_key_];
-		float start_time = attached_sample->times[current_start_key_];
-		float end_time = attached_sample->times[next_start_key_];
 		
-		float blend_factor = (current_time_ - start_time) / (end_time - start_time);
+		float start_time = 0;
+		if (current_start_key_ > 0)
+			start_time = attached_sample->times[current_start_key_ - 1];
+		float end_time = attached_sample->times[current_start_key_];
+		
+		float blend_factor = (current_time - start_time) / (end_time - start_time);
 		
 		Quaternion::Slerp(local_pose.rotate, blend_factor, start.rotate, end.rotate);
 		local_pose.scale = start.scale * (1.0f - blend_factor) + end.scale * blend_factor;
@@ -154,9 +141,7 @@ namespace ERI
 
 	SkeletonIns::SkeletonIns(const SharedSkeleton* resource_ref) :
 		resource_ref_(resource_ref),
-		anim_speed_rate_(1.0f),
-		is_inverse_(false),
-		is_loop_(true)
+		anim_current_time_(0.0f)
 	{
 		ASSERT(resource_ref_);
 
@@ -167,42 +152,75 @@ namespace ERI
 	{
 	}
 
-	void SkeletonIns::SetAnim(int idx, float speed_rate, bool is_inverse, bool is_loop)
+	void SkeletonIns::SetAnim(const AnimSetting& setting)
 	{
-		ASSERT(idx >= 0 && idx < resource_ref_->anim_refs.size());
+		ASSERT(setting.idx >= 0 && setting.idx < resource_ref_->anim_refs.size());
 		
-		anim_idx_ = idx;
-		anim_speed_rate_ = speed_rate;
-		is_inverse_ = is_inverse;
-		is_loop_ = is_loop;
+		anim_setting_ = setting;
 		
 		AttachSample();
 	}
-
-	void SkeletonIns::AddTime(float add_time)
+	
+	void SkeletonIns::GetAnim(AnimSetting& out_setting)
 	{
-		float delta_time = add_time * anim_speed_rate_;
+		out_setting = anim_setting_;
+	}
+
+	void SkeletonIns::SetTimePercent(float time_percent)
+	{
+		anim_current_time_ = anim_duration_ * time_percent;
 		
 		int node_num = node_ins_array_.size();
 		for (int i = 0; i < node_num; ++i)
 		{
-			node_ins_array_[i].AddTime(delta_time, is_loop_, is_inverse_);
+			node_ins_array_[i].SetTime(anim_current_time_, anim_setting_);
 		}
 		
 		UpdatePose();
 	}
 	
-	void SkeletonIns::SetTimePercent(float time_percent)
+	float SkeletonIns::GetTimePercent()
 	{
-		float time = anim_duration_ * time_percent;
+		return anim_current_time_ / anim_duration_;
+	}
+	
+	void SkeletonIns::AddTime(float add_time)
+	{
+		float delta_time = add_time * anim_setting_.speed_rate;
+		
+		if (anim_setting_.is_inverse)
+			anim_current_time_ -= delta_time;
+		else
+			anim_current_time_ += delta_time;
+		
+		if (anim_setting_.is_loop)
+		{
+			while (anim_current_time_ >= anim_duration_) anim_current_time_ -= anim_duration_;
+			while (anim_current_time_ < 0) anim_current_time_ += anim_duration_;
+		}
 		
 		int node_num = node_ins_array_.size();
 		for (int i = 0; i < node_num; ++i)
 		{
-			node_ins_array_[i].SetTime(time);
+			node_ins_array_[i].SetTime(anim_current_time_, anim_setting_);
 		}
 		
 		UpdatePose();
+	}
+	
+	float SkeletonIns::GetTime()
+	{
+		return anim_current_time_;
+	}
+	
+	bool SkeletonIns::IsAnimEnd()
+	{
+		return (anim_current_time_ >= anim_duration_);
+	}
+	
+	void SkeletonIns::CancelLoop()
+	{
+		anim_setting_.is_loop = false;
 	}
 	
 	int SkeletonIns::GetVertexBufferSize()
@@ -304,7 +322,7 @@ namespace ERI
 			node_ins_array_[i].attached_sample = NULL;
 		}
 		
-		AnimClip* anim = resource_ref_->anim_refs[anim_idx_];
+		AnimClip* anim = resource_ref_->anim_refs[anim_setting_.idx];
 		PoseSample* pose_sample;
 		
 		anim_duration_ = 0.0f;
@@ -315,11 +333,14 @@ namespace ERI
 		{
 			pose_sample = anim->pose_samples[i];
 			node_ins_array_[pose_sample->skeleton_node_idx].attached_sample = pose_sample;
+			node_ins_array_[pose_sample->skeleton_node_idx].SetTime(0.0f, anim_setting_);
 			
 			sample_duration = pose_sample->times[pose_sample->times.size() - 1];
 			if (anim_duration_ < sample_duration)
 				anim_duration_ = sample_duration;
 		}
+		
+		anim_current_time_ = 0.0f;
 	}
 
 #pragma mark SkeletonActor
@@ -339,16 +360,59 @@ namespace ERI
 		
 		delete skeleton_ins_;
 	}
+	
+	void SkeletonActor::ChangeResource(const SharedSkeleton* resource_ref)
+	{
+		ASSERT(resource_ref);
+		
+		if (vertex_buffer_)
+		{
+			free(vertex_buffer_);
+			vertex_buffer_ = NULL;
+		}
+		
+		AnimSetting old_setting;
+		skeleton_ins_->GetAnim(old_setting);
+		float time_percent = skeleton_ins_->GetTimePercent();
+		
+		delete skeleton_ins_;
+		skeleton_ins_ = new SkeletonIns(resource_ref);
+		
+		skeleton_ins_->SetAnim(old_setting);
+		skeleton_ins_->SetTimePercent(time_percent);
+		
+		UpdateVertexBuffer();
+	}
 
 	void SkeletonActor::Update(float delta_time)
 	{
 		skeleton_ins_->AddTime(delta_time);
+		
+		if (next_anim_.idx != -1 && skeleton_ins_->IsAnimEnd())
+		{
+			AnimSetting old_setting;
+			skeleton_ins_->GetAnim(old_setting);
+			skeleton_ins_->SetAnim(next_anim_);
+			
+			// TODO: use is_loop to recognize recover anim not a good idea ...
+			
+			if (!next_anim_.is_loop)
+			{
+				next_anim_ = old_setting;
+				next_anim_.is_loop = true;
+			}
+			else
+			{
+				next_anim_.idx = -1;
+			}
+		}
+		
 		UpdateVertexBuffer();
 	}
 	
-	void SkeletonActor::SetAnim(int idx, float speed_rate /*= 1.0f*/, bool is_inverse /*= false*/, bool is_loop /*= true*/)
+	void SkeletonActor::SetAnim(const AnimSetting& setting)
 	{
-		skeleton_ins_->SetAnim(idx, speed_rate, is_inverse, is_loop);
+		skeleton_ins_->SetAnim(setting);
 	}
 	
 	void SkeletonActor::SetTimePercent(float time_percent)
@@ -356,7 +420,27 @@ namespace ERI
 		skeleton_ins_->SetTimePercent(time_percent);
 		UpdateVertexBuffer();
 	}
-
+	
+	void SkeletonActor::PlayAnimOnce(int idx, float speed_rate /*= 1.0f*/, bool is_inverse /*= false*/)
+	{
+		AnimSetting old_setting;
+		skeleton_ins_->GetAnim(old_setting);
+		
+		if (idx == old_setting.idx
+			&& speed_rate == old_setting.speed_rate
+			&& is_inverse == old_setting.is_inverse)
+		{
+			return;
+		}
+		
+		next_anim_.idx = idx;
+		next_anim_.speed_rate = speed_rate;
+		next_anim_.is_inverse = is_inverse;
+		next_anim_.is_loop = false;
+		
+		skeleton_ins_->CancelLoop();
+	}
+	
 	void SkeletonActor::UpdateVertexBuffer()
 	{
 		if (render_data_.vertex_buffer == 0)

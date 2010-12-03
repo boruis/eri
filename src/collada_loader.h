@@ -45,7 +45,7 @@ namespace ERI
 		
 		//
 		
-		ERI::SharedSkeleton* CreateSharedSkeleton();
+		ERI::SharedSkeleton* CreateSharedSkeleton(std::vector<int>* anim_sections = NULL);
 
 	private:
 		enum Semantic
@@ -175,7 +175,10 @@ namespace ERI
 		//
 		
 		ERI::Mesh* CreateMesh(Skin* skin, const std::vector<int>& joint_node_mapping);
-		ERI::AnimClip* CreateAnimClip(Animation* anim, const std::vector<SkeletonNode*> nodes);
+		ERI::AnimClip* CreateAnimClip(Animation* anim,
+									  const std::vector<SkeletonNode*>& nodes,
+									  int start_frame = -1,
+									  int frame_count = -1);
 		
 		//
 		

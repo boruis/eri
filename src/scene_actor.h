@@ -51,11 +51,11 @@ namespace ERI {
 		
 		virtual void AddToScene(int layer_id = 0);
 		virtual void RemoveFromScene();
-
 		void MoveToLayer(int layer_id);
 		
 		void AddChild(SceneActor* actor);
 		void RemoveChild(SceneActor* actor);
+		void RemoveFromParent();
 		
 		// intersection
 		
