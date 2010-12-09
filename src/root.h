@@ -47,6 +47,15 @@ namespace ERI {
 			return ins_ptr_;
 		}
 		
+		inline static void DestroyIns()
+		{
+			if (ins_ptr_)
+			{
+				delete ins_ptr_;
+				ins_ptr_ = NULL;
+			}
+		}
+		
 	private:
 		Renderer*		renderer_;
 		SceneMgr*		scene_mgr_;
