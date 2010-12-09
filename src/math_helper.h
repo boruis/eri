@@ -324,11 +324,18 @@ namespace ERI {
 		Vector2	axis[2];
 		float	extent[2];
 	};
+	
+	struct AABox2
+	{
+		Vector2	min;
+		Vector2 max;
+	};
 
 	float GetPointBox2DistanceSquared(const Vector2& point, const Box2& box);
 	IntersectionType CheckIntersectRayRay2(const Ray2& ray1, const Ray2& ray2, Vector2* out_intersect_pos);
 	bool IsIntersectBoxCircle2(const Box2& box, const Circle2& circle);
 	bool IsIntersectBoxBox2(const Box2& box1, const Box2& box2);
+	bool IsIntersectAABoxCircle2(const AABox2& box, const Circle2& circle);
 	
 #pragma mark Random
 	

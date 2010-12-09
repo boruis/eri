@@ -825,6 +825,38 @@ namespace ERI {
 		return true;
 	}
 	
+	bool IsIntersectAABoxCircle2(const AABox2& box, const Circle2& circle)
+	{
+		float diff;
+		float squared_distance = 0.0f;
+		
+		// process X
+		if (circle.center.x < box.min.x)
+		{
+			diff = circle.center.x - box.min.x;
+			squared_distance += diff * diff;
+		}
+		else if (circle.center.x > box.max.x)
+		{
+			float diff = circle.center.x - box.max.x;
+			squared_distance += diff * diff;
+		}
+
+		// process Y
+		if (circle.center.y < box.min.y)
+		{
+			diff = circle.center.y - box.min.y;
+			squared_distance += diff * diff;
+		}
+		else if (circle.center.y > box.max.y)
+		{
+			float diff = circle.center.y - box.max.y;
+			squared_distance += diff * diff;
+		}
+		
+		return squared_distance <= circle.radius;
+	}
+	
 #pragma mark Random
 	
 	static bool is_rand_seed_set = false;
