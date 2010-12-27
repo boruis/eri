@@ -145,11 +145,16 @@ namespace ERI
 		void SetAnim(const AnimSetting& setting);
 		void GetAnim(AnimSetting& out_setting);
 		void SetTimePercent(float time_percent);
-		float GetTimePercent();
+		float GetTimePercent() const;
 		void AddTime(float add_time);
-		float GetTime();
-		bool IsAnimEnd();
+		float GetTime() const;
+		bool IsAnimEnd() const;
 		void CancelLoop();
+		
+		//
+		
+		int FindNodeIdxByName(const std::string& name) const;
+		Vector3 GetNodeCurrentWorldPos(int idx) const;
 		
 		//
 		
@@ -187,6 +192,10 @@ namespace ERI
 		void SetTimePercent(float time_percent);
 		
 		void PlayAnimOnce(int idx, float speed_rate = 1.0f, bool is_inverse = false);
+		
+		int	GetAnimIdx();
+		
+		inline const SkeletonIns* skeleton_ins() { return skeleton_ins_; }
 		
 	private:
 		void UpdateVertexBuffer();

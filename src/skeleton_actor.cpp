@@ -179,7 +179,7 @@ namespace ERI
 		UpdatePose();
 	}
 	
-	float SkeletonIns::GetTimePercent()
+	float SkeletonIns::GetTimePercent() const
 	{
 		return anim_current_time_ / anim_duration_;
 	}
@@ -208,12 +208,12 @@ namespace ERI
 		UpdatePose();
 	}
 	
-	float SkeletonIns::GetTime()
+	float SkeletonIns::GetTime() const
 	{
 		return anim_current_time_;
 	}
 	
-	bool SkeletonIns::IsAnimEnd()
+	bool SkeletonIns::IsAnimEnd() const
 	{
 		return (anim_current_time_ >= anim_duration_);
 	}
@@ -221,6 +221,26 @@ namespace ERI
 	void SkeletonIns::CancelLoop()
 	{
 		anim_setting_.is_loop = false;
+	}
+	
+	int SkeletonIns::FindNodeIdxByName(const std::string& name) const
+	{
+		const Skeleton* skeleton = resource_ref_->skeleton_ref;
+		int num = skeleton->nodes.size();
+		for (int i = 0; i < num; ++i)
+		{
+			if (skeleton->nodes[i]->name.compare(name) == 0)
+				return i;
+		}
+		
+		return -1;
+	}
+	
+	Vector3 SkeletonIns::GetNodeCurrentWorldPos(int idx) const
+	{
+		ASSERT(idx >= 0 && idx < node_ins_array_.size());
+		
+		return node_ins_array_[idx].global_matrix.GetTranslate();
 	}
 	
 	int SkeletonIns::GetVertexBufferSize()
@@ -439,6 +459,13 @@ namespace ERI
 		next_anim_.is_loop = false;
 		
 		skeleton_ins_->CancelLoop();
+	}
+	
+	int	SkeletonActor::GetAnimIdx()
+	{
+		AnimSetting setting;
+		skeleton_ins_->GetAnim(setting);
+		return setting.idx;
 	}
 	
 	void SkeletonActor::UpdateVertexBuffer()
