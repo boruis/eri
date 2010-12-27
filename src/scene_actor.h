@@ -315,13 +315,13 @@ namespace ERI {
 	class NumberActor : public SceneActor
 	{
 	public:
-		NumberActor(float width, float height, bool is_force_sign = true);
-		NumberActor(float width, float height, const std::string& material, int tex_unit_width, int tex_unit_height, bool is_force_sign = true);
+		NumberActor(float unit_width, float unit_height, bool is_force_sign = false);
 		virtual ~NumberActor();
 		
-		void SetTexUnit(int tex_unit_width, int tex_unit_height);
+		void SetTexUnit(int width, int height);
+		void SetTexArea(int start_x, int start_y, int width, int height);
 		
-		void SetUseLine(bool use_line);
+		void SetSpacing(float spacing);
 		
 		void SetNumber(int number);
 		void SetNumberFloat(float number);
@@ -339,8 +339,10 @@ namespace ERI {
 		int					now_len_;
 		
 		Vector2		size_;
-		Vector2		unit_uv_;
-		bool		is_use_line_;
+		Vector2		tex_unit_uv_;
+		Vector2		tex_scale_;
+		Vector2		tex_scroll_;
+		float		spacing_;
 		
 		int			number_;
 		float		number_f_;

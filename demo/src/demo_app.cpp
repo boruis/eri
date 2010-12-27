@@ -48,7 +48,9 @@ DemoApp::DemoApp()
 	fps_txt->SetPos(-110 * content_scale, -30 * content_scale);
 	fps_txt->SetColor(ERI::Color(0.4f, 0.4f, 0.4f));
 	
-	fps_number = new ERI::NumberActor(20 * content_scale, 28 * content_scale, "media/num.png", 5, 7);
+	fps_number = new ERI::NumberActor(20 * content_scale, 28 * content_scale);
+	fps_number->SetMaterial("media/num.png");
+	fps_number->SetTexUnit(5, 7);
 	fps_number->AddToScene(ui_layer);
 	fps_number->SetPos(fps_txt->GetPos().x + static_cast<int>(fps_txt->width()), -30 * content_scale);
 	fps_number->SetColor(ERI::Color(1, 0, 0));

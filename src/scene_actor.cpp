@@ -983,33 +983,19 @@ namespace ERI {
 
 #pragma mark NumberActor
 	
-	NumberActor::NumberActor(float width, float height, bool is_force_sign /*= true*/) :
+	NumberActor::NumberActor(float width, float height, bool is_force_sign /*= false*/) :
 		vertices_(NULL),
 		now_len_max_(0),
 		now_len_(0),
 		size_(Vector2(width, height)),
-		unit_uv_(Vector2(1.0f, 1.0f)),
-		is_use_line_(false),
+		tex_unit_uv_(Vector2(1.0f, 1.0f)),
+		tex_scale_(Vector2(1.0f, 1.0f)),
+		spacing_(0.0f),
 		number_(0),
 		number_f_(0.0f),
 		is_float_(false),
 		is_force_sign_(is_force_sign)
 	{
-	}
-	
-	NumberActor::NumberActor(float width, float height, const std::string& material, int tex_unit_width, int tex_unit_height, bool is_force_sign /*= true*/) :
-		vertices_(NULL),
-		now_len_max_(0),
-		now_len_(0),
-		size_(Vector2(width, height)),
-		is_use_line_(false),
-		number_(0),
-		number_f_(0.0f),
-		is_float_(false),
-		is_force_sign_(is_force_sign)
-	{
-		SetMaterial(material);
-		SetTexUnit(tex_unit_width, tex_unit_height);
 	}
 	
 	NumberActor::~NumberActor()
@@ -1017,14 +1003,14 @@ namespace ERI {
 		if (vertices_) free(vertices_);
 	}
 	
-	void NumberActor::SetTexUnit(int tex_unit_width, int tex_unit_height)
+	void NumberActor::SetTexUnit(int width, int height)
 	{
 		const Texture* tex = material_data_.texture_units[0].texture;
 		
 		ASSERT(tex);
 		
-		unit_uv_.x = static_cast<float>(tex_unit_width) / tex->width;
-		unit_uv_.y = static_cast<float>(tex_unit_height) / tex->height;
+		tex_unit_uv_.x = static_cast<float>(width) / tex->width;
+		tex_unit_uv_.y = static_cast<float>(height) / tex->height;
 		
 		if (vertices_)
 		{
@@ -1032,16 +1018,30 @@ namespace ERI {
 		}
 	}
 	
-	void NumberActor::SetUseLine(bool use_line)
+	void NumberActor::SetTexArea(int start_x, int start_y, int width, int height)
 	{
-		if (is_use_line_ != use_line)
+		const Texture* tex = material_data_.texture_units[0].texture;
+		
+		ASSERT(tex);
+		
+		tex_scale_.x = static_cast<float>(width) / tex->width;
+		tex_scale_.y = static_cast<float>(height) / tex->height;
+		tex_scroll_.x = static_cast<float>(start_x) / tex->width;
+		tex_scroll_.y = static_cast<float>(start_y) / tex->height;
+		
+		if (vertices_)
 		{
-			is_use_line_ = use_line;
-			
-			if (vertices_)
-			{
-				UpdateVertexBuffer();
-			}
+			UpdateVertexBuffer();
+		}
+	}
+	
+	void NumberActor::SetSpacing(float spacing)
+	{
+		spacing_ = spacing;
+		
+		if (vertices_)
+		{
+			UpdateVertexBuffer();
 		}
 	}
 	
@@ -1081,13 +1081,13 @@ namespace ERI {
 		char number_str[16];
 		
 		if (is_float_)
-			sprintf(number_str, (!is_force_sign_ || number_ == 0) ? "%.2f" : "%+.2f", number_f_);
+			sprintf(number_str, (!is_force_sign_ || number_f_ == 0.0f) ? "%.2f" : "%+.2f", number_f_);
 		else
 			sprintf(number_str, (!is_force_sign_ || number_ == 0) ? "%d" : "%+d", number_);
 		
 		now_len_ = strlen(number_str);
 		
-		int unit_vertex_num = is_use_line_ ? 8 : 6;
+		int unit_vertex_num = 6;
 		
 		if (now_len_max_ < now_len_)
 		{
@@ -1106,70 +1106,53 @@ namespace ERI {
 			glGenBuffers(1, &render_data_.vertex_buffer);
 		}
 		
-		float start_x = (now_len_ - 1) * size_.x * -0.5f;
+		float start_x = (now_len_ - 1) * (size_.x + spacing_) * -0.5f;
 		int start_idx = 0;
 		float scroll_u, scroll_v;
-		scroll_u = scroll_v = 0;
 		
 		for (int i = 0; i < now_len_; ++i)
 		{
+			scroll_u = tex_scroll_.x;
+			scroll_v = tex_scroll_.y;
+			
 			if (number_str[i] >= '0' && number_str[i] <= '9')
 			{
-				scroll_u = (number_str[i] - '0') * unit_uv_.x;
+				scroll_u += (number_str[i] - '0') * tex_unit_uv_.x;
 			}
 			else if (number_str[i] == '+')
 			{
-				scroll_u = 10 * unit_uv_.x;
+				scroll_u += 10 * tex_unit_uv_.x;
 			}
 			else if (number_str[i] == '-')
 			{
-				scroll_u = 11 * unit_uv_.x;
+				scroll_u += 11 * tex_unit_uv_.x;
 			}
 			else if (number_str[i] == '.')
 			{
-				scroll_u = 12 * unit_uv_.x;
+				scroll_u += 12 * tex_unit_uv_.x;
 			}
 			else
 			{
 				ASSERT(0);
 			}
 			
-			if (is_use_line_)
-			{
-				vertex_2_pos_tex v[] = {
-					{ start_x - 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 0.0f * unit_uv_.x, scroll_v + 1.0f * unit_uv_.y },
-					{ start_x + 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 1.0f * unit_uv_.x, scroll_v + 1.0f * unit_uv_.y },
-					{ start_x + 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 1.0f * unit_uv_.x, scroll_v + 1.0f * unit_uv_.y },
-					{ start_x + 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 1.0f * unit_uv_.x, scroll_v + 0.0f * unit_uv_.y },
-					{ start_x + 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 1.0f * unit_uv_.x, scroll_v + 0.0f * unit_uv_.y },
-					{ start_x - 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 0.0f * unit_uv_.x, scroll_v + 0.0f * unit_uv_.y },
-					{ start_x - 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 0.0f * unit_uv_.x, scroll_v + 0.0f * unit_uv_.y },
-					{ start_x - 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 0.0f * unit_uv_.x, scroll_v + 1.0f * unit_uv_.y }
-				};
-				
-				memcpy(&vertices_[start_idx], v, sizeof(v));
-				
-			}
-			else
-			{
-				vertex_2_pos_tex v[] = {
-					{ start_x - 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 0.0f * unit_uv_.x, scroll_v + 1.0f * unit_uv_.y },
-					{ start_x + 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 1.0f * unit_uv_.x, scroll_v + 1.0f * unit_uv_.y },
-					{ start_x - 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 0.0f * unit_uv_.x, scroll_v + 0.0f * unit_uv_.y },
-					{ start_x - 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 0.0f * unit_uv_.x, scroll_v + 0.0f * unit_uv_.y },
-					{ start_x + 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 1.0f * unit_uv_.x, scroll_v + 1.0f * unit_uv_.y },
-					{ start_x + 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 1.0f * unit_uv_.x, scroll_v + 0.0f * unit_uv_.y }
-				};
-				
-				memcpy(&vertices_[start_idx], v, sizeof(v));
-			}
+			vertex_2_pos_tex v[] = {
+				{ start_x - 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 0.0f * tex_unit_uv_.x, scroll_v + 1.0f * tex_unit_uv_.y },
+				{ start_x + 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 1.0f * tex_unit_uv_.x, scroll_v + 1.0f * tex_unit_uv_.y },
+				{ start_x - 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 0.0f * tex_unit_uv_.x, scroll_v + 0.0f * tex_unit_uv_.y },
+				{ start_x - 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 0.0f * tex_unit_uv_.x, scroll_v + 0.0f * tex_unit_uv_.y },
+				{ start_x + 0.5f * size_.x, - 0.5f * size_.y, scroll_u + 1.0f * tex_unit_uv_.x, scroll_v + 1.0f * tex_unit_uv_.y },
+				{ start_x + 0.5f * size_.x, + 0.5f * size_.y, scroll_u + 1.0f * tex_unit_uv_.x, scroll_v + 0.0f * tex_unit_uv_.y }
+			};
 			
-			start_x += size_.x;
+			memcpy(&vertices_[start_idx], v, sizeof(v));
+			
+			start_x += size_.x + spacing_;
 			start_idx += unit_vertex_num;
 		}
 		
 		render_data_.vertex_count = now_len_ * unit_vertex_num;
-		render_data_.vertex_type = is_use_line_ ? GL_LINES : GL_TRIANGLES;
+		render_data_.vertex_type = GL_TRIANGLES;
 		
 		glBindBuffer(GL_ARRAY_BUFFER, render_data_.vertex_buffer);
 		glBufferData(GL_ARRAY_BUFFER, render_data_.vertex_count * sizeof(vertex_2_pos_tex), vertices_, GL_DYNAMIC_DRAW);
