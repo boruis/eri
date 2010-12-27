@@ -124,9 +124,7 @@ namespace ERI {
 		}
 #endif
 
-#if ERI_PLATFORM != ERI_PLATFORM_MAC
 		if (context_) delete context_;
-#endif
 	}
 
 	bool RendererES1::Init(bool use_depth_buffer)
@@ -139,14 +137,12 @@ namespace ERI {
 		context_ = new RenderContextIphone;
 #endif
 
-#if ERI_PLATFORM != ERI_PLATFORM_MAC
 		if (context_ && !context_->Init(1))
 		{
 			delete context_;
 			context_ = NULL;
 			return false;
 		}
-#endif
 		
 		clear_bits_ = GL_COLOR_BUFFER_BIT;
 		
@@ -224,7 +220,8 @@ namespace ERI {
 		
 		// clear initial display
 		glClear(clear_bits_);
-		if (context_) context_->Present();
+		context_->Present();
+
 #endif
 	}
 	
@@ -245,7 +242,7 @@ namespace ERI {
 	{
 		// This application only creates a single context which is already set current at this point.
 		// This call is redundant, but needed if dealing with multiple contexts.
-		//if (context_) context_->SetAsCurrent();
+		if (context_) context_->SetAsCurrent();
 
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 		// This application only creates a single default framebuffer which is already bound at this point.
@@ -265,9 +262,7 @@ namespace ERI {
 		glBindRenderbufferOES(GL_RENDERBUFFER_OES, color_render_buffer_);
 #endif
 		
-#if ERI_PLATFORM != ERI_PLATFORM_MAC
 		if (context_) context_->Present();
-#endif
 	}
 	
 	void RendererES1::ClearDepth()
