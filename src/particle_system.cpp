@@ -314,7 +314,7 @@ namespace ERI
 		
 		emitter_ = emitter;
 		
-		int need_particle_num = static_cast<int>(emitter_->rate() * setup_ref_->particle_life_max) * 1.5f;
+		int need_particle_num = static_cast<int>(emitter_->rate() * setup_ref_->particle_life_max * 1.25f);
 		int original_particle_num = particles_.size();
 		
 		for (int i = 0; i < need_particle_num; ++i)
@@ -435,6 +435,8 @@ namespace ERI
 		{
 			p = ObtainParticle();
 			
+			if (!p) return;
+			
 			emitter_->GetEmitPos(pos);
 			rotate = emitter_->GetEmitAngle();
 			
@@ -489,9 +491,11 @@ namespace ERI
 			}
 		}
 		
-		ASSERT(first_available_particle_idx_ >= 0 &&
-			   first_available_particle_idx_ < particles_.size() &&
-			   !particles_[first_available_particle_idx_]->in_use);
+		if (first_available_particle_idx_ < 0)
+			return NULL;
+		
+		ASSERT(first_available_particle_idx_ < particles_.size()
+			   && !particles_[first_available_particle_idx_]->in_use);
 		
 		Particle* p = particles_[first_available_particle_idx_];
 		
