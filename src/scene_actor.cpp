@@ -172,6 +172,12 @@ namespace ERI {
 		return render_data_.color;
 	}
 	
+	void SceneActor::BlendNormal()
+	{
+		render_data_.blend_src_factor = GL_SRC_ALPHA;
+		render_data_.blend_dst_factor = GL_ONE_MINUS_SRC_ALPHA;
+	}
+	
 	void SceneActor::BlendAdd()
 	{
 		render_data_.blend_src_factor = GL_SRC_ALPHA;

@@ -69,6 +69,7 @@ namespace ERI {
 		void SetColor(const Color& color);
 		const Color& GetColor() const;
 		
+		void BlendNormal();
 		void BlendAdd();
 		
 		//
