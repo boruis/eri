@@ -231,6 +231,10 @@ namespace ERI
 			{
 				have_normal = true;
 			}
+			else if (tri->inputs[i]->semantic == COLOR)
+			{
+				have_color = true;
+			}
 			else if (tri->inputs[i]->semantic == TEXCOORD)
 			{
 				have_texcoord = true;
@@ -247,7 +251,13 @@ namespace ERI
 			tri_total_count += current_load_mesh_->triangles_array[i]->count;
 		}
 
-		if (have_pos && have_normal && have_texcoord)
+		if (have_pos && have_normal && have_texcoord && have_color)
+		{
+			current_vertex_format_ = POS_NORMAL_COLOR_TEX_3;
+			current_vertex_size_ = sizeof(vertex_3_pos_normal_color_tex);
+			return current_vertex_size_ * 3 * tri_total_count;
+		}
+		else if (have_pos && have_normal && have_texcoord)
 		{
 			current_vertex_format_ = POS_NORMAL_TEX_3;
 			current_vertex_size_ = sizeof(vertex_3_pos_normal_tex);
@@ -356,7 +366,7 @@ namespace ERI
 		vertex_format = current_vertex_format_;
 	}
 	
-	SharedSkeleton* ColladaLoader::CreateSharedSkeleton(std::vector<int>* anim_sections /*= NULL*/)
+	SharedSkeleton* ColladaLoader::CreateSharedSkeleton(const std::vector<int>* anim_sections /*= NULL*/)
 	{
 		if (skeleton_map_.empty())
 			return NULL;
@@ -529,6 +539,11 @@ namespace ERI
 				buffer_data = static_cast<unsigned char*>(vertex->data);
 				buffer_offset = 0;
 				
+				// TODO: vertex data order need to match collada input order, should change implement way
+
+				// TODO: now only support 1 color input, and use it as vertex color
+				int color_input_count = 0;
+				
 				for (int j = 0; j < input_num; ++j)
 				{
 					src_idx = tri->primitives[i * vertex_stride + tri->inputs[j]->offset];
@@ -538,17 +553,35 @@ namespace ERI
 					if (tri->inputs[j]->semantic == TEXCOORD)
 						src_want_stride = 2;
 					
-					for (int k = 0; k < src_want_stride; ++k)
+					if (tri->inputs[j]->semantic == COLOR)
 					{
-						memcpy(&buffer_data[buffer_offset + k * 4],
-							   &input_srcs[j]->datas[src_idx * src_stride + k],
-							   4);
-						
-						ASSERT(reinterpret_cast<long>(&buffer_data[buffer_offset + k * 4]) < reinterpret_cast<long>(buffer_data) + current_vertex_size_);
+						++color_input_count;
+						if (color_input_count > 1)
+						{
+							continue;
+						}
+						else
+						{
+							float* color_buff = (float*)&buffer_data[buffer_offset];
+							color_buff[0] = color_buff[1] = color_buff[2] = 1.0f;
+							color_buff[3] =*(float*)(&input_srcs[j]->datas[src_idx * src_stride]);
+							buffer_offset += 16;
+						}
 					}
-					
-					buffer_offset += input_srcs[j]->stride * 4;
-					
+					else
+					{
+						for (int k = 0; k < src_want_stride; ++k)
+						{
+							memcpy(&buffer_data[buffer_offset + k * 4],
+								   &input_srcs[j]->datas[src_idx * src_stride + k],
+								   4);
+							
+							ASSERT(reinterpret_cast<long>(&buffer_data[buffer_offset + k * 4]) < reinterpret_cast<long>(buffer_data) + current_vertex_size_);
+						}
+
+						buffer_offset += input_srcs[j]->stride * 4;
+					}
+
 					//
 					
 					if (skin && tri->inputs[j]->semantic == VERTEX)
@@ -1427,6 +1460,10 @@ namespace ERI
 		else if (s.compare("NORMAL") == 0)
 		{
 			input->semantic = NORMAL;
+		}
+		else if (s.compare("COLOR") == 0)
+		{
+			input->semantic = COLOR;
 		}
 		else if (s.compare("TEXCOORD") == 0)
 		{

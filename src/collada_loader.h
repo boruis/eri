@@ -45,7 +45,7 @@ namespace ERI
 		
 		//
 		
-		ERI::SharedSkeleton* CreateSharedSkeleton(std::vector<int>* anim_sections = NULL);
+		ERI::SharedSkeleton* CreateSharedSkeleton(const std::vector<int>* anim_sections = NULL);
 
 	private:
 		enum Semantic
@@ -53,6 +53,7 @@ namespace ERI
 			VERTEX,
 			POSITION,
 			NORMAL,
+			COLOR,
 			TEXCOORD,
 			JOINT,
 			INV_BIND_MATRIX,
