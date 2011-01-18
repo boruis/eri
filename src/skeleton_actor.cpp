@@ -441,7 +441,7 @@ namespace ERI
 		UpdateVertexBuffer();
 	}
 	
-	void SkeletonActor::PlayAnimOnce(int idx, float speed_rate /*= 1.0f*/, bool is_inverse /*= false*/)
+	void SkeletonActor::PlayAnim(int idx, float speed_rate /*= 1.0f*/, bool is_loop /*= false*/, bool is_inverse /*= false*/)
 	{
 		AnimSetting old_setting;
 		skeleton_ins_->GetAnim(old_setting);
@@ -456,7 +456,7 @@ namespace ERI
 		next_anim_.idx = idx;
 		next_anim_.speed_rate = speed_rate;
 		next_anim_.is_inverse = is_inverse;
-		next_anim_.is_loop = false;
+		next_anim_.is_loop = is_loop;
 		
 		skeleton_ins_->CancelLoop();
 	}

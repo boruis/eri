@@ -191,7 +191,7 @@ namespace ERI
 		void SetAnim(const AnimSetting& setting);
 		void SetTimePercent(float time_percent);
 		
-		void PlayAnimOnce(int idx, float speed_rate = 1.0f, bool is_inverse = false);
+		void PlayAnim(int idx, float speed_rate = 1.0f, bool is_loop = false, bool is_inverse = false);
 		
 		int	GetAnimIdx();
 		
