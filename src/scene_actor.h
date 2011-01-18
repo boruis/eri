@@ -71,6 +71,9 @@ namespace ERI {
 		
 		void BlendNormal();
 		void BlendAdd();
+		void BlendMultiply();
+		void BlendReplace();
+		void AlphaTestGreater(int alpha_value);
 		
 		//
 		// transform
@@ -114,6 +117,7 @@ namespace ERI {
 		void AddMaterial();
 		
 		void SetTextureFilter(TextureFilter filter_min, TextureFilter filter_mag);
+		void SetTextureWrap(TextureWrap wrap_s, TextureWrap wrap_t);
 		void SetTextureEnvs(int idx, const TextureEnvs& envs);
 	
 		void SetOpacityType(OpacityType type);

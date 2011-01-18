@@ -98,7 +98,9 @@ namespace ERI {
 			is_tex_transform(false),
 			tex_scale(Vector2(1, 1)),
 			blend_src_factor(GL_SRC_ALPHA),
-			blend_dst_factor(GL_ONE_MINUS_SRC_ALPHA)
+			blend_dst_factor(GL_ONE_MINUS_SRC_ALPHA),
+			alpha_test_func(GL_GREATER),
+			alpha_test_ref(0)
 		{
 		}
 		
@@ -142,6 +144,10 @@ namespace ERI {
 		
 		// blend
 		GLenum blend_src_factor, blend_dst_factor;
+		
+		// alpha test
+		GLenum		alpha_test_func;
+		GLclampx	alpha_test_ref;
 	};
 
 }

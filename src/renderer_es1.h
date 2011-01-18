@@ -151,6 +151,7 @@ namespace ERI {
 		bool depth_test_enable_;
 		bool depth_write_enable_;
 		bool blend_enable_;
+		bool alpha_test_enable_;
 		
 		bool texture_enable_;
 		bool texture_unit_enable_[MAX_TEXTURE_UNIT];
@@ -161,6 +162,9 @@ namespace ERI {
 		Color now_color_;
 		
 		GLenum blend_src_factor_, blend_dst_factor_;
+		
+		GLenum		alpha_test_func_;
+		GLclampx	alpha_test_ref_;
 		
 		LightInfo light_infos_[MAX_LIGHT];
 	};

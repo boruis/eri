@@ -265,17 +265,27 @@ namespace ERI {
 			renderer->ClearDepth();
 		
 		// opaque
-		renderer->EnableBlend(false);
-		opaque_actors_->Render(renderer);
+		if (!opaque_actors_->IsEmpty())
+		{
+			renderer->EnableBlend(false);
+			opaque_actors_->Render(renderer);
+		}
 				
 		// alpha test
-		renderer->EnableBlend(true);
-		renderer->EnableAlphaTest(true);
-		alpha_test_actors_->Render(renderer);
+		if (!alpha_test_actors_->IsEmpty())
+		{
+			renderer->EnableBlend(true);
+			renderer->EnableAlphaTest(true);
+			alpha_test_actors_->Render(renderer);
+			renderer->EnableAlphaTest(false);
+		}
 		
 		// alpha blend
-		renderer->EnableAlphaTest(false);
-		alpha_blend_actors_->Render(renderer);
+		if (!alpha_blend_actors_->IsEmpty())
+		{
+			renderer->EnableBlend(true);
+			alpha_blend_actors_->Render(renderer);
+		}
 	}
 	
 	void SceneLayer::AddActor(SceneActor* actor)

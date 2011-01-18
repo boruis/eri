@@ -92,11 +92,14 @@ namespace ERI {
 		depth_test_enable_(true),
 		depth_write_enable_(true),
 		blend_enable_(false),
+		alpha_test_enable_(false),
 		texture_enable_(false),
 		now_texture_(0),
 		bg_color_(Color(0.0f, 0.0f, 0.0f, 0.0f)),
 		blend_src_factor_(GL_SRC_ALPHA),
-		blend_dst_factor_(GL_ONE_MINUS_SRC_ALPHA)
+		blend_dst_factor_(GL_ONE_MINUS_SRC_ALPHA),
+		alpha_test_func_(GL_GREATER),
+		alpha_test_ref_(0)
 	{
 		memset(frame_buffers_, 0, sizeof(frame_buffers_));
 		memset(texture_unit_enable_, 0, sizeof(texture_unit_enable_));
@@ -292,6 +295,13 @@ namespace ERI {
 				blend_src_factor_ = data->blend_src_factor;
 				blend_dst_factor_ = data->blend_dst_factor;
 				glBlendFunc(blend_src_factor_, blend_dst_factor_);
+			}
+			
+			if (alpha_test_enable_ && (alpha_test_func_ != data->alpha_test_func || alpha_test_ref_ != data->alpha_test_ref))
+			{
+				alpha_test_func_ = data->alpha_test_func;
+				alpha_test_ref_ = data->alpha_test_ref;
+				glAlphaFunc(alpha_test_func_, alpha_test_ref_ / 256.0f);
 			}
 			
 			glBindBuffer(GL_ARRAY_BUFFER, data->vertex_buffer);
@@ -528,6 +538,15 @@ namespace ERI {
 	
 	void RendererES1::EnableAlphaTest(bool enable)
 	{
+		if (alpha_test_enable_ != enable)
+		{
+			alpha_test_enable_ = enable;
+			
+			if (enable)
+				glEnable(GL_ALPHA_TEST);
+			else
+				glDisable(GL_ALPHA_TEST);
+		}
 	}
 	
 	void RendererES1::EnableMaterial(const MaterialData* data)

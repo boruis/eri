@@ -184,6 +184,24 @@ namespace ERI {
 		render_data_.blend_dst_factor = GL_ONE;
 	}
 	
+	void SceneActor::BlendMultiply()
+	{
+		render_data_.blend_src_factor = GL_DST_COLOR;
+		render_data_.blend_dst_factor = GL_ZERO;
+	}
+	
+	void SceneActor::BlendReplace()
+	{
+		render_data_.blend_src_factor = GL_ONE;
+		render_data_.blend_dst_factor = GL_ZERO;
+	}
+	
+	void SceneActor::AlphaTestGreater(int alpha_value)
+	{
+		render_data_.alpha_test_func = GL_GREATER;
+		render_data_.alpha_test_ref = alpha_value;
+	}
+	
 	const Matrix4& SceneActor::GetTransform()
 	{
 		if (render_data_.need_update_model_matrix)
@@ -384,6 +402,14 @@ namespace ERI {
 		
 		material_data_.texture_units[0].params.filter_min = filter_min;
 		material_data_.texture_units[0].params.filter_mag = filter_mag;
+	}
+	
+	void SceneActor::SetTextureWrap(TextureWrap wrap_s, TextureWrap wrap_t)
+	{
+		ASSERT(material_data_.used_unit > 0);
+		
+		material_data_.texture_units[0].params.wrap_s = wrap_s;
+		material_data_.texture_units[0].params.wrap_t = wrap_t;
 	}
 	
 	void SceneActor::SetTextureEnvs(int idx, const TextureEnvs& envs)
@@ -860,14 +886,49 @@ namespace ERI {
 		
 		ASSERT(tex);
 		
-		SetTexScale(static_cast<float>(width) / tex->width, static_cast<float>(height) / tex->height, is_tex2);
-		SetTexScroll(static_cast<float>(start_x) / tex->width, static_cast<float>(start_y) / tex->height, is_tex2);
+		float u_scale = static_cast<float>(width) / tex->width;
+		float v_scale = static_cast<float>(height) / tex->height;
+		float u_scroll = static_cast<float>(start_x) / tex->width;
+		float v_scroll = static_cast<float>(start_y) / tex->height;
+		
+		if (is_tex2)
+		{
+			tex_scale2_.x = u_scale;
+			tex_scale2_.y = v_scale;
+			tex_scroll2_.x = u_scroll;
+			tex_scroll2_.y = v_scroll;
+			is_use_tex2_ = true;
+		}
+		else
+		{
+			tex_scale_.x = u_scale;
+			tex_scale_.y = v_scale;
+			tex_scroll_.x = u_scroll;
+			tex_scroll_.y = v_scroll;
+		}
+		
+		UpdateVertexBuffer();
 	}
 	
 	void SpriteActor::SetTexAreaUV(float start_u, float start_v, float width, float height, bool is_tex2 /*= false*/)
 	{
-		SetTexScale(width, height, is_tex2);
-		SetTexScroll(start_u, start_v, is_tex2);
+		if (is_tex2)
+		{
+			tex_scale2_.x = width;
+			tex_scale2_.y = height;
+			tex_scroll2_.x = start_u;
+			tex_scroll2_.y = start_v;
+			is_use_tex2_ = true;
+		}
+		else
+		{
+			tex_scale_.x = width;
+			tex_scale_.y = height;
+			tex_scroll_.x = start_u;
+			tex_scroll_.y = start_v;
+		}
+		
+		UpdateVertexBuffer();
 	}
 
 	void SpriteActor::SetTxt(const std::string& txt, const std::string& font_name, float font_size)
