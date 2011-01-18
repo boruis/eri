@@ -15,8 +15,10 @@ namespace ERI {
 	class TextureReader
 	{
 	public:
-		TextureReader() : width_(-1), height_(-1), texture_id_(0) {}
+		TextureReader(bool generate_immediately) : width_(-1), height_(-1), texture_id_(0) {}
 		virtual ~TextureReader() {}
+		
+		virtual void Generate() = 0;
 		
 		inline int width() { return width_; }
 		inline int height() { return height_; }

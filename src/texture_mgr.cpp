@@ -70,17 +70,68 @@ namespace ERI {
 		return true;
 	}
 	
+	void Texture::ReleaseFromRenderer()
+	{
+		if (bind_frame_buffer)
+			Root::Ins().renderer()->ReleaseRenderToTexture(id, bind_frame_buffer);
+		else
+			Root::Ins().renderer()->ReleaseTexture(id);
+		
+		id = 0;
+	}
+	
 #pragma mark TextureMgr
 	
 	TextureMgr::~TextureMgr()
 	{
+		for (int i = 0; i < preload_textures_.size(); ++i)
+		{
+			delete preload_textures_[i].reader;
+		}
+		
 		for (std::map<std::string, Texture*>::iterator it = texture_map_.begin(); it != texture_map_.end(); ++it)
 		{
 			// TODO: release?
 			
 			delete it->second;
 		}
-		texture_map_.clear();
+	}
+	
+	void TextureMgr::PreloadTexture(const std::string& resource_path)
+	{
+		std::map<std::string, Texture*>::iterator it = texture_map_.find(resource_path);
+		if (it == texture_map_.end())
+		{
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
+			PreloadTextureInfo info;
+			info.path = resource_path;
+			info.reader = new TextureReaderLibPNG(resource_path, false);
+			preload_textures_.push_back(info);
+#endif
+		}
+	}
+	
+	void TextureMgr::ConstructPreloadTextures()
+	{
+		int num = preload_textures_.size();
+		for (int i = 0; i < num; ++i)
+		{
+			PreloadTextureInfo& info = preload_textures_[i];
+			
+			info.reader->Generate();
+			
+			// TODO: check texture invalid number, maybe use int -1 is better
+			
+			if (info.reader->texture_id() != 0)
+			{
+				Texture* tex = new Texture(info.reader->texture_id(), info.reader->width(), info.reader->height());
+				texture_map_.insert(std::make_pair(info.path, tex));
+			}
+			
+			delete info.reader;
+		}
+		
+		preload_textures_.clear();
 	}
 	
 	const Texture* TextureMgr::GetTexture(const std::string& resource_path, bool keep_texture_data /*= false*/)
@@ -89,8 +140,8 @@ namespace ERI {
 		if (it == texture_map_.end())
 		{
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
-			TextureReaderUIImage reader(resource_path);
-			//TextureReaderLibPNG reader(resource_path);
+			TextureReaderUIImage reader(resource_path, true);
+			//TextureReaderLibPNG reader(resource_path, true);
 #elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
 			TextureReaderBitmapFactory reader(resource_path);
 #else
@@ -198,28 +249,32 @@ namespace ERI {
 		return NULL;
 	}
 
+	void TextureMgr::ReleaseTexture(const std::string& name)
+	{
+		std::map<std::string, Texture*>::iterator it = texture_map_.find(name);
+		if (it != texture_map_.end())
+		{
+			Texture* texture = it->second;
+			
+			texture->ReleaseFromRenderer();
+			texture_map_.erase(it);
+			delete texture;
+		}
+	}
+	
 	void TextureMgr::ReleaseTexture(const Texture* texture)
 	{
 		ASSERT(texture);
-		
-		// TODO: map key?
 		
 		std::map<std::string, Texture*>::iterator it;
 		for (it = texture_map_.begin(); it != texture_map_.end(); ++it)
 		{
 			if ((*it).second == texture)
 			{
-				if (texture->bind_frame_buffer)
-				{
-					Root::Ins().renderer()->ReleaseRenderToTexture(texture->id, texture->bind_frame_buffer);
-				}
-				else
-				{
-					Root::Ins().renderer()->ReleaseTexture(texture->id);
-				}
-
+				it->second->ReleaseFromRenderer();
 				texture_map_.erase(it);
 				delete texture;
+				
 				return;
 			}
 		}

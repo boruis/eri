@@ -11,6 +11,7 @@
 #define ERI_TEXTURE_MGR_H
 
 #include <string>
+#include <vector>
 #include <map>
 
 #include "math_helper.h"
@@ -18,6 +19,7 @@
 namespace ERI {
 	
 	struct Color;
+	class TextureReader;
 	
 	enum TextureFilter
 	{
@@ -122,6 +124,7 @@ namespace ERI {
 		
 		void CopyPixels(const void* _data);
 		bool GetPixelColor(Color& out_color, int x, int y) const;
+		void ReleaseFromRenderer();
 		
 		int		id;
 		int		width;
@@ -134,10 +137,19 @@ namespace ERI {
 		mutable TextureParams	current_params;
 	};
 	
+	struct PreloadTextureInfo
+	{
+		std::string		path;
+		TextureReader*	reader;
+	};
+	
 	class TextureMgr
 	{
 	public:
 		~TextureMgr();
+		
+		void PreloadTexture(const std::string& resource_path);
+		void ConstructPreloadTextures();
 		
 		const Texture* GetTexture(const std::string& resource_path, bool keep_texture_data = false);
 		const Texture* CreateTexture(const std::string& name, int width, int height, const void* data);
@@ -147,10 +159,12 @@ namespace ERI {
 		
 		const Texture* GenerateRenderToTexture(int width, int height);
 		
+		void ReleaseTexture(const std::string& name);
 		void ReleaseTexture(const Texture* texture);
 		
 	private:
 		std::map<std::string, Texture*>	texture_map_;
+		std::vector<PreloadTextureInfo> preload_textures_;
 	};
 	
 #pragma mark RenderToTexture

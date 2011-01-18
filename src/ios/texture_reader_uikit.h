@@ -19,8 +19,10 @@ namespace ERI {
 	class TextureReaderUIImage : public TextureReader
 	{
 	public:
-		TextureReaderUIImage(const std::string& path);
+		TextureReaderUIImage(const std::string& path, bool generate_immediately);
 		virtual ~TextureReaderUIImage();
+		
+		virtual void Generate();
 		
 		virtual void* texture_data() { return texture_data_; }
 		
@@ -33,6 +35,8 @@ namespace ERI {
 	public:
 		TextureReaderUIFont(const std::string& txt, const std::string& font_name, float font_size, float w, float h);
 		virtual ~TextureReaderUIFont();
+		
+		virtual void Generate() {}
 	};
 
 }
