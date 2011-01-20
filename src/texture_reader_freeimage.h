@@ -21,8 +21,10 @@ namespace ERI {
 	class TextureReaderFreeImage : public TextureReader
 	{
 	public:
-		TextureReaderFreeImage(const std::string& path);
+		TextureReaderFreeImage(const std::string& path, bool generate_immediately);
 		virtual ~TextureReaderFreeImage();
+
+		virtual void Generate();
 		
 		virtual void* texture_data() { return texture_data_; }
 		

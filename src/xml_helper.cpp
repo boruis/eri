@@ -22,9 +22,18 @@ namespace ERI
 	{
 		ASSERT(!out_data.buffer);
 
-		std::string real_path = GetResourcePath();
-		real_path += "/";
-		real_path += path;
+		std::string real_path(path);
+#if ERI_PLATFORM == ERI_PLATFORM_IOS || ERI_PLATFORM == ERI_PLATFORM_MAC
+		if (path[0] != '/')
+		{
+			real_path = GetResourcePath() + std::string("/") + path;
+		}
+#elif ERI_PLATFORM == ERI_PLATFORM_WIN
+		if (path[1] != ':')
+		{
+			real_path = GetResourcePath() + std::string("\\") + path;
+		}
+#endif
 		
 		std::ifstream ifs;
 		ifs.open(real_path.c_str(), std::ios::binary);

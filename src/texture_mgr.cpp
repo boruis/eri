@@ -145,7 +145,7 @@ namespace ERI {
 #elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
 			TextureReaderBitmapFactory reader(resource_path);
 #else
-			TextureReaderFreeImage reader(resource_path);
+			TextureReaderFreeImage reader(resource_path, true);
 #endif
 
 			// TODO: check texture invalid number, maybe use int -1 is better
@@ -204,7 +204,7 @@ namespace ERI {
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 			TextureReaderUIFont reader(txt, font_name, font_size, w, h);
 #else
-			TextureReader reader;
+			TextureReader reader(true);
 #endif
 			
 			// TODO: check texture invalid number, maybe use int -1 is better

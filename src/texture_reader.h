@@ -18,7 +18,7 @@ namespace ERI {
 		TextureReader(bool generate_immediately) : width_(-1), height_(-1), texture_id_(0) {}
 		virtual ~TextureReader() {}
 		
-		virtual void Generate() = 0;
+		virtual void Generate() {}
 		
 		inline int width() { return width_; }
 		inline int height() { return height_; }

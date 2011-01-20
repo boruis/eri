@@ -21,7 +21,11 @@ namespace ERI {
 	
 #pragma mark TextureReaderFreeImage
 
-	TextureReaderFreeImage::TextureReaderFreeImage(const std::string& path) : texture_data_(NULL)
+	TextureReaderFreeImage::TextureReaderFreeImage(const std::string& path,
+												   bool generate_immediately)
+		:
+		TextureReader(generate_immediately),
+		texture_data_(NULL)
 	{
 		std::string real_path(path);
 #if ERI_PLATFORM == ERI_PLATFORM_IOS || ERI_PLATFORM == ERI_PLATFORM_MAC
@@ -83,12 +87,20 @@ namespace ERI {
 
 		FreeImage_Unload(bitmap);
 
-		texture_id_ = Root::Ins().renderer()->GenerateTexture(texture_data_, width_, height_, RGBA);
+		if (generate_immediately)
+		{
+			Generate();
+		}
 	}
 	
 	TextureReaderFreeImage::~TextureReaderFreeImage()
 	{
 		free(texture_data_);
 	}
-	
+
+	void TextureReaderFreeImage::Generate()
+	{
+		texture_id_ = Root::Ins().renderer()->GenerateTexture(texture_data_, width_, height_, RGBA);
+	}
+
 }
