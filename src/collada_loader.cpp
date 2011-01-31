@@ -692,8 +692,6 @@ namespace ERI
 		
 		while (node2)
 		{
-			printf("%s\n", node2->name());
-			
 			if (strcmp(node2->name(), "geometry") == 0)
 			{
 				if (GetAttrStr(node2, "id", s))
@@ -834,8 +832,6 @@ namespace ERI
 		
 		while (node2)
 		{
-			printf("%s\n", node2->name());
-			
 			if (strcmp(node2->name(), "controller") == 0)
 			{
 				if (GetAttrStr(node2, "id", s))
