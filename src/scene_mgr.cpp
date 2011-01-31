@@ -102,7 +102,7 @@ namespace ERI {
 		size_t num = actor_arrays_.size();
 		for (size_t i = 0; i < num; ++i)
 		{
-			if (actor_arrays_[i]->size() > 0)
+			if (actor_arrays_[i] && actor_arrays_[i]->size() > 0)
 				return false;
 		}
 		
@@ -139,6 +139,7 @@ namespace ERI {
 		std::map<int, int>::iterator it = texture_map_.find(texture_id);
 		
 		ASSERT(it != texture_map_.end());
+		ASSERT(actor_arrays_[it->second] != NULL);
 		
 		// find actor
 		ActorArray& actors = *actor_arrays_[it->second];
