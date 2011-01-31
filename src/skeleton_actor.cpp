@@ -103,10 +103,9 @@ namespace ERI
 		{
 			ASSERT(!setting.is_loop);
 			
-			current_start_key_ = key_num - 1;
-			next_start_key_ = setting.is_blend_begin ? 0 : current_start_key_;
+			current_start_key_ = next_start_key_ = key_num - 1;
 		}
-		if (next_start_key_ >= key_num)
+		else if (next_start_key_ >= key_num)
 		{
 			next_start_key_ = setting.is_blend_begin ? 0 : current_start_key_;
 		}
@@ -132,7 +131,7 @@ namespace ERI
 		
 		float blend_factor = (current_time - start_time) / (end_time - start_time);
 		
-		Quaternion::Slerp(local_pose.rotate, blend_factor, start.rotate, end.rotate);
+		Quaternion::Slerp(local_pose.rotate, blend_factor, start.rotate, end.rotate, true);
 		local_pose.scale = start.scale * (1.0f - blend_factor) + end.scale * blend_factor;
 		local_pose.translate = start.translate * (1.0f - blend_factor) + end.translate * blend_factor;
 	}
@@ -347,6 +346,7 @@ namespace ERI
 		
 		anim_duration_ = 0.0f;
 		float sample_duration;
+		int time_end_idx;
 		
 		int sample_num = anim->pose_samples.size();
 		for (int i = 0; i < sample_num; ++i)
@@ -355,7 +355,11 @@ namespace ERI
 			node_ins_array_[pose_sample->skeleton_node_idx].attached_sample = pose_sample;
 			node_ins_array_[pose_sample->skeleton_node_idx].SetTime(0.0f, anim_setting_);
 			
-			sample_duration = pose_sample->times[pose_sample->times.size() - 1];
+			time_end_idx = pose_sample->times.size() - 1;
+			if (!anim_setting_.is_blend_begin) time_end_idx -= 1;
+			ASSERT(time_end_idx >= 0);
+			
+			sample_duration = pose_sample->times[time_end_idx];
 			if (anim_duration_ < sample_duration)
 				anim_duration_ = sample_duration;
 		}
@@ -410,19 +414,19 @@ namespace ERI
 		
 		if (next_anim_.idx != -1 && skeleton_ins_->IsAnimEnd())
 		{
-			AnimSetting old_setting;
-			skeleton_ins_->GetAnim(old_setting);
-			skeleton_ins_->SetAnim(next_anim_);
-			
 			// TODO: use is_loop to recognize recover anim not a good idea ...
 			
 			if (!next_anim_.is_loop)
 			{
+				AnimSetting old_setting;
+				skeleton_ins_->GetAnim(old_setting);
+
+				skeleton_ins_->SetAnim(next_anim_);
 				next_anim_ = old_setting;
-				next_anim_.is_loop = true;
 			}
 			else
 			{
+				skeleton_ins_->SetAnim(next_anim_);
 				next_anim_.idx = -1;
 			}
 		}
@@ -441,22 +445,17 @@ namespace ERI
 		UpdateVertexBuffer();
 	}
 	
-	void SkeletonActor::PlayAnim(int idx, float speed_rate /*= 1.0f*/, bool is_loop /*= false*/, bool is_inverse /*= false*/)
+	void SkeletonActor::PlayAnim(const AnimSetting& setting)
 	{
 		AnimSetting old_setting;
 		skeleton_ins_->GetAnim(old_setting);
 		
-		if (idx == old_setting.idx
-			&& speed_rate == old_setting.speed_rate
-			&& is_inverse == old_setting.is_inverse)
+		if (setting == old_setting)
 		{
 			return;
 		}
 		
-		next_anim_.idx = idx;
-		next_anim_.speed_rate = speed_rate;
-		next_anim_.is_inverse = is_inverse;
-		next_anim_.is_loop = is_loop;
+		next_anim_ = setting;
 		
 		skeleton_ins_->CancelLoop();
 	}

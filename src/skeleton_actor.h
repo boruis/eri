@@ -94,13 +94,22 @@ namespace ERI
 					bool _is_loop = true,
 					bool _is_blend_begin = true,
 					bool _is_inverse = false)
-		:
+			:
 			idx(_idx),
 			speed_rate(_speed_rate),
 			is_loop(_is_loop),
 			is_blend_begin(_is_blend_begin),
 			is_inverse(_is_inverse)
 		{
+		}
+
+		bool operator==(const AnimSetting& setting) const
+		{
+			return (idx == setting.idx
+					&& speed_rate == setting.speed_rate
+					&& is_loop == setting.is_loop
+					&& is_blend_begin == setting.is_blend_begin
+					&& is_inverse == setting.is_inverse);
 		}
 		
 		int		idx;
@@ -191,7 +200,7 @@ namespace ERI
 		void SetAnim(const AnimSetting& setting);
 		void SetTimePercent(float time_percent);
 		
-		void PlayAnim(int idx, float speed_rate = 1.0f, bool is_loop = false, bool is_inverse = false);
+		void PlayAnim(const AnimSetting& setting);
 		
 		int	GetAnimIdx();
 		
