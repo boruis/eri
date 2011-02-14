@@ -160,11 +160,6 @@ namespace ERI
 		AttachSample();
 	}
 	
-	void SkeletonIns::GetAnim(AnimSetting& out_setting)
-	{
-		out_setting = anim_setting_;
-	}
-
 	void SkeletonIns::SetTimePercent(float time_percent)
 	{
 		anim_current_time_ = anim_duration_ * time_percent;
@@ -395,14 +390,12 @@ namespace ERI
 			vertex_buffer_ = NULL;
 		}
 		
-		AnimSetting old_setting;
-		skeleton_ins_->GetAnim(old_setting);
 		float time_percent = skeleton_ins_->GetTimePercent();
 		
 		delete skeleton_ins_;
 		skeleton_ins_ = new SkeletonIns(resource_ref);
 		
-		skeleton_ins_->SetAnim(old_setting);
+		skeleton_ins_->SetAnim(curr_anim_);
 		skeleton_ins_->SetTimePercent(time_percent);
 		
 		UpdateVertexBuffer();
@@ -418,15 +411,16 @@ namespace ERI
 			
 			if (!next_anim_.is_loop)
 			{
-				AnimSetting old_setting;
-				skeleton_ins_->GetAnim(old_setting);
+				AnimSetting old_anim = curr_anim_;
 
 				skeleton_ins_->SetAnim(next_anim_);
-				next_anim_ = old_setting;
+				curr_anim_ = next_anim_;
+				next_anim_ = old_anim;
 			}
 			else
 			{
 				skeleton_ins_->SetAnim(next_anim_);
+				curr_anim_ = next_anim_;
 				next_anim_.idx = -1;
 			}
 		}
@@ -437,6 +431,7 @@ namespace ERI
 	void SkeletonActor::SetAnim(const AnimSetting& setting)
 	{
 		skeleton_ins_->SetAnim(setting);
+		curr_anim_ = setting;
 	}
 	
 	void SkeletonActor::SetTimePercent(float time_percent)
@@ -447,10 +442,7 @@ namespace ERI
 	
 	void SkeletonActor::PlayAnim(const AnimSetting& setting)
 	{
-		AnimSetting old_setting;
-		skeleton_ins_->GetAnim(old_setting);
-		
-		if (setting == old_setting)
+		if (setting == curr_anim_)
 		{
 			return;
 		}
@@ -462,9 +454,7 @@ namespace ERI
 	
 	int	SkeletonActor::GetAnimIdx()
 	{
-		AnimSetting setting;
-		skeleton_ins_->GetAnim(setting);
-		return setting.idx;
+		return curr_anim_.idx;
 	}
 	
 	void SkeletonActor::UpdateVertexBuffer()

@@ -152,7 +152,6 @@ namespace ERI
 		// TODO: should put to another anim class interface ...
 		
 		void SetAnim(const AnimSetting& setting);
-		void GetAnim(AnimSetting& out_setting);
 		void SetTimePercent(float time_percent);
 		float GetTimePercent() const;
 		void AddTime(float add_time);
@@ -214,7 +213,7 @@ namespace ERI
 		void*			vertex_buffer_;
 		int				vertex_buffer_size_;
 
-		AnimSetting		next_anim_;
+		AnimSetting		curr_anim_, next_anim_;
 	};
 	
 }
