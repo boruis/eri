@@ -10,7 +10,7 @@
 #ifndef ERI_MATH_HELPER_H
 #define ERI_MATH_HELPER_H
 
-#include "pch.h"
+#include <vector>
 
 namespace ERI {
 	
@@ -305,6 +305,12 @@ namespace ERI {
 		IT_POINT,
 		IT_COLINEAR
 	};
+
+	struct Line2
+	{
+		Vector2	origin;
+		Vector2	dir;
+	};
 	
 	struct Ray2
 	{
@@ -333,6 +339,8 @@ namespace ERI {
 
 	float GetPointBox2DistanceSquared(const Vector2& point, const Box2& box);
 	IntersectionType CheckIntersectRayRay2(const Ray2& ray1, const Ray2& ray2, Vector2* out_intersect_pos);
+	bool IsIntersectLineCircle2(const Line2& line, const Circle2& circle, std::vector<float>* out_intersect_length);
+	bool IsIntersectRayCircle2(const Ray2& ray, const Circle2& circle, std::vector<Vector2>* out_intersect_pos);
 	bool IsIntersectBoxCircle2(const Box2& box, const Circle2& circle);
 	bool IsIntersectBoxBox2(const Box2& box1, const Box2& box2);
 	bool IsIntersectAABoxCircle2(const AABox2& box, const Circle2& circle);

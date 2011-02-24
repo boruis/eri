@@ -767,6 +767,94 @@ namespace ERI {
 		return IT_EMPTY;
 	}
 	
+	bool IsIntersectLineCircle2(const Line2& line, const Circle2& circle, std::vector<float>* out_intersect_length)
+	{
+		// Intersection of a the line P+t*D and the circle |X-C| = R.  The line
+		// direction is unit length. The t value is a root to the quadratic
+		// equation:
+		//   0 = |t*D+P-C|^2 - R^2
+		//     = t^2 + 2*Dot(D,P-C)*t + |P-C|^2-R^2
+		//     = t^2 + 2*a1*t + a0
+		// If two roots are returned, the order is T[0] < T[1].
+		
+		int intersection_count = 0;
+
+		Vector2 diff = line.origin - circle.center;
+		float a0 = diff.LengthSquared() - circle.radius * circle.radius;
+		float a1 = line.dir.DotProduct(diff);
+		float discr = a1 * a1 - a0;
+		if (discr > Math::ZERO_TOLERANCE)
+		{
+			intersection_count = 2;
+			if (out_intersect_length)
+			{
+				discr = sqrt(discr);
+				out_intersect_length->clear();
+				out_intersect_length->push_back(-a1 - discr);
+				out_intersect_length->push_back(-a1 + discr);
+			}
+		}
+		else if (discr < -Math::ZERO_TOLERANCE)
+		{
+		}
+		else  // discr == 0
+		{
+			intersection_count = 1;
+			if (out_intersect_length)
+			{
+				out_intersect_length->clear();
+				out_intersect_length->push_back(-a1);
+			}
+		}
+
+		return intersection_count != 0;
+	}
+	
+	bool IsIntersectRayCircle2(const Ray2& ray, const Circle2& circle, std::vector<Vector2>* out_intersect_pos)
+	{
+		std::vector<float> t;
+		Line2 line;
+		line.origin = ray.origin;
+		line.dir = ray.dir;
+		bool intersects = IsIntersectLineCircle2(line, circle, &t);
+
+		int intersection_count = t.size();
+
+		if (intersects)
+		{
+			// Reduce root count if line-circle intersections are not on ray.
+			if (intersection_count == 1)
+			{
+				if (t[0] < 0.0f)
+				{
+					intersection_count = 0;
+				}
+			}
+			else
+			{
+				if (t[1] < 0.0f)
+				{
+					intersection_count = 0;
+				}
+				else if (t[0] < 0.0f)
+				{
+					intersection_count = 1;
+					t[0] = t[1];
+				}
+			}
+			
+			if (out_intersect_pos)
+			{
+				for (int i = 0; i < intersection_count; ++i)
+				{
+					out_intersect_pos->push_back(ray.origin + ray.dir * t[i]);
+				}
+			}
+		}
+
+		return intersection_count > 0;
+	}
+	
 	bool IsIntersectBoxCircle2(const Box2& box, const Circle2& circle)
 	{
 		float distance_squared = GetPointBox2DistanceSquared(circle.center, box);
