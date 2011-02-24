@@ -230,11 +230,11 @@ namespace ERI
 		return -1;
 	}
 	
-	Vector3 SkeletonIns::GetNodeCurrentWorldPos(int idx) const
+	const Matrix4& SkeletonIns::GetNodeCurrentTransform(int idx) const
 	{
 		ASSERT(idx >= 0 && idx < node_ins_array_.size());
 		
-		return node_ins_array_[idx].global_matrix.GetTranslate();
+		return node_ins_array_[idx].global_matrix;
 	}
 	
 	int SkeletonIns::GetVertexBufferSize()

@@ -162,7 +162,7 @@ namespace ERI
 		//
 		
 		int FindNodeIdxByName(const std::string& name) const;
-		Vector3 GetNodeCurrentWorldPos(int idx) const;
+		const Matrix4& GetNodeCurrentTransform(int idx) const;
 		
 		//
 		
