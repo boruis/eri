@@ -17,6 +17,8 @@
 #include "win/render_context_win.h"
 #elif ERI_PLATFORM == ERI_PLATFORM_IOS
 #include "ios/render_context_ios.h"
+#else
+#include "render_context.h"
 #endif
 
 #include "root.h"
@@ -99,7 +101,7 @@ namespace ERI {
 		blend_src_factor_(GL_SRC_ALPHA),
 		blend_dst_factor_(GL_ONE_MINUS_SRC_ALPHA),
 		alpha_test_func_(GL_GREATER),
-		alpha_test_ref_(0)
+		alpha_test_ref_(0.0f)
 	{
 		memset(frame_buffers_, 0, sizeof(frame_buffers_));
 		memset(texture_unit_enable_, 0, sizeof(texture_unit_enable_));
@@ -290,18 +292,22 @@ namespace ERI {
 				now_color_ = data->color;
 			}
 			
-			if (blend_enable_ && (blend_src_factor_ != data->blend_src_factor || blend_dst_factor_ != data->blend_dst_factor))
+			if (blend_enable_ &&
+				(blend_src_factor_ != data->blend_src_factor ||
+				 blend_dst_factor_ != data->blend_dst_factor))
 			{
 				blend_src_factor_ = data->blend_src_factor;
 				blend_dst_factor_ = data->blend_dst_factor;
 				glBlendFunc(blend_src_factor_, blend_dst_factor_);
 			}
 			
-			if (alpha_test_enable_ && (alpha_test_func_ != data->alpha_test_func || alpha_test_ref_ != data->alpha_test_ref))
+			if (alpha_test_enable_ &&
+				(alpha_test_func_ != data->alpha_test_func ||
+				 alpha_test_ref_ != data->alpha_test_ref))
 			{
 				alpha_test_func_ = data->alpha_test_func;
 				alpha_test_ref_ = data->alpha_test_ref;
-				glAlphaFunc(alpha_test_func_, alpha_test_ref_ / 256.0f);
+				glAlphaFunc(alpha_test_func_, alpha_test_ref_);
 			}
 			
 			glBindBuffer(GL_ARRAY_BUFFER, data->vertex_buffer);

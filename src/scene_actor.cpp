@@ -199,7 +199,7 @@ namespace ERI {
 	void SceneActor::AlphaTestGreater(int alpha_value)
 	{
 		render_data_.alpha_test_func = GL_GREATER;
-		render_data_.alpha_test_ref = alpha_value;
+		render_data_.alpha_test_ref = alpha_value / 255.0f;
 	}
 	
 	const Matrix4& SceneActor::GetTransform()

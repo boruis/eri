@@ -164,7 +164,7 @@ namespace ERI {
 		GLenum blend_src_factor_, blend_dst_factor_;
 		
 		GLenum		alpha_test_func_;
-		GLclampx	alpha_test_ref_;
+		GLclampf	alpha_test_ref_;
 		
 		LightInfo light_infos_[MAX_LIGHT];
 	};
