@@ -9,6 +9,7 @@
 #import "gl_view.h"
 
 #include "root.h"
+#include "renderer.h"
 #include "input_mgr.h"
 #include "math_helper.h"
 
@@ -96,7 +97,14 @@ float mouse_down_x, mouse_down_y;
 	ERI::Root::Ins().input_mgr()->KeyDown([characters UTF8String], code);
 }
 
-- (void)dealloc {
+- (void)reshape
+{
+	if (ERI::Root::Ins().renderer())
+		ERI::Root::Ins().renderer()->Resize([self bounds].size.width, [self bounds].size.height);
+}
+
+- (void)dealloc
+{
     [super dealloc];
 }
 

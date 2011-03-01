@@ -48,7 +48,7 @@ static DemoApp* demo_app;
 	demo_app = new DemoApp;
 	
 	// create our rendering timer
-	[NSTimer scheduledTimerWithTimeInterval:(1.0f/60.0f) target:self selector:@selector(update) userInfo:nil repeats:YES];	
+	[NSTimer scheduledTimerWithTimeInterval:(1.0f / 60.0f) target:self selector:@selector(update) userInfo:nil repeats:YES];	
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)theApplication
@@ -56,5 +56,9 @@ static DemoApp* demo_app;
 	return YES;
 }
 
+- (void)applicationWillTerminate:(NSNotification *)aNotification
+{
+	delete demo_app;
+}
 
 @end
