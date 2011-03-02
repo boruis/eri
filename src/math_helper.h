@@ -12,6 +12,8 @@
 
 #include <vector>
 
+#include "pch.h"
+
 namespace ERI {
 	
 #pragma mark Geometry

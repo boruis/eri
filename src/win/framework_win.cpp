@@ -63,12 +63,18 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case SIZE_MAXIMIZED:
 			win_init_info->is_visible = true;
-			//ReshapeGL (LOWORD (lParam), HIWORD (lParam));		// Reshape Window - LoWord=Width, HiWord=Height
+			win_init_info->width = LOWORD(lParam);
+			win_init_info->height = HIWORD(lParam);
+			if (Root::Ins().renderer())
+				Root::Ins().renderer()->Resize(win_init_info->width, win_init_info->height);
 			return 0;
 
 		case SIZE_RESTORED:
 			win_init_info->is_visible = true;
-			//ReshapeGL (LOWORD (lParam), HIWORD (lParam));		// Reshape Window - LoWord=Width, HiWord=Height
+			win_init_info->width = LOWORD(lParam);
+			win_init_info->height = HIWORD(lParam);
+			if (Root::Ins().renderer())
+				Root::Ins().renderer()->Resize(win_init_info->width, win_init_info->height);
 			return 0;
 		}
 		break;
