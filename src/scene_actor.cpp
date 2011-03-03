@@ -313,10 +313,21 @@ namespace ERI {
 		SetTransformDirty();
 	}
 	
+	void SceneActor::GetRotate(float& out_degree, Vector3& out_axis) const
+	{
+		out_degree = render_data_.rotate_degree;
+		out_axis = render_data_.rotate_axis;
+	}
+	
 	void SceneActor::SetScale(const Vector3& scale)
 	{
 		render_data_.scale = scale;
 		SetTransformDirty();
+	}
+	
+	const Vector3& SceneActor::GetScale3() const
+	{
+		return render_data_.scale;
 	}
 	
 	float SceneActor::GetViewDepth()

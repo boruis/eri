@@ -220,14 +220,14 @@ namespace ERI {
 									0.0f, 0.0f, 1.0f, 0.0f,
 									0.0f, 0.0f, 0.0f, 1.0f);
 	
-	void Matrix4::ExtractMatrix3(Matrix3& m3)
+	void Matrix4::ExtractMatrix3(Matrix3& m3) const
 	{
 		m3.m[TRI_00] = m[_00]; m3.m[TRI_01] = m[_01]; m3.m[TRI_02] = m[_02];
 		m3.m[TRI_10] = m[_10]; m3.m[TRI_11] = m[_11]; m3.m[TRI_12] = m[_12];
 		m3.m[TRI_20] = m[_20]; m3.m[TRI_21] = m[_21]; m3.m[TRI_22] = m[_22];
 	}
 	
-	void Matrix4::ExtractTransform(Vector3& scale, Quaternion& rotate, Vector3& translate)
+	void Matrix4::ExtractTransform(Vector3& scale, Quaternion& rotate, Vector3& translate) const
 	{
 		ASSERT(is_affine());
 		

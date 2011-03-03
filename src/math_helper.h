@@ -230,8 +230,8 @@ namespace ERI {
             return m[_30] == 0 && m[_31] == 0 && m[_32] == 0 && m[_33] == 1;
         }
 		
-		void ExtractMatrix3(Matrix3& m3);
-		void ExtractTransform(Vector3& scale, Quaternion& rotate, Vector3& translate);
+		void ExtractMatrix3(Matrix3& m3) const;
+		void ExtractTransform(Vector3& scale, Quaternion& rotate, Vector3& translate) const;
 		void MakeTransform(const Vector3& scale, const Quaternion& rotate, const Vector3& translate);
 		
 		float m[16];

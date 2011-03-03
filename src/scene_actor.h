@@ -99,8 +99,12 @@ namespace ERI {
 		// 3D
 		virtual void SetPos(const Vector3& pos);
 		const Vector3& GetPos3() const;
+		
 		void SetRotate(float degree, const Vector3& axis);
+		void GetRotate(float& out_degree, Vector3& out_axis) const;
+		
 		void SetScale(const Vector3& scale);
+		const Vector3& GetScale3() const;
 		
 		//
 		
