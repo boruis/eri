@@ -371,7 +371,37 @@ namespace ERI
 		if (skeleton_map_.empty())
 			return NULL;
 		
-		Skeleton* skeleton = skeleton_map_.begin()->second;
+		Skeleton* skeleton = NULL;
+		
+		// TODO: wrong usage, find out correct one
+		
+		int skel_idx = 0;
+		int max_node = 0;
+		std::map<std::string, Skeleton*>::iterator skel_it;
+		for (skel_it = skeleton_map_.begin(); skel_it != skeleton_map_.end(); ++skel_it, ++skel_idx)
+		{
+			Skeleton* current_skel = skel_it->second;
+			
+			printf("skel[%d]: %d node, %d skin\n", skel_idx,
+						 static_cast<int>(current_skel->nodes.size()),
+						 static_cast<int>(current_skel->skin_refs.size()));
+			
+			for (int i = 0; i < current_skel->nodes.size(); ++i)
+			{
+				printf("  node[%d]: %s, parent %d\n", i,
+							 current_skel->nodes[i]->name.c_str(),
+							 current_skel->nodes[i]->parent_idx);
+			}
+			
+			if (current_skel->nodes.size() > max_node)
+			{
+				max_node = current_skel->nodes.size();
+				skeleton = current_skel;
+			}
+		}
+		
+		if (!skeleton)
+			return NULL;
 		
 		//
 		
@@ -1163,28 +1193,10 @@ namespace ERI
 		node = root_node->first_node("node");
 		while (node)
 		{
-			if (GetAttrStr(node, "id", s))
+			if (GetAttrStr(node, "id", s) &&
+					FindSkeletonNode(node->first_node("node"), skeletion))
 			{
-				node2 = node;
-				while (node2)
-				{
-					if (GetAttrStr(node2, "id", s))
-					{
-						std::map<std::string, Skeleton*>::iterator skel_it = skeleton_map_.find(s);
-						
-						if (skel_it != skeleton_map_.end())
-						{
-							skeletion = skel_it->second;
-							//skeletion = skeleton_map_.begin()->second;
-							
-							ParseSkeletonNode(node, skeletion, -1);
-							
-							break;
-						}
-					}
-					
-					node2 = node2->first_node("node");
-				}
+				ParseSkeletonNode(node, skeletion, -1);
 			}
 			
 			node = node->next_sibling("node");
@@ -1566,6 +1578,38 @@ namespace ERI
 			
 			node = node->next_sibling();
 		}
+	}
+	
+	bool ColladaLoader::FindSkeletonNode(rapidxml::xml_node<>* node, Skeleton*& out_skeleton)
+	{
+		if (!node)
+			return false;
+		
+		std::string s;
+		std::map<std::string, Skeleton*>::iterator skel_it;
+		
+		do
+		{
+			if (GetAttrStr(node, "id", s))
+			{
+				skel_it = skeleton_map_.find(s);
+				if (skel_it != skeleton_map_.end())
+				{
+					out_skeleton = skel_it->second;
+					return true;
+				}
+				else
+				{
+					if (FindSkeletonNode(node->first_node("node"), out_skeleton))
+						return true;
+				}
+			}
+			
+			node = node->next_sibling("node");
+		}
+		while (node);
+		
+		return false;
 	}
 	
 	int ColladaLoader::FindMatchJointIdx(Skin* skin, const std::string& joint_name)

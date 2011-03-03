@@ -192,6 +192,7 @@ namespace ERI
 		Input* ParseInput(rapidxml::xml_node<>* node, bool is_need_offset);
 		
 		void ParseSkeletonNode(rapidxml::xml_node<>* node, Skeleton* skeleton, int parent_idx);
+		bool FindSkeletonNode(rapidxml::xml_node<>* node, Skeleton*& out_skeleton);
 		
 		int FindMatchJointIdx(Skin* skin, const std::string& joint_name);
 		
