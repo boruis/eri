@@ -97,8 +97,11 @@ namespace ERI {
 		void SetSortDirty();
 		
 		inline int id() { return id_; }
-		inline bool is_visible() { return is_visible_; }
+		
+		inline CameraActor* cam() { return cam_; }
+		inline void set_cam(CameraActor* cam) { cam_ = cam; }
 
+		inline bool is_visible() { return is_visible_; }
 		inline void set_is_visible(bool visible) { is_visible_ = visible; }
 		inline void set_is_clear_depth(bool claear_depth) { is_clear_depth_ = claear_depth; }
 		
@@ -108,6 +111,8 @@ namespace ERI {
 		ActorGroup*	opaque_actors_;
 		ActorGroup*	alpha_test_actors_;
 		ActorGroup*	alpha_blend_actors_;
+		
+		CameraActor*	cam_;
 		
 		bool	is_visible_;
 		bool	is_sort_alpha_;
@@ -124,6 +129,7 @@ namespace ERI {
 		void SetLayerVisible(int layer_id, bool visible);
 		void SetLayerClearDepth(int layer_id, bool clear_depth);
 		void SetLayerSortAlpha(int layer_id, bool sort_alpha);
+		void SetLayerCam(int layer_id, CameraActor* cam);
 		void ClearLayer();
 
 		void AddActor(SceneActor* actor, int layer_id = 0);
@@ -140,12 +146,16 @@ namespace ERI {
 	
 		inline CameraActor* current_cam() { return current_cam_; }
 		
+		inline CameraActor* default_cam() { return default_cam_; }
+		inline void set_default_cam(CameraActor* cam) { default_cam_ = cam; }
+		
 	private:
 		void UpdateDefaultView();
 		void UpdateDefaultProjection();
 		
 		std::vector<SceneLayer*>	layers_;
 		CameraActor*				current_cam_;
+		CameraActor*				default_cam_;
 	};
 
 }

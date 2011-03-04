@@ -240,6 +240,7 @@ namespace ERI {
 	
 	SceneLayer::SceneLayer(int uid, bool is_sort_alpha, bool is_clear_depth) :
 		id_(uid),
+		cam_(NULL),
 		is_visible_(true),
 		is_sort_alpha_(is_sort_alpha),
 		is_clear_depth_(is_clear_depth)
@@ -394,7 +395,7 @@ namespace ERI {
 
 #pragma mark SceneMgr
 
-	SceneMgr::SceneMgr() : current_cam_(NULL)
+	SceneMgr::SceneMgr() : current_cam_(NULL), default_cam_(NULL)
 	{
 		CreateLayer(1); // default layer
 	}
@@ -437,6 +438,13 @@ namespace ERI {
 		layers_[layer_id]->SetSortAlpha(sort_alpha);
 	}
 	
+	void SceneMgr::SetLayerCam(int layer_id, CameraActor* cam)
+	{
+		ASSERT(layer_id < static_cast<int>(layers_.size()));
+		
+		layers_[layer_id]->set_cam(cam);
+	}
+	
 	void SceneMgr::ClearLayer()
 	{
 		for (int i = 0; i < layers_.size(); ++i)
@@ -466,19 +474,21 @@ namespace ERI {
 	
 	void SceneMgr::Render(Renderer* renderer)
 	{
-		if (current_cam_)
-		{
-			if (current_cam_->is_projection_modified())
-				current_cam_->UpdateProjectionMatrix();
-			
-			if (current_cam_->is_view_modified())
-				current_cam_->UpdateViewMatrix();
-		}
-		
 		for (size_t i = 0; i < layers_.size(); ++i)
 		{
 			if (layers_[i]->is_visible())
 			{
+				SetCurrentCam(layers_[i]->cam() ? layers_[i]->cam() : default_cam_);
+				
+				if (current_cam_)
+				{
+					if (current_cam_->is_projection_modified())
+						current_cam_->UpdateProjectionMatrix();
+					
+					if (current_cam_->is_view_modified())
+						current_cam_->UpdateViewMatrix();
+				}
+				
 				layers_[i]->Render(renderer);
 			}
 		}
@@ -486,7 +496,7 @@ namespace ERI {
 
 	Vector3 SceneMgr::ScreenToWorldPos(int screen_x, int screen_y)
 	{
-		// TODO: perspective?
+		// TODO: perspective? which cam?
 		
 		Vector3 world_pos;
 		
@@ -523,6 +533,17 @@ namespace ERI {
 	
 	void SceneMgr::OnRenderResize()
 	{
+		if (default_cam_)
+		{
+			default_cam_->SetProjectionModified();
+		}
+		
+		for (size_t i = 0; i < layers_.size(); ++i)
+		{
+			if (layers_[i]->cam())
+				layers_[i]->cam()->SetProjectionModified();
+		}
+		
 		if (current_cam_)
 		{
 			current_cam_->SetProjectionModified();
