@@ -261,6 +261,8 @@ namespace ERI
 		
 		void Update(float delta_time);
 		
+		void ResetParticles();
+		
 		void SetTexAreaUV(float start_u, float start_v, float width, float height);
 		
 		inline const ParticleSystemSetup* setup_ref() { return setup_ref_; }

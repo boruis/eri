@@ -421,6 +421,17 @@ namespace ERI
 		
 		UpdateBuffer();
 	}
+	
+	void ParticleSystem::ResetParticles()
+	{
+		int num = particles_.size();
+		for (int i = 0; i < num; ++i)
+		{
+			particles_[i]->Reset();
+		}
+
+		UpdateBuffer();
+	}
 		
 	void ParticleSystem::EmitParticle(int num)
 	{
