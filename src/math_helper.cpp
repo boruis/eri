@@ -238,8 +238,21 @@ namespace ERI {
 		Vector3 vU;
 		m3.QDUDecomposition(mQ, scale, vU);
 		
+		if (scale.x != scale.x) scale.x = 0.0f;
+		if (scale.y != scale.y) scale.y = 0.0f;
+		if (scale.z != scale.z) scale.z = 0.0f;
+		
 		rotate = Quaternion(Matrix4(mQ));
 		translate = Vector3(m[_03], m[_13], m[_23]);
+		
+		if (rotate.x != rotate.x) rotate.x = 0.0f;
+		if (rotate.y != rotate.y) rotate.y = 0.0f;
+		if (rotate.z != rotate.z) rotate.z = 0.0f;
+		if (rotate.w != rotate.w) rotate.w = 0.0f;
+
+		if (translate.x != translate.x) translate.x = 0.0f;
+		if (translate.y != translate.y) translate.y = 0.0f;
+		if (translate.z != translate.z) translate.z = 0.0f;
 	}
 	
 	void Matrix4::MakeTransform(const Vector3& scale, const Quaternion& rotate, const Vector3& translate)
