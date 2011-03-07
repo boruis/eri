@@ -331,9 +331,19 @@ namespace ERI
 					
 					for (int k = 0; k < src_want_stride; ++k)
 					{
-						memcpy(&buffer_data[buffer_offset + k * 4],
-							   &input_srcs[j]->datas[src_idx * src_stride + k],
-							   4);
+						if (tri->inputs[j]->semantic == TEXCOORD && k == 1)
+						{
+							float invert_v = 1.0f - input_srcs[j]->datas[src_idx * src_stride + k];
+							memcpy(&buffer_data[buffer_offset + k * 4],
+										 &invert_v,
+										 4);
+						}
+						else
+						{
+							memcpy(&buffer_data[buffer_offset + k * 4],
+										 &input_srcs[j]->datas[src_idx * src_stride + k],
+										 4);
+						}
 						
 						ASSERT(reinterpret_cast<long>(&buffer_data[buffer_offset + k * 4]) < reinterpret_cast<long>(buffer_data) + current_vertex_size_);
 					}
@@ -579,10 +589,6 @@ namespace ERI
 					src_idx = tri->primitives[i * vertex_stride + tri->inputs[j]->offset];
 					src_stride = src_want_stride = input_srcs[j]->stride;
 					
-					// TODO: check this, some resource's TEXCOORD stride will greater than 2 (S,T,P), we can only use 2
-					if (tri->inputs[j]->semantic == TEXCOORD)
-						src_want_stride = 2;
-					
 					if (tri->inputs[j]->semantic == COLOR)
 					{
 						++color_input_count;
@@ -600,11 +606,25 @@ namespace ERI
 					}
 					else
 					{
+						// TODO: check this, some resource's TEXCOORD stride will greater than 2 (S,T,P), we can only use 2
+						if (tri->inputs[j]->semantic == TEXCOORD)
+							src_want_stride = 2;
+
 						for (int k = 0; k < src_want_stride; ++k)
 						{
-							memcpy(&buffer_data[buffer_offset + k * 4],
-								   &input_srcs[j]->datas[src_idx * src_stride + k],
-								   4);
+							if (tri->inputs[j]->semantic == TEXCOORD && k == 1)
+							{
+								float invert_v = 1.0f - input_srcs[j]->datas[src_idx * src_stride + k];
+								memcpy(&buffer_data[buffer_offset + k * 4],
+											 &invert_v,
+											 4);
+							}
+							else
+							{
+								memcpy(&buffer_data[buffer_offset + k * 4],
+											 &input_srcs[j]->datas[src_idx * src_stride + k],
+											 4);
+							}
 							
 							ASSERT(reinterpret_cast<long>(&buffer_data[buffer_offset + k * 4]) < reinterpret_cast<long>(buffer_data) + current_vertex_size_);
 						}
@@ -657,6 +677,27 @@ namespace ERI
 			
 			pose_sample = new PoseSample;
 			
+			// find corresponding node idx
+			
+			target_name = anim->channel_array[i]->target;
+			size_t pos = target_name.find('/');
+			if (pos != std::string::npos)
+				target_name = target_name.substr(0, pos);
+			
+			int node_num = nodes.size();
+			for (int j = 0; j < node_num; ++j)
+			{
+				if (target_name.compare(nodes[j]->name) == 0)
+				{
+					pose_sample->skeleton_node_idx = j;
+					break;
+				}
+			}
+			
+			ASSERT(pose_sample->skeleton_node_idx != -1);
+			
+			//
+			
 			int key_num = sampler->times.size();
 			int start_key = 0;
 			float time_offset = 0;
@@ -683,24 +724,6 @@ namespace ERI
 														pose_sample->transforms[j - start_key].rotate,
 														pose_sample->transforms[j - start_key].translate);
 			}
-			
-			// find corresponding node idx
-			
-			target_name = anim->channel_array[i]->target;
-			size_t pos = target_name.find('/');
-			if (pos != std::string::npos)
-				target_name = target_name.substr(0, pos);
-			
-			int node_num = nodes.size();
-			for (int j = 0; j < node_num; ++j)
-			{
-				if (target_name.compare(nodes[j]->name) == 0)
-				{
-					pose_sample->skeleton_node_idx = j;
-				}
-			}
-			
-			ASSERT(pose_sample->skeleton_node_idx != -1);
 			
 			//
 			
