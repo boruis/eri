@@ -886,7 +886,14 @@ namespace ERI
 							s = s.substr(pos + 1);
 						
 						std::string real_path("media/Effect/");
-						real_path += s;
+						
+						pos = path.rfind('/');
+						if (pos == std::string::npos)
+							pos = path.rfind('\\');
+						if (pos != std::string::npos)
+							real_path = path.substr(0, pos);
+						
+						real_path += "/" + s;
 						
 						creator->material_setup.tex_path = real_path;
 						
