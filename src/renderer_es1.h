@@ -167,6 +167,8 @@ namespace ERI {
 		GLclampf	alpha_test_ref_;
 		
 		LightInfo light_infos_[MAX_LIGHT];
+		
+		Matrix4		current_view_matrix_;
 	};
 
 }

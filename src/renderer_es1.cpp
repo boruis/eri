@@ -281,8 +281,10 @@ namespace ERI {
 	
 	void RendererES1::Render(const RenderData* data)
 	{
-		if (data->apply_identity_model_matrix) glLoadIdentity();
-		else glMultMatrixf(data->world_model_matrix.m);
+		if (data->apply_identity_model_matrix)
+			glLoadMatrixf(current_view_matrix_.m);
+		else
+			glMultMatrixf(data->world_model_matrix.m);
 		
 		if (data->vertex_count > 0)
 		{
@@ -957,11 +959,10 @@ namespace ERI {
 	
 	void RendererES1::UpdateView(const Vector3& eye, const Vector3& at, const Vector3& up)
 	{
-		static Matrix4 view;
-		MatrixLookAtRH(view, eye, at, up);
+		MatrixLookAtRH(current_view_matrix_, eye, at, up);
 		
 		glMatrixMode(GL_MODELVIEW);
-		glLoadMatrixf(view.m);
+		glLoadMatrixf(current_view_matrix_.m);
 		
 		UpdateLightTransform();
 	}
