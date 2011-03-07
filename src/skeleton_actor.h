@@ -163,6 +163,7 @@ namespace ERI
 		
 		int FindNodeIdxByName(const std::string& name) const;
 		const Matrix4& GetNodeCurrentTransform(int idx) const;
+		int GetAnimClipNum() const;
 		
 		//
 		
@@ -171,7 +172,7 @@ namespace ERI
 		void GetVertexInfo(GLenum& vertex_type, VertexFormat& vertex_format);
 
 		void UpdatePose();
-
+		
 	private:
 		void AttachSample();
 		
@@ -199,7 +200,7 @@ namespace ERI
 		void SetAnim(const AnimSetting& setting);
 		void SetTimePercent(float time_percent);
 		
-		void PlayAnim(const AnimSetting& setting);
+		void PlayAnim(const AnimSetting& setting, bool wait_current_finish = true);
 		
 		int	GetAnimIdx();
 		

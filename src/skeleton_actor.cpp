@@ -237,6 +237,11 @@ namespace ERI
 		return node_ins_array_[idx].global_matrix;
 	}
 	
+	int SkeletonIns::GetAnimClipNum() const
+	{
+		return resource_ref_->anim_refs.size();
+	}
+	
 	int SkeletonIns::GetVertexBufferSize()
 	{
 		return (resource_ref_->mesh_refs[0]->vertex_size * resource_ref_->mesh_refs[0]->vertices.size());
@@ -440,16 +445,25 @@ namespace ERI
 		UpdateVertexBuffer();
 	}
 	
-	void SkeletonActor::PlayAnim(const AnimSetting& setting)
+	void SkeletonActor::PlayAnim(const AnimSetting& setting, bool wait_current_finish /*= true*/)
 	{
 		if (setting == curr_anim_)
 		{
 			return;
 		}
 		
-		next_anim_ = setting;
-		
-		skeleton_ins_->CancelLoop();
+		if (wait_current_finish)
+		{
+			next_anim_ = setting;
+			skeleton_ins_->CancelLoop();
+		}
+		else
+		{
+			if (curr_anim_.is_loop)
+				next_anim_ = curr_anim_;
+			
+			SetAnim(setting);
+		}
 	}
 	
 	int	SkeletonActor::GetAnimIdx()
