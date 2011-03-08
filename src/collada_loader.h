@@ -21,9 +21,9 @@
 
 namespace ERI
 {
-	class SharedSkeleton;
-	class Mesh;
-	class AnimClip;
+	struct SharedSkeleton;
+	struct Mesh;
+	struct AnimClip;
 	
 	class ColladaLoader : public MeshLoader
 	{
