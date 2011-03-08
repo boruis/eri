@@ -17,7 +17,7 @@ namespace ERI
 {
 	const char* GetResourcePath()
 	{
-		static char* path = "";
+		static char* path = ".";
 		return path;
 	}
 
