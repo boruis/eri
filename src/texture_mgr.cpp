@@ -328,7 +328,7 @@ namespace ERI {
 		}
 		else
 		{
-			scene_mgr->OnRenderResize();
+			scene_mgr->OnViewportResize();
 		}
 		
 		//
@@ -354,7 +354,7 @@ namespace ERI {
 		}
 		else
 		{
-			scene_mgr->OnRenderResize();
+			scene_mgr->OnViewportResize();
 		}
 	}
 	

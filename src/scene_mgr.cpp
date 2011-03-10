@@ -474,7 +474,8 @@ namespace ERI {
 	
 	void SceneMgr::Render(Renderer* renderer)
 	{
-		for (size_t i = 0; i < layers_.size(); ++i)
+		int layer_num = layers_.size();
+		for (int i = 0; i < layer_num; ++i)
 		{
 			if (layers_[i]->is_visible())
 			{
@@ -531,14 +532,15 @@ namespace ERI {
 		return NULL;
 	}
 	
-	void SceneMgr::OnRenderResize()
+	void SceneMgr::OnViewportResize()
 	{
 		if (default_cam_)
 		{
 			default_cam_->SetProjectionModified();
 		}
 		
-		for (size_t i = 0; i < layers_.size(); ++i)
+		int layer_num = layers_.size();
+		for (int i = 0; i < layer_num; ++i)
 		{
 			if (layers_[i]->cam())
 				layers_[i]->cam()->SetProjectionModified();
@@ -551,6 +553,14 @@ namespace ERI {
 		else
 		{
 			UpdateDefaultProjection();
+		}
+		
+		if (viewport_resize_subject_.HaveObserver())
+		{
+			ResizeInfo info(Root::Ins().renderer()->width(),
+											Root::Ins().renderer()->height());
+			
+			viewport_resize_subject_.Notify(info);
 		}
 	}
 	

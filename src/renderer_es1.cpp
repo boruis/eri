@@ -244,7 +244,7 @@ namespace ERI {
 		glViewport(0, 0, backing_width_, backing_height_);
 		glScissor(0, 0, backing_width_, backing_height_);
 		
-		Root::Ins().scene_mgr()->OnRenderResize();
+		Root::Ins().scene_mgr()->OnViewportResize();
 	}
 
 	void RendererES1::RenderStart()

@@ -10,10 +10,11 @@
 #ifndef ERI_SCENE_MGR_H
 #define ERI_SCENE_MGR_H
 
-#include "math_helper.h"
-
 #include <vector>
 #include <map>
+
+#include "observer.h"
+#include "math_helper.h"
 
 namespace ERI {
 	
@@ -122,6 +123,8 @@ namespace ERI {
 	class SceneMgr
 	{
 	public:
+		typedef std::pair<int, int> ResizeInfo;
+		
 		SceneMgr();
 		~SceneMgr();
 		
@@ -140,14 +143,16 @@ namespace ERI {
 		Vector3 ScreenToWorldPos(int screen_x, int screen_y);
 		SceneActor* GetHitActor(const Vector3& pos);
 		
-		void OnRenderResize();
-
+		void OnViewportResize();
+		
 		void SetCurrentCam(CameraActor* cam);
 	
 		inline CameraActor* current_cam() { return current_cam_; }
 		
 		inline CameraActor* default_cam() { return default_cam_; }
 		inline void set_default_cam(CameraActor* cam) { default_cam_ = cam; }
+		
+		inline Subject<ResizeInfo>& viewport_resize_subject() { return viewport_resize_subject_; }
 		
 	private:
 		void UpdateDefaultView();
@@ -156,6 +161,8 @@ namespace ERI {
 		std::vector<SceneLayer*>	layers_;
 		CameraActor*				current_cam_;
 		CameraActor*				default_cam_;
+		
+		Subject<ResizeInfo>	viewport_resize_subject_;
 	};
 
 }
