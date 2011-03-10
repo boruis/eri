@@ -51,6 +51,11 @@ namespace ERI {
 		if (handler_) handler_->MultiMove(events, num, is_start);
 	}
 	
+	void InputMgr::Scroll(const InputEvent& event)
+	{
+		if (handler_) handler_->Scroll(event);
+	}
+	
 	void InputMgr::OverMove(const InputEvent& event)
 	{
 		if (handler_) handler_->OverMove(event);

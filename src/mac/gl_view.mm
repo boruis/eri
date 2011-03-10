@@ -47,6 +47,8 @@ float mouse_down_x, mouse_down_y;
 	NSPoint pos = [self convertPoint:[event locationInWindow] fromView:nil];
 
 	ERI::InputEvent e(0, pos.x, pos.y);
+	e.dx = [event deltaX];
+	e.dy = [event deltaY];
 	ERI::Root::Ins().input_mgr()->OverMove(e);
 }
 
@@ -55,6 +57,8 @@ float mouse_down_x, mouse_down_y;
 	NSPoint pos = [self convertPoint:[event locationInWindow] fromView:nil];
 	
 	ERI::InputEvent e(0, pos.x, pos.y);
+	e.dx = [event deltaX];
+	e.dy = [event deltaY];
 	ERI::Root::Ins().input_mgr()->Move(e);
 }
 
@@ -73,12 +77,17 @@ float mouse_down_x, mouse_down_y;
 
 - (void)scrollWheel:(NSEvent *)event
 {
-	NSLog(@"scroll delta %f %f %f\n", [event deltaX], [event deltaY], [event deltaZ]);
+	NSPoint pos = [self convertPoint:[event locationInWindow] fromView:nil];
+	
+	ERI::InputEvent e(0, pos.x, pos.y);
+	e.dx = [event deltaX];
+	e.dy = [event deltaY];
+	ERI::Root::Ins().input_mgr()->Scroll(e);
 }
 
 - (void)keyDown:(NSEvent *)event
 {
-    NSString *characters = [event characters];
+	NSString *characters = [event characters];
 	NSLog(@"key %@\n", characters);
 	
 	ERI::InputKeyCode code = ERI::KEY_NONE;

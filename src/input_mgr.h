@@ -19,10 +19,10 @@ namespace ERI {
 	struct InputEvent
 	{
 		InputEvent() {}
-		InputEvent(unsigned int _uid, int _x, int _y) : uid(_uid), x(_x), y(_y) {}
+		InputEvent(unsigned int _uid, int _x, int _y) : uid(_uid), x(_x), y(_y), dx(0), dy(0) {}
 		
 		unsigned int	uid;
-		int				x, y;
+		int				x, y, dx, dy;
 	};
 	
 	enum InputKeyCode
@@ -42,6 +42,7 @@ namespace ERI {
 		virtual void Move(const InputEvent& event) {}
 		virtual void MultiMove(const InputEvent* events, int num, bool is_start) {}
 		
+		virtual void Scroll(const InputEvent& event) {}
 		virtual void OverMove(const InputEvent& event) {}
 		virtual void KeyDown(const std::string& characters, InputKeyCode code) {}
 		
@@ -62,6 +63,7 @@ namespace ERI {
 		void Move(const InputEvent& event);
 		void MultiMove(const InputEvent* events, int num, bool is_start);
 
+		void Scroll(const InputEvent& event);
 		void OverMove(const InputEvent& event);
 		void KeyDown(const std::string& characters, InputKeyCode code = KEY_NONE);
 
