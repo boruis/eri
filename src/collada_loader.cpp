@@ -1252,13 +1252,22 @@ namespace ERI
 			node = node->next_sibling("node");
 		}
 		
+		std::map<std::string, Skeleton*>::iterator skel_it;
 		node = root_node->first_node("node");
 		while (node)
 		{
-			if (GetAttrStr(node, "id", s) &&
-					FindSkeletonNode(node->first_node("node"), skeletion))
+			if (GetAttrStr(node, "id", s))
 			{
-				ParseSkeletonNode(node, skeletion, -1);
+				skel_it = skeleton_map_.find(s);
+				if (skel_it != skeleton_map_.end())
+				{
+					skeletion = skel_it->second;
+					ParseSkeletonNode(node, skeletion, -1);
+				}
+				else if(FindSkeletonNode(node->first_node("node"), skeletion))
+				{
+					ParseSkeletonNode(node, skeletion, -1);
+				}
 			}
 			
 			node = node->next_sibling("node");
