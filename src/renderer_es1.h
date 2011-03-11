@@ -103,7 +103,7 @@ namespace ERI {
 		virtual void SetLightSpotExponent(int idx, float exponent);
 		virtual void SetLightSpotCutoff(int idx, float cutoff);
 
-		virtual unsigned int GenerateTexture(const void* buffer, int width, int height, PixelFormat format);
+		virtual unsigned int GenerateTexture(const void* buffer, int width, int height, PixelFormat format, int buffer_size = 0);
 		virtual unsigned int GenerateRenderToTexture(int width, int height, int& out_frame_buffer);
 		virtual void UpdateTexture(unsigned int texture_id, const void* buffer, int width, int height, PixelFormat format);
 		virtual void ReleaseTexture(int texture_id);

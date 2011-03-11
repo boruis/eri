@@ -26,7 +26,9 @@ namespace ERI {
 	{
 		ALPHA,
 		RGB,
-		RGBA
+		RGBA,
+		RGBA_PVR_4BPP,
+		RGBA_PVR_2BPP
 	};
 	
 	struct RenderData;
@@ -76,7 +78,7 @@ namespace ERI {
 		virtual void SetLightSpotExponent(int idx, float exponent) = 0;
 		virtual void SetLightSpotCutoff(int idx, float cutoff) = 0;
 		
-		virtual unsigned int GenerateTexture(const void* buffer, int width, int height, PixelFormat format) = 0;
+		virtual unsigned int GenerateTexture(const void* buffer, int width, int height, PixelFormat format, int buffer_size = 0) = 0;
 		virtual unsigned int GenerateRenderToTexture(int width, int height, int& out_frame_buffer) = 0;
 		virtual void UpdateTexture(unsigned int texture_id, const void* buffer, int width, int height, PixelFormat format) = 0;
 		virtual void ReleaseTexture(int texture_id) = 0;

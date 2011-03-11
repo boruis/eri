@@ -12,6 +12,7 @@
 		1B207ADF1277B02A006D3CDF /* xml_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1B207ADB1277B02A006D3CDF /* xml_helper.cpp */; };
 		1B956586126545FC00D123AF /* particle_system.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1B956584126545FC00D123AF /* particle_system.cpp */; };
 		1B99015A12814F47008DE295 /* skeleton_actor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1B99015912814F47008DE295 /* skeleton_actor.cpp */; };
+		1BC745DD132A106900F14147 /* texture_reader_pvr.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1BC745DC132A106900F14147 /* texture_reader_pvr.mm */; };
 		1D3623260D0F684500981E51 /* eriAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D3623250D0F684500981E51 /* eriAppDelegate.mm */; };
 		1D60589B0D05DD56006BFB54 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; };
 		1D60589F0D05DD5A006BFB54 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D30AB110D05D00D00671497 /* Foundation.framework */; };
@@ -59,6 +60,8 @@
 		1B956585126545FC00D123AF /* particle_system.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = particle_system.h; path = ../../src/particle_system.h; sourceTree = SOURCE_ROOT; };
 		1B99015812814F47008DE295 /* skeleton_actor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = skeleton_actor.h; path = ../../src/skeleton_actor.h; sourceTree = SOURCE_ROOT; };
 		1B99015912814F47008DE295 /* skeleton_actor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = skeleton_actor.cpp; path = ../../src/skeleton_actor.cpp; sourceTree = SOURCE_ROOT; };
+		1BC745DB132A106900F14147 /* texture_reader_pvr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = texture_reader_pvr.h; sourceTree = "<group>"; };
+		1BC745DC132A106900F14147 /* texture_reader_pvr.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = texture_reader_pvr.mm; sourceTree = "<group>"; };
 		1D30AB110D05D00D00671497 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		1D3623240D0F684500981E51 /* eriAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = eriAppDelegate.h; sourceTree = "<group>"; };
 		1D3623250D0F684500981E51 /* eriAppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = eriAppDelegate.mm; sourceTree = "<group>"; };
@@ -221,6 +224,8 @@
 				423386CD1233C75D0077CD42 /* render_context_ios.mm */,
 				423386CE1233C75D0077CD42 /* texture_reader_uikit.h */,
 				423386CF1233C75D0077CD42 /* texture_reader_uikit.mm */,
+				1BC745DB132A106900F14147 /* texture_reader_pvr.h */,
+				1BC745DC132A106900F14147 /* texture_reader_pvr.mm */,
 			);
 			name = ios;
 			path = ../../src/ios;
@@ -370,6 +375,7 @@
 				1B207ADE1277B02A006D3CDF /* mesh_actor.cpp in Sources */,
 				1B207ADF1277B02A006D3CDF /* xml_helper.cpp in Sources */,
 				1B99015A12814F47008DE295 /* skeleton_actor.cpp in Sources */,
+				1BC745DD132A106900F14147 /* texture_reader_pvr.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -386,6 +392,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = eri_Prefix.pch;
 				GCC_THUMB_SUPPORT = NO;
+				HEADER_SEARCH_PATHS = ../../../3rd/libpng;
 				INFOPLIST_FILE = "eri-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -403,6 +410,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = eri_Prefix.pch;
 				GCC_THUMB_SUPPORT = NO;
+				HEADER_SEARCH_PATHS = ../../../3rd/libpng;
 				INFOPLIST_FILE = "eri-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",

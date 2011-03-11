@@ -832,7 +832,7 @@ namespace ERI {
 		glLightf(GL_LIGHT0 + idx, GL_SPOT_CUTOFF, cutoff);
 	}
 	
-	unsigned int RendererES1::GenerateTexture(const void* buffer, int width, int height, PixelFormat format)
+	unsigned int RendererES1::GenerateTexture(const void* buffer, int width, int height, PixelFormat format, int buffer_size /*= 0*/)
 	{
 		GLuint texture;
 		glGenTextures(1, &texture);
@@ -856,6 +856,12 @@ namespace ERI {
 				break;
 			case ALPHA:
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, buffer);
+				break;
+			case RGBA_PVR_4BPP:
+				glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG, width, height, 0, buffer_size, buffer);
+				break;
+			case RGBA_PVR_2BPP:
+				glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG, width, height, 0, buffer_size, buffer);
 				break;
 			default:
 				ASSERT2(0, "invalid pixel format!");

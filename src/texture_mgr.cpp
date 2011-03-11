@@ -13,6 +13,7 @@
 
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 #include "ios/texture_reader_uikit.h"
+#include "ios/texture_reader_pvr.h"
 #include "texture_reader_libpng.h"
 #elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
 #include "texture_reader_bitmap_factory.h"
@@ -105,7 +106,11 @@ namespace ERI {
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 			PreloadTextureInfo info;
 			info.path = resource_path;
-			info.reader = new TextureReaderLibPNG(resource_path, false);
+			if (resource_path.substr(resource_path.length() - 4, 4).compare(".pvr") == 0)
+				info.reader = new TextureReaderPVR(resource_path, false);
+			else
+				info.reader = new TextureReaderLibPNG(resource_path, false);
+				//info.reader = new TextureReaderUIImage(resource_path, false);
 			preload_textures_.push_back(info);
 #endif
 		}
@@ -139,28 +144,37 @@ namespace ERI {
 		std::map<std::string, Texture*>::iterator it = texture_map_.find(resource_path);
 		if (it == texture_map_.end())
 		{
+			TextureReader* reader;
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
-			TextureReaderUIImage reader(resource_path, true);
-			//TextureReaderLibPNG reader(resource_path, true);
+			if (resource_path.substr(resource_path.length() - 4, 4).compare(".pvr") == 0)
+				reader = new TextureReaderPVR(resource_path, true);
+			else
+				reader = new TextureReaderLibPNG(resource_path, true);
+			//reader = new TextureReaderUIImage(resource_path, true);
 #elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
-			TextureReaderBitmapFactory reader(resource_path);
+			reader = new TextureReaderBitmapFactory(resource_path);
 #else
-			TextureReaderFreeImage reader(resource_path, true);
+			reader = TextureReaderFreeImage(resource_path, true);
 #endif
 
 			// TODO: check texture invalid number, maybe use int -1 is better
 			
-			if (reader.texture_id() == 0)
+			if (reader->texture_id() == 0)
+			{
+				delete reader;
 				return NULL;
+			}
 			
-			Texture* tex = new Texture(reader.texture_id(), reader.width(), reader.height());
+			Texture* tex = new Texture(reader->texture_id(), reader->width(), reader->height());
 			
 			if (keep_texture_data)
 			{
-				tex->CopyPixels(reader.texture_data());
+				tex->CopyPixels(reader->texture_data());
 			}
 			
 			texture_map_.insert(std::make_pair(resource_path, tex));
+			
+			delete reader;
 	
 			return tex;
 		}
