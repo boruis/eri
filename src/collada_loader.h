@@ -175,6 +175,13 @@ namespace ERI
 		
 		//
 		
+		void FillSingleVertexInput(const Input* input,
+															 const Src* src,
+															 int src_idx,
+															 unsigned char* buffer_data,
+															 int& buffer_offset,
+															 int& color_input_count);
+		
 		ERI::Mesh* CreateMesh(Skin* skin, const std::vector<int>& joint_node_mapping);
 		ERI::AnimClip* CreateAnimClip(Animation* anim,
 									  const std::vector<SkeletonNode*>& nodes,

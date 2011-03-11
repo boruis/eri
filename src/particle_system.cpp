@@ -537,10 +537,10 @@ namespace ERI
 		int vertex_num = particle_num * 4;
 		
 		if (vertices_) delete [] vertices_;
-		vertices_ = new vertex_3_pos_tex_color[vertex_num];
+		vertices_ = new vertex_3_pos_color_tex[vertex_num];
 		
 		glBindBuffer(GL_ARRAY_BUFFER, render_data_.vertex_buffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_3_pos_tex_color) * vertex_num, vertices_, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_3_pos_color_tex) * vertex_num, vertices_, GL_DYNAMIC_DRAW);
 		
 		if (render_data_.index_buffer == 0)
 		{
@@ -570,7 +570,7 @@ namespace ERI
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short) * index_num, indices_, GL_STATIC_DRAW);
 		
 		render_data_.vertex_type = GL_TRIANGLES;
-		render_data_.vertex_format = POS_TEX_COLOR_3;
+		render_data_.vertex_format = POS_COLOR_TEX_3;
 		render_data_.vertex_count = 0;
 		render_data_.index_count = 0;
 	}
@@ -607,55 +607,55 @@ namespace ERI
 				vertices_[start_idx].position[0] = p->pos.x + up.x - right.x;
 				vertices_[start_idx].position[1] = p->pos.y + up.y - right.y;
 				vertices_[start_idx].position[2] = p->pos.z;
+				vertices_[start_idx].color[0] = static_cast<unsigned char>(p->color.r * 255.0f);
+				vertices_[start_idx].color[1] = static_cast<unsigned char>(p->color.g * 255.0f);
+				vertices_[start_idx].color[2] = static_cast<unsigned char>(p->color.b * 255.0f);
+				vertices_[start_idx].color[3] = static_cast<unsigned char>(p->color.a * 255.0f);
 				vertices_[start_idx].tex_coord[0] = uv_start_.x;
 				vertices_[start_idx].tex_coord[1] = uv_start_.y;
-				vertices_[start_idx].color[0] = p->color.r;
-				vertices_[start_idx].color[1] = p->color.g;
-				vertices_[start_idx].color[2] = p->color.b;
-				vertices_[start_idx].color[3] = p->color.a;
 
 				++start_idx;
 				
 				vertices_[start_idx].position[0] = p->pos.x + up.x + right.x;
 				vertices_[start_idx].position[1] = p->pos.y + up.y + right.y;
 				vertices_[start_idx].position[2] = p->pos.z;
+				vertices_[start_idx].color[0] = static_cast<unsigned char>(p->color.r * 255.0f);
+				vertices_[start_idx].color[1] = static_cast<unsigned char>(p->color.g * 255.0f);
+				vertices_[start_idx].color[2] = static_cast<unsigned char>(p->color.b * 255.0f);
+				vertices_[start_idx].color[3] = static_cast<unsigned char>(p->color.a * 255.0f);
 				vertices_[start_idx].tex_coord[0] = uv_start_.x + uv_size_.x;
 				vertices_[start_idx].tex_coord[1] = uv_start_.y;
-				vertices_[start_idx].color[0] = p->color.r;
-				vertices_[start_idx].color[1] = p->color.g;
-				vertices_[start_idx].color[2] = p->color.b;
-				vertices_[start_idx].color[3] = p->color.a;
 
 				++start_idx;
 				
 				vertices_[start_idx].position[0] = p->pos.x - up.x - right.x;
 				vertices_[start_idx].position[1] = p->pos.y - up.y - right.y;
 				vertices_[start_idx].position[2] = p->pos.z;
+				vertices_[start_idx].color[0] = static_cast<unsigned char>(p->color.r * 255.0f);
+				vertices_[start_idx].color[1] = static_cast<unsigned char>(p->color.g * 255.0f);
+				vertices_[start_idx].color[2] = static_cast<unsigned char>(p->color.b * 255.0f);
+				vertices_[start_idx].color[3] = static_cast<unsigned char>(p->color.a * 255.0f);
 				vertices_[start_idx].tex_coord[0] = uv_start_.x;
 				vertices_[start_idx].tex_coord[1] = uv_start_.y + uv_size_.y;
-				vertices_[start_idx].color[0] = p->color.r;
-				vertices_[start_idx].color[1] = p->color.g;
-				vertices_[start_idx].color[2] = p->color.b;
-				vertices_[start_idx].color[3] = p->color.a;
 
 				++start_idx;
 				
 				vertices_[start_idx].position[0] = p->pos.x - up.x + right.x;
 				vertices_[start_idx].position[1] = p->pos.y - up.y + right.y;
 				vertices_[start_idx].position[2] = p->pos.z;
+				vertices_[start_idx].color[0] = static_cast<unsigned char>(p->color.r * 255.0f);
+				vertices_[start_idx].color[1] = static_cast<unsigned char>(p->color.g * 255.0f);
+				vertices_[start_idx].color[2] = static_cast<unsigned char>(p->color.b * 255.0f);
+				vertices_[start_idx].color[3] = static_cast<unsigned char>(p->color.a * 255.0f);
 				vertices_[start_idx].tex_coord[0] = uv_start_.x + uv_size_.x;
 				vertices_[start_idx].tex_coord[1] = uv_start_.y + uv_size_.y;
-				vertices_[start_idx].color[0] = p->color.r;
-				vertices_[start_idx].color[1] = p->color.g;
-				vertices_[start_idx].color[2] = p->color.b;
-				vertices_[start_idx].color[3] = p->color.a;
 				
 				++in_use_num;
 			}
 		}
 		
 		glBindBuffer(GL_ARRAY_BUFFER, render_data_.vertex_buffer);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex_3_pos_tex_color) * in_use_num * 4, vertices_);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex_3_pos_color_tex) * in_use_num * 4, vertices_);
 		
 		render_data_.vertex_count = in_use_num * 4;
 		render_data_.index_count = in_use_num * 6;

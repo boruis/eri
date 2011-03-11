@@ -287,18 +287,28 @@ namespace ERI
 		unsigned char* buffer_data = static_cast<unsigned char*>(buffer);
 		int vertex_total_num = 0;
 		
+		std::vector<Src*> input_srcs;
+		Src* src;
+		Input* input;
+		
+		int vertex_num, vertex_stride;
+		int buffer_offset;
+		int src_idx;
+		
+		// TODO: now only support 1 color input, and use it as vertex color
+		int color_input_count;
+		
 		for (int tri_idx = 0; tri_idx < current_load_mesh_->triangles_array.size(); ++tri_idx)
 		{
 			Triangles* tri = current_load_mesh_->triangles_array[tri_idx];
 			int input_num = tri->inputs.size();
 			
-			std::vector<Src*> input_srcs;
-			Src* src;
+			input_srcs.clear();
 			for (int i = 0; i < input_num; ++i)
 			{
 				if (tri->inputs[i]->semantic == VERTEX)
 				{
-					Input* input = current_load_mesh_->vertices_map[tri->inputs[i]->src];
+					input = current_load_mesh_->vertices_map[tri->inputs[i]->src];
 					src = current_load_mesh_->src_map[input->src];
 				}
 				else
@@ -308,47 +318,28 @@ namespace ERI
 				input_srcs.push_back(src);
 			}
 			
-			int vertex_num = tri->count * 3;
-			int vertex_stride = tri->primitives.size() / vertex_num;
+			vertex_num = tri->count * 3;
+			vertex_stride = tri->primitives.size() / vertex_num;
 			
 			ASSERT((vertex_stride * vertex_num) == tri->primitives.size());
-			
-			int buffer_offset;
-			int src_idx, src_stride, src_want_stride;
 			
 			for (int i = 0; i < vertex_num; ++i)
 			{
 				buffer_offset = 0;
+				color_input_count = 0;
+				
+				// TODO: vertex data order need to match collada input order, should change implement way
 				
 				for (int j = 0; j < input_num; ++j)
 				{
 					src_idx = tri->primitives[i * vertex_stride + tri->inputs[j]->offset];
-					src_stride = src_want_stride = input_srcs[j]->stride;
-					
-					// TODO: check this, some resource's TEXCOORD stride will greater than 2 (S,T,P), we can only use 2
-					if (tri->inputs[j]->semantic == TEXCOORD)
-						src_want_stride = 2;
-					
-					for (int k = 0; k < src_want_stride; ++k)
-					{
-						if (tri->inputs[j]->semantic == TEXCOORD && k == 1)
-						{
-							float invert_v = 1.0f - input_srcs[j]->datas[src_idx * src_stride + k];
-							memcpy(&buffer_data[buffer_offset + k * 4],
-										 &invert_v,
-										 4);
-						}
-						else
-						{
-							memcpy(&buffer_data[buffer_offset + k * 4],
-										 &input_srcs[j]->datas[src_idx * src_stride + k],
-										 4);
-						}
-						
-						ASSERT(reinterpret_cast<long>(&buffer_data[buffer_offset + k * 4]) < reinterpret_cast<long>(buffer_data) + current_vertex_size_);
-					}
-					
-					buffer_offset += input_srcs[j]->stride * 4;
+										
+					FillSingleVertexInput(tri->inputs[j],
+																input_srcs[j],
+																src_idx,
+																buffer_data,
+																buffer_offset,
+																color_input_count);
 				}
 				
 				buffer_data += current_vertex_size_;
@@ -527,6 +518,90 @@ namespace ERI
 		return share_skeleton;
 	}
 	
+	void ColladaLoader::FillSingleVertexInput(const Input* input,
+																						const Src* src,
+																						int src_idx,
+																						unsigned char* buffer_data,
+																						int& buffer_offset,
+																						int& color_input_count)
+	{
+		float color_values[4];
+		bool is_color_for_alpha;
+		float invert_v;
+		
+		if (input->semantic == COLOR)
+		{
+			++color_input_count;
+			if (color_input_count > 1)
+			{
+				return;
+			}
+			else
+			{
+				ASSERT(src->stride <= 4);
+				
+				is_color_for_alpha = true;
+				for (int k = 0; k < src->stride; ++k)
+				{
+					memcpy(&color_values[k],
+								 &src->datas[src_idx * src->stride + k], 4);
+					
+					if (k > 0 && color_values[k] != color_values[k - 1])
+						is_color_for_alpha = false;
+				}
+				
+				unsigned char* color_buff = &buffer_data[buffer_offset];
+				if (is_color_for_alpha)
+				{
+					color_buff[0] = color_buff[1] = color_buff[2] = 255;
+					color_buff[3] = static_cast<unsigned char>(color_values[0] * 255);
+				}
+				else
+				{
+					for (int k = 0; k < src->stride; ++k)
+					{
+						color_buff[k] = static_cast<unsigned char>(color_values[k] * 255);
+					}
+					if (src->stride < 4)
+						color_buff[3] = 255;
+				}
+				
+				buffer_offset += 4;
+				
+				//// float color
+				//float* color_buff = (float*)&buffer_data[buffer_offset];
+				//color_buff[0] = color_buff[1] = color_buff[2] = 1.0f;
+				//color_buff[3] =*(float*)(&src->datas[src_idx * src->stride]);
+				//buffer_offset += 16;
+			}
+		}
+		else if (input->semantic == TEXCOORD)
+		{
+			// TODO: check this, some resource's TEXCOORD stride will greater than 2 (S,T,P), we can only use 2
+			
+			memcpy(&buffer_data[buffer_offset],
+						 &src->datas[src_idx * src->stride], 4);
+			
+			// TODO: check this, collada export's v is invert in our renderer
+			invert_v = 1.0f - src->datas[src_idx * src->stride + 1];
+			memcpy(&buffer_data[buffer_offset + 4], &invert_v, 4);
+			
+			buffer_offset += 8;
+		}
+		else
+		{
+			for (int k = 0; k < src->stride; ++k)
+			{
+				memcpy(&buffer_data[buffer_offset + k * 4],
+							 &src->datas[src_idx * src->stride + k], 4);
+				
+				ASSERT(reinterpret_cast<long>(&buffer_data[buffer_offset + k * 4]) < reinterpret_cast<long>(buffer_data) + current_vertex_size_);
+			}
+			
+			buffer_offset += src->stride * 4;
+		}
+	}
+	
 	ERI::Mesh* ColladaLoader::CreateMesh(Skin* skin, const std::vector<int>& joint_node_mapping)
 	{
 		ERI::Mesh* mesh = new ERI::Mesh;
@@ -542,7 +617,10 @@ namespace ERI
 		int vertex_num, vertex_stride;
 		unsigned char* buffer_data;
 		int buffer_offset;
-		int src_idx, src_stride, src_want_stride;
+		int src_idx;
+		
+		// TODO: now only support 1 color input, and use it as vertex color
+		int color_input_count;
 		
 		ERI::Vertex* vertex;
 		
@@ -578,61 +656,22 @@ namespace ERI
 				
 				buffer_data = static_cast<unsigned char*>(vertex->data);
 				buffer_offset = 0;
+				color_input_count = 0;
 				
 				// TODO: vertex data order need to match collada input order, should change implement way
-
-				// TODO: now only support 1 color input, and use it as vertex color
-				int color_input_count = 0;
 				
 				for (int j = 0; j < input_num; ++j)
 				{
 					src_idx = tri->primitives[i * vertex_stride + tri->inputs[j]->offset];
-					src_stride = src_want_stride = input_srcs[j]->stride;
 					
-					if (tri->inputs[j]->semantic == COLOR)
-					{
-						++color_input_count;
-						if (color_input_count > 1)
-						{
-							continue;
-						}
-						else
-						{
-							float* color_buff = (float*)&buffer_data[buffer_offset];
-							color_buff[0] = color_buff[1] = color_buff[2] = 1.0f;
-							color_buff[3] =*(float*)(&input_srcs[j]->datas[src_idx * src_stride]);
-							buffer_offset += 16;
-						}
-					}
-					else
-					{
-						// TODO: check this, some resource's TEXCOORD stride will greater than 2 (S,T,P), we can only use 2
-						if (tri->inputs[j]->semantic == TEXCOORD)
-							src_want_stride = 2;
+					FillSingleVertexInput(tri->inputs[j],
+																input_srcs[j],
+																src_idx,
+																buffer_data,
+																buffer_offset,
+																color_input_count);
 
-						for (int k = 0; k < src_want_stride; ++k)
-						{
-							if (tri->inputs[j]->semantic == TEXCOORD && k == 1)
-							{
-								float invert_v = 1.0f - input_srcs[j]->datas[src_idx * src_stride + k];
-								memcpy(&buffer_data[buffer_offset + k * 4],
-											 &invert_v,
-											 4);
-							}
-							else
-							{
-								memcpy(&buffer_data[buffer_offset + k * 4],
-											 &input_srcs[j]->datas[src_idx * src_stride + k],
-											 4);
-							}
-							
-							ASSERT(reinterpret_cast<long>(&buffer_data[buffer_offset + k * 4]) < reinterpret_cast<long>(buffer_data) + current_vertex_size_);
-						}
-
-						buffer_offset += input_srcs[j]->stride * 4;
-					}
-
-					//
+					// skin vertex weight
 					
 					if (skin && tri->inputs[j]->semantic == VERTEX)
 					{

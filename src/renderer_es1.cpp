@@ -104,6 +104,9 @@ namespace ERI {
 		bg_color_(Color(0.0f, 0.0f, 0.0f, 0.0f)),
 		blend_src_factor_(GL_SRC_ALPHA),
 		blend_dst_factor_(GL_ONE_MINUS_SRC_ALPHA),
+		//// pre-multiplied alpha?
+		//blend_src_factor_(GL_ONE),
+		//blend_dst_factor_(GL_ONE_MINUS_SRC_ALPHA),
 		alpha_test_func_(GL_GREATER),
 		alpha_test_ref_(0.0f)
 	{
@@ -169,12 +172,15 @@ namespace ERI {
 			glEnable(GL_DEPTH_TEST);
 		}
 		
+		//glDisable(GL_DITHER);
+		//glDisable(GL_MULTISAMPLE);
+		
 		glEnable(GL_SCISSOR_TEST);
 		glEnable(GL_CULL_FACE);
-		glBlendFunc(blend_src_factor_, blend_dst_factor_);
-		//glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); // because pre-multiplied alpha?
 		glEnable(GL_COLOR_MATERIAL);
 		glEnableClientState(GL_VERTEX_ARRAY);
+		
+		glBlendFunc(blend_src_factor_, blend_dst_factor_);
 
 		SetBgColor(bg_color_);
 		
@@ -395,15 +401,15 @@ namespace ERI {
 					use_vertex_color = true;
 					break;
 					
-				case POS_TEX_COLOR_3:
+				case POS_COLOR_TEX_3:
 					vertex_pos_size = 3;
-					vertex_stride = sizeof(vertex_3_pos_tex_color);
-					vertex_pos_offset = (void*)offsetof(vertex_3_pos_tex_color, position);
-					vertex_tex_coord_offset[0] = (void*)offsetof(vertex_3_pos_tex_color, tex_coord);
+					vertex_stride = sizeof(vertex_3_pos_color_tex);
+					vertex_pos_offset = (void*)offsetof(vertex_3_pos_color_tex, position);
+					vertex_tex_coord_offset[0] = (void*)offsetof(vertex_3_pos_color_tex, tex_coord);
 					for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
 						vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
 					}
-					vertex_color_offset = (void*)offsetof(vertex_3_pos_tex_color, color);
+					vertex_color_offset = (void*)offsetof(vertex_3_pos_color_tex, color);
 					use_vertex_color = true;
 					break;
 
@@ -438,7 +444,7 @@ namespace ERI {
 			}
 			if (vertex_color_enable_)
 			{
-				glColorPointer(4, GL_FLOAT, vertex_stride, vertex_color_offset);
+				glColorPointer(4, GL_UNSIGNED_BYTE, vertex_stride, vertex_color_offset);
 			}
 			// tex coord
 			if (texture_enable_)

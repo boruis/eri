@@ -286,7 +286,7 @@ namespace ERI
 		std::vector<Particle*>		particles_;
 		int							first_available_particle_idx_;
 		
-		vertex_3_pos_tex_color*		vertices_;
+		vertex_3_pos_color_tex*		vertices_;
 		unsigned short*				indices_;
 		
 		Vector2		system_scale_;

@@ -40,8 +40,8 @@ namespace ERI {
 	
 	struct vertex_2_pos_tex_color {
 		GLfloat position[2];
+		GLbyte	color[4];
 		GLfloat tex_coord[2];
-		GLfloat color[4];
 	};
 
 	struct vertex_3_pos_normal {
@@ -58,14 +58,14 @@ namespace ERI {
 	struct vertex_3_pos_normal_color_tex {
 		GLfloat position[3];
 		GLfloat normal[3];
-		GLfloat color[4];
+		GLbyte	color[4];
 		GLfloat tex_coord[2];
 	};
 	
-	struct vertex_3_pos_tex_color {
+	struct vertex_3_pos_color_tex {
 		GLfloat position[3];
+		GLbyte	color[4];
 		GLfloat tex_coord[2];
-		GLfloat color[4];
 	};
 	
 	enum VertexFormat
@@ -76,7 +76,7 @@ namespace ERI {
 		POS_NORMAL_3,
 		POS_NORMAL_TEX_3,
 		POS_NORMAL_COLOR_TEX_3,
-		POS_TEX_COLOR_3,
+		POS_COLOR_TEX_3,
 		INVALID_VERTEX_FORMAT
 	};
 
