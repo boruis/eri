@@ -59,6 +59,7 @@ static bool	in_multi_move;
 - (void)layoutSubviews
 {
 	ERI::Root::Ins().renderer()->BackingLayer(self.layer);
+	ERI::Root::Ins().Update();
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event

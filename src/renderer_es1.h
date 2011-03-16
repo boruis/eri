@@ -123,6 +123,9 @@ namespace ERI {
 	private:
 		int GenerateFrameBuffer();
 		void ReleaseFrameBuffer(int frame_buffer);
+		
+		void ActiveTextureUnit(GLenum idx);
+		void ClientActiveTextureUnit(GLenum idx);
 
 		void UpdateLightTransform();
 		void AdjustProjectionForViewOrientation();
@@ -135,7 +138,6 @@ namespace ERI {
 		int backing_width_backup_, backing_height_backup_;
 		int width_, height_;
 		
-		GLuint current_frame_buffer_;
 		GLuint color_render_buffer_;
 		
 		GLuint frame_buffers_[MAX_FRAMEBUFFER];
@@ -155,7 +157,9 @@ namespace ERI {
 		
 		bool texture_enable_;
 		bool texture_unit_enable_[MAX_TEXTURE_UNIT];
-		
+		TextureEnvMode	texture_unit_env_mode_[MAX_TEXTURE_UNIT];
+
+		GLenum now_active_texture_unit_, now_client_active_texture_unit_;
 		unsigned int now_texture_;
 		
 		Color bg_color_;

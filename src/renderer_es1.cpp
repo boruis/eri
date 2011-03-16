@@ -88,7 +88,6 @@ namespace ERI {
 		context_(NULL),
 		width_(0),
 		height_(0),
-		current_frame_buffer_(0),
 		color_render_buffer_(0),
 		depth_buffer_(0),
 		use_depth_buffer_(true),
@@ -100,6 +99,8 @@ namespace ERI {
 		blend_enable_(false),
 		alpha_test_enable_(false),
 		texture_enable_(false),
+		now_active_texture_unit_(0),
+		now_client_active_texture_unit_(0),
 		now_texture_(0),
 		bg_color_(Color(0.0f, 0.0f, 0.0f, 0.0f)),
 		blend_src_factor_(GL_SRC_ALPHA),
@@ -112,6 +113,11 @@ namespace ERI {
 	{
 		memset(frame_buffers_, 0, sizeof(frame_buffers_));
 		memset(texture_unit_enable_, 0, sizeof(texture_unit_enable_));
+		
+		for (int i = 0; i < MAX_TEXTURE_UNIT; ++i)
+		{
+			texture_unit_env_mode_[i] = MODE_MODULATE;
+		}
 	}
 	
 	RendererES1::~RendererES1()
@@ -190,7 +196,6 @@ namespace ERI {
 	void RendererES1::BackingLayer(void* layer)
 	{
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
-
 		ASSERT(context_);
 
 		// Create default framebuffer object. The backing will be allocated for the current layer in -resizeFromLayer
@@ -229,14 +234,7 @@ namespace ERI {
 			}
 		}
 		
-		current_frame_buffer_ = frame_buffers_[kDefaultFrameBufferIdx];
-		
 		Resize(backing_width, backing_height);
-		
-		// clear initial display
-		glClear(clear_bits_);
-		context_->Present();
-
 #endif
 	}
 	
@@ -259,12 +257,6 @@ namespace ERI {
 		// This call is redundant, but needed if dealing with multiple contexts.
 		if (context_) context_->SetAsCurrent();
 
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
-		// This application only creates a single default framebuffer which is already bound at this point.
-		// This call is redundant, but needed if dealing with multiple framebuffers.
-		glBindFramebufferOES(GL_FRAMEBUFFER_OES, current_frame_buffer_);
-#endif
-	
 		EnableDepthWrite(true);
 		glClear(clear_bits_);
 	}
@@ -276,6 +268,13 @@ namespace ERI {
 		// This call is redundant, but needed if dealing with multiple renderbuffers.
 		glBindRenderbufferOES(GL_RENDERBUFFER_OES, color_render_buffer_);
 #endif
+		
+		// TODO: check support GL_EXT_discard_framebuffer
+		if (use_depth_buffer_)
+		{
+			GLenum attachments[] = { GL_DEPTH_ATTACHMENT_OES};
+			glDiscardFramebufferEXT(GL_FRAMEBUFFER_OES, 1, attachments);
+		}
 		
 		if (context_) context_->Present();
 	}
@@ -463,7 +462,8 @@ namespace ERI {
 				{
 					if (texture_unit_enable_[i])
 					{
-						glClientActiveTexture(GL_TEXTURE0 + i);
+						ClientActiveTextureUnit(GL_TEXTURE0 + i);
+						
 						glTexCoordPointer(2, GL_FLOAT, vertex_stride, vertex_tex_coord_offset[i]);
 					}
 				}
@@ -509,7 +509,7 @@ namespace ERI {
 		glViewport(0, 0, backing_width_, backing_height_);
 
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
-		current_frame_buffer_ = frame_buffer;
+		glBindFramebufferOES(GL_FRAMEBUFFER_OES, frame_buffer);
 #endif
 	}
 
@@ -537,7 +537,7 @@ namespace ERI {
 		glViewport(0, 0, backing_width_, backing_height_);
 
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
-		current_frame_buffer_ = frame_buffers_[kDefaultFrameBufferIdx];
+		glBindFramebufferOES(GL_FRAMEBUFFER_OES, frame_buffers_[kDefaultFrameBufferIdx]);
 #endif
 	}
 	
@@ -627,7 +627,7 @@ namespace ERI {
 	{
 		GLenum tex_enum = GL_TEXTURE0 + idx;
 		
-		glActiveTexture(tex_enum);
+		ActiveTextureUnit(tex_enum);
 		
 		if (unit.texture)
 		{
@@ -660,9 +660,19 @@ namespace ERI {
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, kParamWraps[unit.params.wrap_t]);
 			}
 		}
-			
-		if (unit.envs.mode == MODE_COMBINE)
+		
+		if (unit.envs.mode != MODE_COMBINE)
 		{
+			if (unit.envs.mode != texture_unit_env_mode_[idx])
+			{
+				texture_unit_env_mode_[idx] = unit.envs.mode;
+				glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, kEnvModes[unit.envs.mode]);
+			}
+		}
+		else
+		{
+			texture_unit_env_mode_[idx] = MODE_COMBINE;
+			
 			if (unit.envs.is_use_constant_color)
 			{
 				GLfloat color[4] = { unit.envs.constant_color.r, unit.envs.constant_color.g, unit.envs.constant_color.b, unit.envs.constant_color.a };
@@ -670,7 +680,7 @@ namespace ERI {
 			}
 			
 			glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-
+			
 			glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, kEnvOps[unit.envs.combine_rgb]);
 			glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, kEnvSrcs[unit.envs.src0_rgb]);
 			glTexEnvi(GL_TEXTURE_ENV, GL_SRC1_RGB, kEnvSrcs[unit.envs.src1_rgb]);
@@ -687,16 +697,13 @@ namespace ERI {
 			glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, kEnvOperands[unit.envs.operand1_alpha]);
 			glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_ALPHA, kEnvOperands[unit.envs.operand2_alpha]);
 		}
-		else
-		{
-			glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, kEnvModes[unit.envs.mode]);
-		}
 
 		if (!texture_unit_enable_[idx])
 		{
 			glEnable(GL_TEXTURE_2D);
 			
-			glClientActiveTexture(GL_TEXTURE0 + idx);
+			ClientActiveTextureUnit(tex_enum);
+
 			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		}
 		
@@ -707,10 +714,14 @@ namespace ERI {
 	{
 		if (texture_unit_enable_[idx])
 		{
-			glActiveTexture(GL_TEXTURE0 + idx);
+			GLenum tex_enum = GL_TEXTURE0 + idx;
+			
+			ActiveTextureUnit(tex_enum);
+			
 			glDisable(GL_TEXTURE_2D);
 			
-			glClientActiveTexture(GL_TEXTURE0 + idx);
+			ClientActiveTextureUnit(tex_enum);
+			
 			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		}
 		
@@ -846,6 +857,7 @@ namespace ERI {
 		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		
+		// TODO: check support GL_IMG_texture_compression_pvrtc
 		switch (format)
 		{
 			case RGBA:
@@ -1123,6 +1135,24 @@ namespace ERI {
 			}
 		}
 #endif
+	}
+	
+	void RendererES1::ActiveTextureUnit(GLenum idx)
+	{
+		if (now_active_texture_unit_ != idx)
+		{
+			now_active_texture_unit_ = idx;
+			glActiveTexture(idx);
+		}
+	}
+	
+	void RendererES1::ClientActiveTextureUnit(GLenum idx)
+	{
+		if (now_client_active_texture_unit_ != idx)
+		{
+			now_client_active_texture_unit_ = idx;
+			glClientActiveTexture(idx);
+		}
 	}
 	
 	void RendererES1::UpdateLightTransform()
