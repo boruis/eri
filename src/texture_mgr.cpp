@@ -154,7 +154,7 @@ namespace ERI {
 #elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
 			reader = new TextureReaderBitmapFactory(resource_path);
 #else
-			reader = TextureReaderFreeImage(resource_path, true);
+			reader = new TextureReaderFreeImage(resource_path, true);
 #endif
 
 			// TODO: check texture invalid number, maybe use int -1 is better

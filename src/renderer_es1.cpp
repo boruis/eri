@@ -267,7 +267,6 @@ namespace ERI {
 		// This application only creates a single color renderbuffer which is already bound at this point.
 		// This call is redundant, but needed if dealing with multiple renderbuffers.
 		glBindRenderbufferOES(GL_RENDERBUFFER_OES, color_render_buffer_);
-#endif
 		
 		// TODO: check support GL_EXT_discard_framebuffer
 		if (use_depth_buffer_)
@@ -275,6 +274,7 @@ namespace ERI {
 			GLenum attachments[] = { GL_DEPTH_ATTACHMENT_OES};
 			glDiscardFramebufferEXT(GL_FRAMEBUFFER_OES, 1, attachments);
 		}
+#endif
 		
 		if (context_) context_->Present();
 	}
@@ -869,12 +869,14 @@ namespace ERI {
 			case ALPHA:
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, buffer);
 				break;
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 			case RGBA_PVR_4BPP:
 				glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG, width, height, 0, buffer_size, buffer);
 				break;
 			case RGBA_PVR_2BPP:
 				glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG, width, height, 0, buffer_size, buffer);
 				break;
+#endif
 			default:
 				ASSERT2(0, "invalid pixel format!");
 				break;
