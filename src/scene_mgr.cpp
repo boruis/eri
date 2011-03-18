@@ -495,24 +495,48 @@ namespace ERI {
 		}
 	}
 
-	Vector3 SceneMgr::ScreenToWorldPos(int screen_x, int screen_y)
+	Vector3 SceneMgr::ScreenToWorldPos(int screen_x, int screen_y, CameraActor* cam /*= NULL*/)
 	{
-		// TODO: perspective? which cam?
+		// TODO: perspective?
 		
 		Vector3 world_pos;
 		
 		Vector2 cam_pos;
 		float cam_zoom = 1.0f;
-		if (current_cam_)
+		CameraActor* use_cam = cam ? cam : default_cam_;
+		
+		if (use_cam)
 		{
-			cam_pos = current_cam_->GetPos();
-			cam_zoom = current_cam_->ortho_zoom();
+			cam_pos = use_cam->GetPos();
+			cam_zoom = use_cam->ortho_zoom();
 		}
 		
 		world_pos.x = (screen_x - Root::Ins().renderer()->width() / 2) / cam_zoom + cam_pos.x;
 		world_pos.y = (screen_y - Root::Ins().renderer()->height() / 2) / cam_zoom + cam_pos.y;
 		
 		return world_pos;
+	}
+	
+	Vector2 SceneMgr::WorldToScreenPos(const Vector3& world_pos, CameraActor* cam /*= NULL*/)
+	{
+		// TODO: perspective?
+		
+		Vector2 screen_pos;
+		
+		Vector2 cam_pos;
+		float cam_zoom = 1.0f;
+		CameraActor* use_cam = cam ? cam : default_cam_;
+		
+		if (use_cam)
+		{
+			cam_pos = use_cam->GetPos();
+			cam_zoom = use_cam->ortho_zoom();
+		}
+		
+		screen_pos.x = (world_pos.x - cam_pos.x) * cam_zoom + Root::Ins().renderer()->width() / 2;
+		screen_pos.y = (world_pos.y - cam_pos.y) * cam_zoom + Root::Ins().renderer()->height() / 2;
+		
+		return screen_pos;
 	}
 
 	SceneActor* SceneMgr::GetHitActor(const Vector3& pos)
