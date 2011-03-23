@@ -320,6 +320,26 @@ namespace ERI {
 		Vector2	dir;
 	};
 	
+	struct Segment2
+	{
+		Segment2(const Vector2& _begin, const Vector2& _end) : begin(_begin), end(_end)
+		{
+			ComputeCenterDirExtent();
+		}
+		
+		void ComputeCenterDirExtent()
+		{
+			center = (begin + end) * 0.5f;
+			dir = end - begin;
+			extent = dir.Normalize() * 0.5f;
+		}
+		
+		Vector2	begin, end;
+		Vector2	center;
+		Vector2	dir;
+		float	extent;
+	};
+	
 	struct Circle2
 	{
 		Vector2	center;
@@ -339,6 +359,7 @@ namespace ERI {
 		Vector2 max;
 	};
 
+	float GetPointSegment2DistanceSquared(const Vector2& point, const Segment2& segment);
 	float GetPointBox2DistanceSquared(const Vector2& point, const Box2& box);
 	IntersectionType CheckIntersectRayRay2(const Ray2& ray1, const Ray2& ray2, Vector2* out_intersect_pos);
 	bool IsIntersectLineCircle2(const Line2& line, const Circle2& circle, std::vector<float>* out_intersect_length);

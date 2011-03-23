@@ -707,6 +707,28 @@ namespace ERI {
 
 #pragma mark Intersection
 	
+	float GetPointSegment2DistanceSquared(const Vector2& point, const Segment2& segment)
+	{
+		Vector2 diff = point - segment.center;
+		float param = segment.dir.DotProduct(diff);
+		
+		Vector2 closest_point;
+		
+		if (-segment.extent < param)
+		{
+			if (param < segment.extent)
+				closest_point = segment.center + segment.dir * param;
+			else
+				closest_point = segment.end;
+		}
+		else
+		{
+			closest_point = segment.begin;
+		}
+		
+		return (closest_point - point).LengthSquared();
+	}
+	
 	float GetPointBox2DistanceSquared(const Vector2& point, const Box2& box)
 	{
 		// Work in the box's coordinate system.
