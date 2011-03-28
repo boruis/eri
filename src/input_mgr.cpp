@@ -60,6 +60,11 @@ namespace ERI {
 	{
 		if (handler_) handler_->OverMove(event);
 	}
+	
+	void InputMgr::RightClick(const InputEvent& event)
+	{
+		if (handler_) handler_->RightClick(event);
+	}
 
 	void InputMgr::KeyDown(const std::string& characters, InputKeyCode code /*= KEY_NONE*/)
 	{

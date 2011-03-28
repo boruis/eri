@@ -14,6 +14,7 @@
 #include "math_helper.h"
 
 float mouse_down_x, mouse_down_y;
+float right_mouse_down_x, right_mouse_down_y;
 
 @implementation GLView
 
@@ -40,6 +41,14 @@ float mouse_down_x, mouse_down_y;
 	
 	mouse_down_x = pos.x;
 	mouse_down_y = pos.y;
+}
+
+- (void)rightMouseDown:(NSEvent *)event
+{
+	NSPoint pos = [self convertPoint:[event locationInWindow] fromView:nil];
+	
+	right_mouse_down_x = pos.x;
+	right_mouse_down_y = pos.y;
 }
 
 - (void)mouseMoved:(NSEvent *)event
@@ -72,6 +81,17 @@ float mouse_down_x, mouse_down_y;
 	if (ERI::Abs(pos.x - mouse_down_x) < 10 && ERI::Abs(pos.y - mouse_down_y) < 10)
 	{
 		ERI::Root::Ins().input_mgr()->Click(e);
+	}
+}
+
+- (void)rightMouseUp:(NSEvent *)event
+{
+	NSPoint pos = [self convertPoint:[event locationInWindow] fromView:nil];
+	
+	if (ERI::Abs(pos.x - right_mouse_down_x) < 10 && ERI::Abs(pos.y - right_mouse_down_y) < 10)
+	{
+		ERI::InputEvent e(0, pos.x, pos.y);
+		ERI::Root::Ins().input_mgr()->RightClick(e);
 	}
 }
 

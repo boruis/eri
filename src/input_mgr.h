@@ -44,6 +44,7 @@ namespace ERI {
 		
 		virtual void Scroll(const InputEvent& event) {}
 		virtual void OverMove(const InputEvent& event) {}
+		virtual void RightClick(const InputEvent& event) {}
 		virtual void KeyDown(const std::string& characters, InputKeyCode code) {}
 		
 		virtual void Accelerate(const Vector3& g) {}
@@ -65,6 +66,7 @@ namespace ERI {
 
 		void Scroll(const InputEvent& event);
 		void OverMove(const InputEvent& event);
+		void RightClick(const InputEvent& event);
 		void KeyDown(const std::string& characters, InputKeyCode code = KEY_NONE);
 
 		void Accelerate(const Vector3& g);
