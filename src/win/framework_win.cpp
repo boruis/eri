@@ -35,6 +35,8 @@ struct WinInitInfo
 
 static int mouse_down_x = 0;
 static int mouse_down_y = 0;
+static int right_mouse_down_x = 0;
+static int right_mouse_down_y = 0;
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -114,6 +116,18 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 
+	case WM_RBUTTONDOWN:
+		{
+			int screen_x = LOWORD(lParam);
+			int screen_y = win_init_info->height - HIWORD(lParam);
+
+			right_mouse_down_x = screen_x;
+			right_mouse_down_y = screen_y;
+
+			return 0;
+		}
+		break;
+
 	case WM_LBUTTONUP:
 		{
 			int screen_x = LOWORD(lParam);
@@ -128,6 +142,23 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (ERI::Abs(screen_x - mouse_down_x) < 10 && ERI::Abs(screen_y - mouse_down_y) < 10)
 			{
 				Root::Ins().input_mgr()->Click(e);
+			}
+
+			return 0;
+		}
+		break;
+
+	case WM_RBUTTONUP:
+		{
+			int screen_x = LOWORD(lParam);
+			int screen_y = win_init_info->height - HIWORD(lParam);
+
+			if (ERI::Abs(screen_x - right_mouse_down_x) < 10 && ERI::Abs(screen_y - right_mouse_down_y) < 10)
+			{
+				InputEvent e;
+				e.x = screen_x;
+				e.y = screen_y;
+				Root::Ins().input_mgr()->RightClick(e);
 			}
 
 			return 0;
