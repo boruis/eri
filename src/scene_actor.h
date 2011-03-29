@@ -144,6 +144,9 @@ namespace ERI {
 		
 		inline const SceneActor* parent() const { return parent_; }
 		
+		bool IsInFrustum();
+		inline const Sphere* bounding_sphere() { return bounding_sphere_; }
+		
 		friend class SceneMgr;
 			
 	protected:
@@ -161,6 +164,9 @@ namespace ERI {
 		bool			is_view_depth_dirty_;
 		
 		UserData*		user_data_;
+		
+		Sphere*			bounding_sphere_;
+		Sphere*			bounding_sphere_world_;
 		
 	private:
 		void SetTransformDirty();
@@ -194,18 +200,28 @@ namespace ERI {
 		void UpdateViewMatrix();
 		void UpdateProjectionMatrix();
 		
-		void SetViewProjectionModified();
 		void SetViewModified();
 		void SetProjectionModified();
+		void SetViewProjectionNeedUpdate();
+		
+		bool IsInFrustum(const Sphere* sphere);
 		
 		inline Projection projection() { return projection_; }
 		inline float ortho_zoom() { return ortho_zoom_; }
 		inline float perspective_fov() { return perspective_fov_y_; }
-		inline bool is_view_modified() { return is_view_modified_; }
-		inline bool is_projection_modified() { return is_projection_modified_; }
+		
+		inline bool is_view_need_update() { return is_view_need_update_; }
+		inline bool is_projection_need_update() { return is_projection_need_update_; }
 		
 	private:
+		void		CalculateViewMatrix();
+		void		CalculateProjectionMatrix();
+		
 		Projection	projection_;
+		
+		Matrix4		view_matrix_;
+		Matrix4		projection_matrix_;
+		Plane		frustum_[6];
 		
 		Vector3		look_at_;
 		bool		is_look_at_offset_;
@@ -213,8 +229,9 @@ namespace ERI {
 		float		ortho_zoom_;
 		float		perspective_fov_y_;
 		
-		bool		is_view_modified_;
-		bool		is_projection_modified_;
+		bool		is_view_modified_, is_projection_modified_;
+		bool		is_view_need_update_, is_projection_need_update_;
+		bool		is_frustum_dirty_;
 	};
 	
 #pragma mark LightActor

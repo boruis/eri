@@ -290,10 +290,10 @@ namespace ERI {
 	
 	void RendererES1::Render(const RenderData* data)
 	{
-		if (data->apply_identity_model_matrix)
-			glLoadMatrixf(current_view_matrix_.m);
-		else
+		if (!data->apply_identity_model_matrix)
+		{
 			glMultMatrixf(data->world_model_matrix.m);
+		}
 		
 		if (data->vertex_count > 0)
 		{
@@ -446,16 +446,19 @@ namespace ERI {
 				glColorPointer(4, GL_UNSIGNED_BYTE, vertex_stride, vertex_color_offset);
 			}
 			// tex coord
+			bool is_need_recover_transform = false;
 			if (texture_enable_)
 			{
 				if (data->is_tex_transform)
 				{
-					SaveTransform();
-					
+					glPushMatrix();
 					glMatrixMode(GL_TEXTURE);
+					
 					glLoadIdentity();
 					glTranslatef(data->tex_translate.x, data->tex_translate.y, 0.0f);
 					glScalef(data->tex_scale.x, data->tex_scale.y, 1.0f);
+					
+					is_need_recover_transform = true;
 				}
 				
 				for (int i = 0; i < MAX_TEXTURE_UNIT; ++i)
@@ -479,12 +482,12 @@ namespace ERI {
 				glDrawArrays(data->vertex_type, 0,  data->vertex_count);
 			}
 			
-			if (data->is_tex_transform)
+			if (is_need_recover_transform)
 			{
 				glLoadIdentity();
-				glMatrixMode(GL_MODELVIEW);
 				
-				RecoverTransform();
+				glMatrixMode(GL_MODELVIEW);
+				glPopMatrix();
 			}
 		}
 	}
@@ -990,32 +993,42 @@ namespace ERI {
 		glClearColor(bg_color_.r, bg_color_.g, bg_color_.b, bg_color_.a);
 	}
 	
+	void RendererES1::UpdateView(const Matrix4& view_matrix)
+	{
+		glLoadMatrixf(view_matrix.m);
+		UpdateLightTransform();
+	}
+	
 	void RendererES1::UpdateView(const Vector3& eye, const Vector3& at, const Vector3& up)
 	{
 		MatrixLookAtRH(current_view_matrix_, eye, at, up);
 		
-		glMatrixMode(GL_MODELVIEW);
 		glLoadMatrixf(current_view_matrix_.m);
 		
 		UpdateLightTransform();
 	}
 	
+	void RendererES1::UpdateProjection(const Matrix4& projection_matrix)
+	{
+		glPushMatrix();
+		glMatrixMode(GL_PROJECTION);
+		
+		glLoadMatrixf(projection_matrix.m);
+		
+		AdjustProjectionForViewOrientation();
+		
+		glMatrixMode(GL_MODELVIEW);
+		glPopMatrix();
+	}
+	
 	void RendererES1::UpdateOrthoProjection(float width, float height, float near_z, float far_z)
 	{
-		GLint original_matrix_mode;
-		glGetIntegerv(GL_MATRIX_MODE, &original_matrix_mode);
+		glPushMatrix();
+		glMatrixMode(GL_PROJECTION);
 		
-		if (original_matrix_mode != GL_PROJECTION)
-		{
-			glPushMatrix();
-			glMatrixMode(GL_PROJECTION);
-		}
-		
-		/*
-		static Matrix4 projection;
-		MatrixOrthoRH(projection, width, height, near_z, far_z);
-		glLoadMatrixf(projection.m);
-		 */
+//		static Matrix4 projection;
+//		MatrixOrthoRH(projection, width, height, near_z, far_z);
+//		glLoadMatrixf(projection.m);
 		
 		glLoadIdentity();
 
@@ -1027,11 +1040,8 @@ namespace ERI {
 		
 		AdjustProjectionForViewOrientation();
 		
-		if (original_matrix_mode != GL_PROJECTION)
-		{
-			glMatrixMode(original_matrix_mode);
-			glPopMatrix();
-		}
+		glMatrixMode(GL_MODELVIEW);
+		glPopMatrix();
 	}
 	
 	void RendererES1::UpdateOrthoProjection(float zoom, float near_z, float far_z)
@@ -1043,20 +1053,12 @@ namespace ERI {
 	
 	void RendererES1::UpdatePerspectiveProjection(float fov_y, float aspect, float near_z, float far_z)
 	{
-		GLint original_matrix_mode;
-		glGetIntegerv(GL_MATRIX_MODE, &original_matrix_mode);
-		
-		if (original_matrix_mode != GL_PROJECTION)
-		{
-			glPushMatrix();
-			glMatrixMode(GL_PROJECTION);
-		}
+		glPushMatrix();
+		glMatrixMode(GL_PROJECTION);
 
-		/*
-		static Matrix4 projection;
-		MatrixPerspectiveFovRH(projection, fov_y, aspect, near_z, far_z);
-		glLoadMatrixf(projection.m);
-		 */
+//		static Matrix4 projection;
+//		MatrixPerspectiveFovRH(projection, fov_y, aspect, near_z, far_z);
+//		glLoadMatrixf(projection.m);
 		
 		glLoadIdentity();
 		 
@@ -1072,11 +1074,8 @@ namespace ERI {
 		
 		AdjustProjectionForViewOrientation();
 		
-		if (original_matrix_mode != GL_PROJECTION)
-		{
-			glMatrixMode(original_matrix_mode);
-			glPopMatrix();
-		}
+		glMatrixMode(GL_MODELVIEW);
+		glPopMatrix();
 	}
 
 	void RendererES1::UpdatePerspectiveProjection(float fov_y, float near_z, float far_z)

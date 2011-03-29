@@ -66,6 +66,8 @@ namespace ERI {
 		
 		virtual int width() { return width_; }
 		virtual int height() { return height_; }
+		virtual int backing_width() { return backing_width_; }
+		virtual int backing_height() { return backing_height_; }
 
 		virtual void RenderStart();
 		virtual void RenderEnd();
@@ -111,8 +113,10 @@ namespace ERI {
 		
 		virtual void SetBgColor(const Color& color);
 		
+		virtual void UpdateView(const Matrix4& view_matrix);
 		virtual void UpdateView(const Vector3& eye, const Vector3& at, const Vector3& up);
 		
+		virtual void UpdateProjection(const Matrix4& projection_matrix);
 		virtual void UpdateOrthoProjection(float width, float height, float near_z, float far_z);
 		virtual void UpdateOrthoProjection(float zoom, float near_z, float far_z);
 		virtual void UpdatePerspectiveProjection(float fov_y, float aspect, float near_z, float far_z);

@@ -173,6 +173,8 @@ namespace ERI
 
 		void UpdatePose();
 		
+		void CalculateBoundingSphere(Sphere* bounding);
+		
 	private:
 		void AttachSample();
 		
@@ -203,6 +205,8 @@ namespace ERI
 		void PlayAnim(const AnimSetting& setting, bool wait_current_finish = true);
 		
 		int	GetAnimIdx();
+		
+		void CalculateBoundingSphere();
 		
 		inline const SkeletonIns* skeleton_ins() { return skeleton_ins_; }
 		

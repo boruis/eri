@@ -16,9 +16,7 @@
 
 namespace ERI {
 	
-#pragma mark Geometry
-	
-	struct Quaternion;
+#pragma mark Math
 	
 	struct Math
 	{
@@ -40,11 +38,16 @@ namespace ERI {
 	inline T Abs(const T& a) { return (a > 0) ? a : -a; }
 	
 	inline int Round(float a) { if (a > 0.0f) return static_cast<int>(a + 0.5f); else if (a < 0.0f) return static_cast<int>(a - 0.5f); else return 0; }
+	
+#pragma mark Vector2
+	
+	struct Vector3;
 
 	struct Vector2
 	{
 		Vector2() : x(0), y(0) {}
 		Vector2(float _x, float _y) : x(_x), y(_y) {}
+		explicit Vector2(const Vector3& v);
 		
 		inline Vector2 operator + (const Vector2& v) const { return Vector2(x + v.x, y + v.y); }
 		inline Vector2 operator - (const Vector2& v) const { return Vector2(x - v.x, y - v.y); }
@@ -79,6 +82,8 @@ namespace ERI {
 		
 		float x, y;
 	};
+	
+#pragma mark Vector3
 	
 	struct Vector3
 	{
@@ -132,6 +137,8 @@ namespace ERI {
 		TRI_22
 	};
 	
+#pragma mark Matrix3
+	
 	struct Matrix3
 	{
 		Matrix3() { *this = IDENTITY; }
@@ -150,6 +157,11 @@ namespace ERI {
 		
 		static const Matrix3 IDENTITY;
 	};
+	
+#pragma mark Matrix4
+	
+	struct Quaternion;
+	struct Plane;
 	
 	enum Matrix4RowCol	// opengl use column-major
 	{
@@ -247,6 +259,27 @@ namespace ERI {
 		static const Matrix4 IDENTITY;
 	};
 	
+	void MatrixLookAtRH(Matrix4& out_m,
+						const Vector3& eye,
+						const Vector3& at,
+						const Vector3& up);
+	
+	void MatrixPerspectiveFovRH(Matrix4	&out_m,
+								const float	fov_y,
+								const float	aspect,
+								const float	near,
+								const float	far);
+	
+	void MatrixOrthoRH(Matrix4	&out_m,
+					   const float w,
+					   const float h,
+					   const float zn,
+					   const float zf);
+	
+	void ExtractFrustum(const Matrix4& view_matrix, const Matrix4& projection_matrix, Plane* out_frustum);
+	
+#pragma mark Quaterion
+	
 	struct Quaternion
 	{
 		Quaternion() : x(0), y(0), z(0), w(1) {}
@@ -282,32 +315,8 @@ namespace ERI {
 		float x, y, z, w;
 	};
 	
-	void MatrixLookAtRH(Matrix4& out_m,
-						const Vector3& eye,
-						const Vector3& at,
-						const Vector3& up);
+#pragma Geometry
 	
-	void MatrixPerspectiveFovRH(Matrix4	&out_m,
-								const float	fov_y,
-								const float	aspect,
-								const float	near,
-								const float	far);
-	
-	void MatrixOrthoRH(Matrix4	&out_m,
-					   const float w,
-					   const float h,
-					   const float zn,
-					   const float zf);
-	
-#pragma mark Intersection
-	
-	enum IntersectionType
-	{
-		IT_EMPTY,
-		IT_POINT,
-		IT_COLINEAR
-	};
-
 	struct Line2
 	{
 		Vector2	origin;
@@ -345,7 +354,13 @@ namespace ERI {
 		Vector2	center;
 		float	radius;
 	};
-
+	
+	struct Sphere
+	{
+		Vector3	center;
+		float	radius;
+	};
+	
 	struct Box2
 	{
 		Vector2	center;
@@ -358,6 +373,21 @@ namespace ERI {
 		Vector2	min;
 		Vector2 max;
 	};
+	
+	struct Plane
+	{
+		Vector3 normal;
+		float	d;
+	};
+	
+#pragma mark Intersection
+	
+	enum IntersectionType
+	{
+		IT_EMPTY,
+		IT_POINT,
+		IT_COLINEAR
+	};
 
 	float GetPointSegment2DistanceSquared(const Vector2& point, const Segment2& segment);
 	float GetPointBox2DistanceSquared(const Vector2& point, const Box2& box);
@@ -367,12 +397,15 @@ namespace ERI {
 	bool IsIntersectBoxCircle2(const Box2& box, const Circle2& circle);
 	bool IsIntersectBoxBox2(const Box2& box1, const Box2& box2);
 	bool IsIntersectAABoxCircle2(const AABox2& box, const Circle2& circle);
-	
+	float SphereInFrustum(const Sphere& sphere, const Plane* frustum);
+
 #pragma mark Random
 	
 	float UnitRandom();
 	int RangeRandom(int min, int max);
 	float RangeRandom(float min, float max);
+	
+#pragma mark Color
 	
 	struct Color
 	{

@@ -483,10 +483,10 @@ namespace ERI {
 				
 				if (current_cam_)
 				{
-					if (current_cam_->is_projection_modified())
+					if (current_cam_->is_projection_need_update())
 						current_cam_->UpdateProjectionMatrix();
 					
-					if (current_cam_->is_view_modified())
+					if (current_cam_->is_view_need_update())
 						current_cam_->UpdateViewMatrix();
 				}
 				
@@ -570,14 +570,11 @@ namespace ERI {
 				layers_[i]->cam()->SetProjectionModified();
 		}
 		
+		// TODO: check need this?
 		if (current_cam_)
-		{
 			current_cam_->SetProjectionModified();
-		}
 		else
-		{
 			UpdateDefaultProjection();
-		}
 		
 		if (viewport_resize_subject_.HaveObserver())
 		{
@@ -597,7 +594,7 @@ namespace ERI {
 		
 		if (current_cam_)
 		{
-			current_cam_->SetViewProjectionModified();
+			current_cam_->SetViewProjectionNeedUpdate();
 		}
 		else
 		{

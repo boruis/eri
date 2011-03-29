@@ -199,7 +199,10 @@ namespace ERI
 			node_ins_array_[i].SetTime(anim_current_time_, anim_setting_);
 		}
 		
-		UpdatePose();
+		if (anim_current_time_ <= anim_duration_)
+		{
+			UpdatePose();
+		}
 	}
 	
 	float SkeletonIns::GetTime() const
@@ -209,7 +212,7 @@ namespace ERI
 	
 	bool SkeletonIns::IsAnimEnd() const
 	{
-		return (anim_current_time_ >= anim_duration_);
+		return (anim_current_time_ > anim_duration_);
 	}
 	
 	void SkeletonIns::CancelLoop()
@@ -333,6 +336,54 @@ namespace ERI
 		}
 	}
 	
+	void SkeletonIns::CalculateBoundingSphere(Sphere* bounding)
+	{
+		ASSERT(bounding);
+		
+		Vector3 min_pos, max_pos;
+		Vector3 pos, weight_pos, final_pos;
+		
+		Mesh* mesh = resource_ref_->mesh_refs[0];
+		Vertex* vertex;
+		
+		void* single_buffer = malloc(mesh->vertex_size);
+		
+		int vertex_num = mesh->vertices.size();
+		for (int i = 0; i < vertex_num; ++i)
+		{
+			vertex = mesh->vertices[i];
+			memcpy(single_buffer, vertex->data, mesh->vertex_size);
+			
+			float* float_value = static_cast<float*>(single_buffer);
+
+			final_pos.x = float_value[0];
+			final_pos.y = float_value[1];
+			final_pos.z = float_value[2];
+			
+			if (i == 0)
+			{
+				min_pos = max_pos = final_pos;
+			}
+			else
+			{
+				if (final_pos.x < min_pos.x) min_pos.x = final_pos.x;
+				if (final_pos.y < min_pos.y) min_pos.y = final_pos.y;
+				if (final_pos.z < min_pos.z) min_pos.z = final_pos.z;
+				if (final_pos.x > max_pos.x) max_pos.x = final_pos.x;
+				if (final_pos.y > max_pos.y) max_pos.y = final_pos.y;
+				if (final_pos.z > max_pos.z) max_pos.z = final_pos.z;
+			}
+		}
+		
+		free(single_buffer);
+		
+		bounding->center = (min_pos + max_pos) * 0.5f;
+		pos = max_pos - min_pos;
+		bounding->radius = Max(pos.x, pos.y);
+		bounding->radius = Max(bounding->radius, pos.z);
+		bounding->radius *= 0.5f;
+	}
+	
 	void SkeletonIns::AttachSample()
 	{
 		int node_num = node_ins_array_.size();
@@ -430,7 +481,10 @@ namespace ERI
 			}
 		}
 		
-		UpdateVertexBuffer();
+		if (!skeleton_ins_->IsAnimEnd())
+		{
+			UpdateVertexBuffer();
+		}
 	}
 	
 	void SkeletonActor::SetAnim(const AnimSetting& setting)
@@ -469,6 +523,19 @@ namespace ERI
 	int	SkeletonActor::GetAnimIdx()
 	{
 		return curr_anim_.idx;
+	}
+	
+	void SkeletonActor::CalculateBoundingSphere()
+	{
+		if (!bounding_sphere_)
+		{
+			bounding_sphere_ = new Sphere;
+			bounding_sphere_world_ = new Sphere;
+		}
+		
+		skeleton_ins_->CalculateBoundingSphere(bounding_sphere_);
+		
+		*bounding_sphere_world_ = *bounding_sphere_;
 	}
 	
 	void SkeletonActor::UpdateVertexBuffer()

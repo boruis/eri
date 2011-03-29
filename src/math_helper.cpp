@@ -39,6 +39,10 @@ namespace ERI {
 		return radian * inverse_radian * 360;
 	}
 	
+	Vector2::Vector2(const Vector3& v) : x(v.x), y(v.y)
+	{
+	}
+	
 	float Vector2::Length() const
 	{
 		return sqrt(x * x + y * y);
@@ -510,6 +514,90 @@ namespace ERI {
 		out_m.m[_33] = 1;
 	}
 	
+	void ExtractFrustum(const Matrix4& view_matrix, const Matrix4& projection_matrix, Plane* out_frustum)
+	{
+		const float* modl = &view_matrix.m[0];
+		const float* proj = &projection_matrix.m[0];
+		float clip[16];
+	
+		/* Combine the two matrices (multiply projection by modelview) */
+		clip[ 0] = modl[ 0] * proj[ 0] + modl[ 1] * proj[ 4] + modl[ 2] * proj[ 8] + modl[ 3] * proj[12];
+		clip[ 1] = modl[ 0] * proj[ 1] + modl[ 1] * proj[ 5] + modl[ 2] * proj[ 9] + modl[ 3] * proj[13];
+		clip[ 2] = modl[ 0] * proj[ 2] + modl[ 1] * proj[ 6] + modl[ 2] * proj[10] + modl[ 3] * proj[14];
+		clip[ 3] = modl[ 0] * proj[ 3] + modl[ 1] * proj[ 7] + modl[ 2] * proj[11] + modl[ 3] * proj[15];
+		
+		clip[ 4] = modl[ 4] * proj[ 0] + modl[ 5] * proj[ 4] + modl[ 6] * proj[ 8] + modl[ 7] * proj[12];
+		clip[ 5] = modl[ 4] * proj[ 1] + modl[ 5] * proj[ 5] + modl[ 6] * proj[ 9] + modl[ 7] * proj[13];
+		clip[ 6] = modl[ 4] * proj[ 2] + modl[ 5] * proj[ 6] + modl[ 6] * proj[10] + modl[ 7] * proj[14];
+		clip[ 7] = modl[ 4] * proj[ 3] + modl[ 5] * proj[ 7] + modl[ 6] * proj[11] + modl[ 7] * proj[15];
+		
+		clip[ 8] = modl[ 8] * proj[ 0] + modl[ 9] * proj[ 4] + modl[10] * proj[ 8] + modl[11] * proj[12];
+		clip[ 9] = modl[ 8] * proj[ 1] + modl[ 9] * proj[ 5] + modl[10] * proj[ 9] + modl[11] * proj[13];
+		clip[10] = modl[ 8] * proj[ 2] + modl[ 9] * proj[ 6] + modl[10] * proj[10] + modl[11] * proj[14];
+		clip[11] = modl[ 8] * proj[ 3] + modl[ 9] * proj[ 7] + modl[10] * proj[11] + modl[11] * proj[15];
+		
+		clip[12] = modl[12] * proj[ 0] + modl[13] * proj[ 4] + modl[14] * proj[ 8] + modl[15] * proj[12];
+		clip[13] = modl[12] * proj[ 1] + modl[13] * proj[ 5] + modl[14] * proj[ 9] + modl[15] * proj[13];
+		clip[14] = modl[12] * proj[ 2] + modl[13] * proj[ 6] + modl[14] * proj[10] + modl[15] * proj[14];
+		clip[15] = modl[12] * proj[ 3] + modl[13] * proj[ 7] + modl[14] * proj[11] + modl[15] * proj[15];
+		
+		/* Extract the numbers for the RIGHT plane */
+		out_frustum[0].normal.x = clip[ 3] - clip[ 0];
+		out_frustum[0].normal.y = clip[ 7] - clip[ 4];
+		out_frustum[0].normal.z = clip[11] - clip[ 8];
+		out_frustum[0].d = clip[15] - clip[12];
+		
+		/* Normalize the result */
+		out_frustum[0].d /= out_frustum[0].normal.Normalize();
+		
+		/* Extract the numbers for the LEFT plane */
+		out_frustum[1].normal.x = clip[ 3] + clip[ 0];
+		out_frustum[1].normal.y = clip[ 7] + clip[ 4];
+		out_frustum[1].normal.z = clip[11] + clip[ 8];
+		out_frustum[1].d = clip[15] + clip[12];
+		
+		/* Normalize the result */
+		out_frustum[1].d /= out_frustum[1].normal.Normalize();
+		
+		/* Extract the BOTTOM plane */
+		out_frustum[2].normal.x = clip[ 3] + clip[ 1];
+		out_frustum[2].normal.y = clip[ 7] + clip[ 5];
+		out_frustum[2].normal.z = clip[11] + clip[ 9];
+		out_frustum[2].d = clip[15] + clip[13];
+		
+		/* Normalize the result */
+		out_frustum[2].d /= out_frustum[2].normal.Normalize();
+		
+		/* Extract the TOP plane */
+		out_frustum[3].normal.x = clip[ 3] - clip[ 1];
+		out_frustum[3].normal.y = clip[ 7] - clip[ 5];
+		out_frustum[3].normal.z = clip[11] - clip[ 9];
+		out_frustum[3].d = clip[15] - clip[13];
+		
+		/* Normalize the result */
+		out_frustum[3].d /= out_frustum[3].normal.Normalize();
+		
+		/* Extract the FAR plane */
+		out_frustum[4].normal.x = clip[ 3] - clip[ 2];
+		out_frustum[4].normal.y = clip[ 7] - clip[ 6];
+		out_frustum[4].normal.z = clip[11] - clip[10];
+		out_frustum[4].d = clip[15] - clip[14];
+		
+		/* Normalize the result */
+		out_frustum[4].d /= out_frustum[4].normal.Normalize();
+		
+		/* Extract the NEAR plane */
+		out_frustum[5].normal.x = clip[ 3] + clip[ 2];
+		out_frustum[5].normal.y = clip[ 7] + clip[ 6];
+		out_frustum[5].normal.z = clip[11] + clip[10];
+		out_frustum[5].d = clip[15] + clip[14];
+		
+		/* Normalize the result */
+		out_frustum[5].d /= out_frustum[5].normal.Normalize();
+	}
+	
+#pragma mark Quaternion
+	
 	Quaternion::Quaternion(float degree, const Vector3& axis)
 	{
 		FromRotationAxis(degree, axis);
@@ -704,7 +792,7 @@ namespace ERI {
             out_q.Normalize();
         }
 	}
-
+	
 #pragma mark Intersection
 	
 	float GetPointSegment2DistanceSquared(const Vector2& point, const Segment2& segment)
@@ -978,6 +1066,20 @@ namespace ERI {
 		}
 		
 		return squared_distance <= circle.radius;
+	}
+	
+	float SphereInFrustum(const Sphere& sphere, const Plane* frustum)
+	{
+		float d;
+		
+		for (int p = 0; p < 6; ++p)
+		{
+			d = frustum[p].normal.DotProduct(sphere.center) + frustum[p].d;
+			if (d <= -sphere.radius)
+				return 0.0f;
+		}
+		
+		return d + sphere.radius;
 	}
 	
 #pragma mark Random

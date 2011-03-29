@@ -26,12 +26,20 @@ namespace ERI {
 		parent_(NULL),
 		visible_(true),
 		is_view_depth_dirty_(true),
-		user_data_(NULL)
+		user_data_(NULL),
+		bounding_sphere_(NULL),
+		bounding_sphere_world_(NULL)
 	{
 	}
 	
 	SceneActor::~SceneActor()
 	{
+		if (bounding_sphere_)
+		{
+			delete bounding_sphere_;
+			delete bounding_sphere_world_;
+		}
+		
 		for (size_t i = 0; i < childs_.size(); ++i)
 		{
 			// TODO: is delete childs right?
@@ -149,6 +157,9 @@ namespace ERI {
 		if (!visible_)
 			return;
 		
+		if (!IsInFrustum())
+			return;
+		
 		// set material state
 		
 		renderer->EnableMaterial(&material_data_);
@@ -229,6 +240,9 @@ namespace ERI {
 				render_data_.UpdateWorldModelMatrix(parent_->GetWorldTransform());
 			else
 				render_data_.UpdateWorldModelMatrix();
+			
+			if (bounding_sphere_)
+				bounding_sphere_world_->center = render_data_.world_model_matrix * bounding_sphere_->center;
 		}
 		
 		return render_data_.world_model_matrix;
@@ -458,6 +472,23 @@ namespace ERI {
 		material_data_.depth_write = enable;
 	}
 	
+	bool SceneActor::IsInFrustum()
+	{
+		if (layer_ && bounding_sphere_world_)
+		{
+			GetWorldTransform();
+			
+			// TODO: no default camera cause no frustum culling, fix it
+			
+			CameraActor* cam = layer_->cam();
+			if (!cam) cam = Root::Ins().scene_mgr()->default_cam();
+			
+			if (cam) return cam->IsInFrustum(bounding_sphere_world_);
+		}
+		
+		return true;
+	}
+	
 	void SceneActor::SetTransformDirty()
 	{
 		render_data_.need_update_model_matrix = true;
@@ -505,7 +536,10 @@ namespace ERI {
 		ortho_zoom_(1.0f),
 		perspective_fov_y_(Math::PI / 3.0f),
 		is_view_modified_(true),
-		is_projection_modified_(true)
+		is_projection_modified_(true),
+		is_view_need_update_(true),
+		is_projection_need_update_(true),
+		is_frustum_dirty_(true)
 	{
 	}
 	
@@ -517,22 +551,22 @@ namespace ERI {
 	{
 		SceneActor::SetPos(x, y);
 		
-		is_view_modified_ = true;
+		SetViewModified();
 	}
 	
 	void CameraActor::SetPos(const Vector3& pos)
 	{
 		SceneActor::SetPos(pos);
 		
-		is_view_modified_ = true;
+		SetViewModified();
 	}
 	
 	void CameraActor::SetLookAt(const Vector3& look_at, bool is_offset)
 	{
 		look_at_ = look_at;
 		is_look_at_offset_ = is_offset;
-		
-		is_view_modified_ = true;
+
+		SetViewModified();
 		
 		// TODO: modify self rotation to make childs' transform correct
 	}
@@ -546,7 +580,7 @@ namespace ERI {
 		SetScale(Vector3(1 / ortho_zoom_, 1 / ortho_zoom_, 1 / ortho_zoom_));
 		//SetScale(1 / ortho_zoom_, 1 / ortho_zoom_);
 		
-		is_projection_modified_ = true;
+		SetProjectionModified();
 	}
 	
 	void CameraActor::SetPerspectiveFov(float fov_y)
@@ -556,49 +590,103 @@ namespace ERI {
 		
 		perspective_fov_y_ = fov_y;
 		
-		is_projection_modified_ = true;
+		SetProjectionModified();
 	}
 	
 	void CameraActor::UpdateViewMatrix()
 	{
-		ASSERT(is_view_modified_);
+		ASSERT(is_view_need_update_);
 		
-		const Vector3& pos = GetPos3();
-		Root::Ins().renderer()->UpdateView(pos, is_look_at_offset_ ? (pos + look_at_) : look_at_, Vector3(0, 1, 0));
+		if (is_view_modified_)
+			CalculateViewMatrix();
 		
-		is_view_modified_ = false;
+		Root::Ins().renderer()->UpdateView(view_matrix_);
+		
+		is_view_need_update_ = false;
 	}
 	
 	void CameraActor::UpdateProjectionMatrix()
 	{
-		ASSERT(is_projection_modified_);
+		ASSERT(is_projection_need_update_);
+
+		if (is_projection_modified_)
+			CalculateProjectionMatrix();
 		
-		if (projection_ == ORTHOGONAL)
-		{
-			Root::Ins().renderer()->UpdateOrthoProjection(ortho_zoom_, -1000, 1000);
-		}
-		else
-		{
-			Root::Ins().renderer()->UpdatePerspectiveProjection(perspective_fov_y_, 1, 1000);
-		}
+		Root::Ins().renderer()->UpdateProjection(projection_matrix_);
 		
-		is_projection_modified_ = false;
-	}
-	
-	void CameraActor::SetViewProjectionModified()
-	{
-		is_view_modified_ = true;
-		is_projection_modified_ = true;
+		is_projection_need_update_ = false;
 	}
 	
 	void CameraActor::SetViewModified()
 	{
 		is_view_modified_ = true;
+		is_view_need_update_ = true;
+		is_frustum_dirty_ = true;
 	}
 	
 	void CameraActor::SetProjectionModified()
 	{
 		is_projection_modified_ = true;
+		is_projection_need_update_ = true;
+		is_frustum_dirty_ = true;
+	}
+	
+	void CameraActor::SetViewProjectionNeedUpdate()
+	{
+		is_view_need_update_ = true;
+		is_projection_need_update_ = true;
+	}
+	
+	bool CameraActor::IsInFrustum(const Sphere* sphere)
+	{
+		if (is_frustum_dirty_)
+		{
+			if (is_view_modified_)
+				CalculateViewMatrix();
+			
+			if (is_projection_modified_)
+				CalculateProjectionMatrix();
+			
+			ExtractFrustum(view_matrix_, projection_matrix_, frustum_);
+			
+			is_frustum_dirty_ = false;
+		}
+		
+		return SphereInFrustum(*sphere, frustum_) > 0.0f;
+	}
+	
+	void CameraActor::CalculateViewMatrix()
+	{
+		ASSERT(is_view_modified_);
+		
+		const Vector3& pos = GetPos3();
+		MatrixLookAtRH(view_matrix_, pos, is_look_at_offset_ ? (pos + look_at_) : look_at_, Vector3(0, 1, 0));
+		
+		is_view_modified_ = false;
+	}
+	
+	void CameraActor::CalculateProjectionMatrix()
+	{
+		ASSERT(is_projection_modified_);
+		
+		Renderer* renderer = Root::Ins().renderer();
+		
+		if (projection_ == ORTHOGONAL)
+		{
+			MatrixOrthoRH(projection_matrix_,
+						  renderer->backing_width() / ortho_zoom_,
+						  renderer->backing_height() / ortho_zoom_,
+						  -1000, 1000);
+		}
+		else
+		{
+			MatrixPerspectiveFovRH(projection_matrix_,
+								   perspective_fov_y_,
+								   static_cast<float>(renderer->backing_width()) / renderer->backing_height(),
+								   1, 1000);
+		}
+		
+		is_projection_modified_ = false;
 	}
 
 #pragma mark LightActor

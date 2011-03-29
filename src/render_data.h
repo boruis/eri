@@ -135,6 +135,7 @@ namespace ERI {
 		Vector3	world_view_pos;
 		
 		// texture
+		// TODO: multi-texture?
 		bool	is_tex_transform;
 		Vector2	tex_scale;
 		Vector2 tex_translate;
