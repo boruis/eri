@@ -197,7 +197,8 @@ namespace ERI
 
 	SkeletonIns::SkeletonIns(const SharedSkeleton* resource_ref) :
 		resource_ref_(resource_ref),
-		anim_current_time_(0.0f)
+		anim_current_time_(0.0f),
+		pose_updated_time_(0.0f)
 	{
 		ASSERT(resource_ref_);
 
@@ -235,7 +236,7 @@ namespace ERI
 		return anim_current_time_ / anim_duration_;
 	}
 	
-	void SkeletonIns::AddTime(float add_time)
+	bool SkeletonIns::AddTime(float add_time)
 	{
 		float delta_time = add_time * anim_setting_.speed_rate;
 		
@@ -256,10 +257,15 @@ namespace ERI
 			node_ins_array_[i].SetTime(anim_current_time_, anim_setting_);
 		}
 		
-		if (anim_current_time_ <= anim_duration_)
+		if (anim_current_time_ <= anim_duration_ ||
+			pose_updated_time_ < anim_duration_)
 		{
 			UpdatePose();
+			
+			return true;
 		}
+		
+		return false;
 	}
 	
 	float SkeletonIns::GetTime() const
@@ -391,6 +397,8 @@ namespace ERI
 			else
 				node_ins.matrix_palette = node_ins.global_matrix;
 		}
+		
+		pose_updated_time_ = anim_current_time_;
 	}
 	
 	void SkeletonIns::AttachSample()
@@ -476,7 +484,7 @@ namespace ERI
 
 	void SkeletonActor::Update(float delta_time)
 	{
-		skeleton_ins_->AddTime(delta_time);
+		bool need_update = skeleton_ins_->AddTime(delta_time);
 		
 		if (next_anim_.idx != -1 && skeleton_ins_->IsAnimEnd())
 		{
@@ -498,7 +506,7 @@ namespace ERI
 			}
 		}
 		
-		if (!skeleton_ins_->IsAnimEnd())
+		if (need_update)
 		{
 			UpdateVertexBuffer();
 		}

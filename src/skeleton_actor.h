@@ -159,7 +159,7 @@ namespace ERI
 		void SetAnim(const AnimSetting& setting);
 		void SetTimePercent(float time_percent);
 		float GetTimePercent() const;
-		void AddTime(float add_time);
+		bool AddTime(float add_time);
 		float GetTime() const;
 		bool IsAnimEnd() const;
 		void CancelLoop();
@@ -190,6 +190,7 @@ namespace ERI
 		AnimSetting		anim_setting_;
 		float			anim_duration_;
 		float			anim_current_time_;
+		float			pose_updated_time_;
 	};
 	
 	class SkeletonActor : public SceneActor
