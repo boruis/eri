@@ -80,11 +80,16 @@ namespace ERI
 	
 	struct SharedSkeleton
 	{
+		SharedSkeleton() : bounding(NULL) {}
 		~SharedSkeleton();
+		
+		void CalculateBounding();
 		
 		Skeleton*					skeleton_ref;
 		std::vector<Mesh*>			mesh_refs;
 		std::vector<AnimClip*>		anim_refs;
+		
+		Sphere*						bounding;
 	};
 	
 	struct AnimSetting
@@ -173,8 +178,6 @@ namespace ERI
 
 		void UpdatePose();
 		
-		void CalculateBoundingSphere(Sphere* bounding);
-		
 	private:
 		void AttachSample();
 		
@@ -205,8 +208,6 @@ namespace ERI
 		void PlayAnim(const AnimSetting& setting, bool wait_current_finish = true);
 		
 		int	GetAnimIdx();
-		
-		void CalculateBoundingSphere();
 		
 		inline const SkeletonIns* skeleton_ins() { return skeleton_ins_; }
 		
