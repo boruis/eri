@@ -27,7 +27,7 @@ namespace ERI
 			scale = Vector2(1.0f, 1.0f);
 		}
 		
-		Vector3	pos;
+		Vector2	pos;
 		Vector2	velocity;
 		Vector2	size;
 		Vector2 scale;
@@ -62,7 +62,7 @@ namespace ERI
 		
 		float GetEmitAngle();
 		
-		virtual void GetEmitPos(Vector3& pos) = 0;
+		virtual void GetEmitPos(Vector2& pos) = 0;
 		
 		virtual BaseEmitter* Clone() = 0;
 		
@@ -81,16 +81,16 @@ namespace ERI
 	class BoxEmitter : public BaseEmitter
 	{
 	public:
-		BoxEmitter(Vector3 half_size, float rate, float angle_min, float angle_max);
+		BoxEmitter(Vector2 half_size, float rate, float angle_min, float angle_max);
 		virtual ~BoxEmitter();
 		
 		virtual BaseEmitter* Clone();
 		
 	protected:
-		virtual void GetEmitPos(Vector3& pos);
+		virtual void GetEmitPos(Vector2& pos);
 		
 	private:
-		Vector3	half_size_;
+		Vector2	half_size_;
 	};
 	
 	class CircleEmitter : public BaseEmitter
@@ -102,7 +102,7 @@ namespace ERI
 		virtual BaseEmitter* Clone();
 		
 	protected:
-		virtual void GetEmitPos(Vector3& pos);
+		virtual void GetEmitPos(Vector2& pos);
 		
 	private:
 		float	radius_;
@@ -286,7 +286,7 @@ namespace ERI
 		std::vector<Particle*>		particles_;
 		int							first_available_particle_idx_;
 		
-		vertex_3_pos_color_tex*		vertices_;
+		vertex_2_pos_tex_color*		vertices_;
 		unsigned short*				indices_;
 		
 		Vector2		system_scale_;

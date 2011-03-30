@@ -52,7 +52,7 @@ namespace ERI
 		return RangeRandom(angle_min_, angle_max_);
 	}
 
-	BoxEmitter::BoxEmitter(Vector3 half_size, float rate, float angle_min, float angle_max) :
+	BoxEmitter::BoxEmitter(Vector2 half_size, float rate, float angle_min, float angle_max) :
 		half_size_(half_size),
 		BaseEmitter(rate, angle_min, angle_max)
 	{
@@ -67,11 +67,10 @@ namespace ERI
 		return new BoxEmitter(half_size_, rate(), angle_min(), angle_max());
 	}
 
-	void BoxEmitter::GetEmitPos(Vector3& pos)
+	void BoxEmitter::GetEmitPos(Vector2& pos)
 	{
 		pos.x = RangeRandom(-half_size_.x, half_size_.x);
 		pos.y = RangeRandom(-half_size_.y, half_size_.y);
-		pos.z = RangeRandom(-half_size_.z, half_size_.z);
 	}
 	
 	CircleEmitter::CircleEmitter(float radius, float rate, float angle_min, float angle_max) :
@@ -89,7 +88,7 @@ namespace ERI
 		return new CircleEmitter(radius_, rate(), angle_min(), angle_max());
 	}
 	
-	void CircleEmitter::GetEmitPos(Vector3& pos)
+	void CircleEmitter::GetEmitPos(Vector2& pos)
 	{
 		pos.x = RangeRandom(-radius_, radius_);
 		pos.y = RangeRandom(-radius_, radius_);
@@ -106,8 +105,6 @@ namespace ERI
 //		r.Rotate(RangeRandom(0.0f, 360.0f));
 //		pos.x = r.x;
 //		pos.y = r.y;
-		
-		pos.z = 0.0f;
 	}
 	
 #pragma mark Affector
@@ -436,7 +433,7 @@ namespace ERI
 	void ParticleSystem::EmitParticle(int num)
 	{
 		Particle* p;
-		Vector3 pos;
+		Vector2 pos;
 		Vector2 v;
 		float rotate;
 		const SceneActor* inherit_actor;
@@ -453,7 +450,7 @@ namespace ERI
 			
 			if (!setup_ref_->is_coord_relative)
 			{
-				pos = GetWorldTransform() * pos;
+				pos = Vector2(GetWorldTransform() * Vector3(pos));
 				
 				// TODO: 3D rotate?
 				
@@ -537,10 +534,10 @@ namespace ERI
 		int vertex_num = particle_num * 4;
 		
 		if (vertices_) delete [] vertices_;
-		vertices_ = new vertex_3_pos_color_tex[vertex_num];
+		vertices_ = new vertex_2_pos_tex_color[vertex_num];
 		
 		glBindBuffer(GL_ARRAY_BUFFER, render_data_.vertex_buffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_3_pos_color_tex) * vertex_num, vertices_, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_2_pos_tex_color) * vertex_num, NULL, GL_DYNAMIC_DRAW);
 		
 		if (render_data_.index_buffer == 0)
 		{
@@ -570,7 +567,7 @@ namespace ERI
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short) * index_num, indices_, GL_STATIC_DRAW);
 		
 		render_data_.vertex_type = GL_TRIANGLES;
-		render_data_.vertex_format = POS_COLOR_TEX_3;
+		render_data_.vertex_format = POS_TEX_COLOR_2;
 		render_data_.vertex_count = 0;
 		render_data_.index_count = 0;
 	}
@@ -583,11 +580,12 @@ namespace ERI
 		
 		int num = particles_.size();
 		int in_use_num = 0;
-		int start_idx;
 		
 		Particle* p;
 		
 		Vector2 up, right;
+		
+		vertex_2_pos_tex_color* vertex = vertices_;
 		
 		for (int i = 0; i < num; ++i)
 		{
@@ -602,60 +600,60 @@ namespace ERI
 				right.y = 0.0f;
 				right.Rotate(p->rotate_angle);
 				
-				start_idx = in_use_num * 4;
-				
-				vertices_[start_idx].position[0] = p->pos.x + up.x - right.x;
-				vertices_[start_idx].position[1] = p->pos.y + up.y - right.y;
-				vertices_[start_idx].position[2] = p->pos.z;
-				vertices_[start_idx].color[0] = static_cast<unsigned char>(p->color.r * 255.0f);
-				vertices_[start_idx].color[1] = static_cast<unsigned char>(p->color.g * 255.0f);
-				vertices_[start_idx].color[2] = static_cast<unsigned char>(p->color.b * 255.0f);
-				vertices_[start_idx].color[3] = static_cast<unsigned char>(p->color.a * 255.0f);
-				vertices_[start_idx].tex_coord[0] = uv_start_.x;
-				vertices_[start_idx].tex_coord[1] = uv_start_.y;
+				vertex->position[0] = p->pos.x + up.x - right.x;
+				vertex->position[1] = p->pos.y + up.y - right.y;
+//				vertex->position[2] = p->pos.z;
+				vertex->color[0] = static_cast<unsigned char>(p->color.r * 255.0f);
+				vertex->color[1] = static_cast<unsigned char>(p->color.g * 255.0f);
+				vertex->color[2] = static_cast<unsigned char>(p->color.b * 255.0f);
+				vertex->color[3] = static_cast<unsigned char>(p->color.a * 255.0f);
+				vertex->tex_coord[0] = uv_start_.x;
+				vertex->tex_coord[1] = uv_start_.y;
 
-				++start_idx;
+				++vertex;
 				
-				vertices_[start_idx].position[0] = p->pos.x + up.x + right.x;
-				vertices_[start_idx].position[1] = p->pos.y + up.y + right.y;
-				vertices_[start_idx].position[2] = p->pos.z;
-				vertices_[start_idx].color[0] = static_cast<unsigned char>(p->color.r * 255.0f);
-				vertices_[start_idx].color[1] = static_cast<unsigned char>(p->color.g * 255.0f);
-				vertices_[start_idx].color[2] = static_cast<unsigned char>(p->color.b * 255.0f);
-				vertices_[start_idx].color[3] = static_cast<unsigned char>(p->color.a * 255.0f);
-				vertices_[start_idx].tex_coord[0] = uv_start_.x + uv_size_.x;
-				vertices_[start_idx].tex_coord[1] = uv_start_.y;
+				vertex->position[0] = p->pos.x + up.x + right.x;
+				vertex->position[1] = p->pos.y + up.y + right.y;
+//				vertex->position[2] = p->pos.z;
+				vertex->color[0] = static_cast<unsigned char>(p->color.r * 255.0f);
+				vertex->color[1] = static_cast<unsigned char>(p->color.g * 255.0f);
+				vertex->color[2] = static_cast<unsigned char>(p->color.b * 255.0f);
+				vertex->color[3] = static_cast<unsigned char>(p->color.a * 255.0f);
+				vertex->tex_coord[0] = uv_start_.x + uv_size_.x;
+				vertex->tex_coord[1] = uv_start_.y;
 
-				++start_idx;
+				++vertex;
 				
-				vertices_[start_idx].position[0] = p->pos.x - up.x - right.x;
-				vertices_[start_idx].position[1] = p->pos.y - up.y - right.y;
-				vertices_[start_idx].position[2] = p->pos.z;
-				vertices_[start_idx].color[0] = static_cast<unsigned char>(p->color.r * 255.0f);
-				vertices_[start_idx].color[1] = static_cast<unsigned char>(p->color.g * 255.0f);
-				vertices_[start_idx].color[2] = static_cast<unsigned char>(p->color.b * 255.0f);
-				vertices_[start_idx].color[3] = static_cast<unsigned char>(p->color.a * 255.0f);
-				vertices_[start_idx].tex_coord[0] = uv_start_.x;
-				vertices_[start_idx].tex_coord[1] = uv_start_.y + uv_size_.y;
+				vertex->position[0] = p->pos.x - up.x - right.x;
+				vertex->position[1] = p->pos.y - up.y - right.y;
+//				vertex->position[2] = p->pos.z;
+				vertex->color[0] = static_cast<unsigned char>(p->color.r * 255.0f);
+				vertex->color[1] = static_cast<unsigned char>(p->color.g * 255.0f);
+				vertex->color[2] = static_cast<unsigned char>(p->color.b * 255.0f);
+				vertex->color[3] = static_cast<unsigned char>(p->color.a * 255.0f);
+				vertex->tex_coord[0] = uv_start_.x;
+				vertex->tex_coord[1] = uv_start_.y + uv_size_.y;
 
-				++start_idx;
+				++vertex;
 				
-				vertices_[start_idx].position[0] = p->pos.x - up.x + right.x;
-				vertices_[start_idx].position[1] = p->pos.y - up.y + right.y;
-				vertices_[start_idx].position[2] = p->pos.z;
-				vertices_[start_idx].color[0] = static_cast<unsigned char>(p->color.r * 255.0f);
-				vertices_[start_idx].color[1] = static_cast<unsigned char>(p->color.g * 255.0f);
-				vertices_[start_idx].color[2] = static_cast<unsigned char>(p->color.b * 255.0f);
-				vertices_[start_idx].color[3] = static_cast<unsigned char>(p->color.a * 255.0f);
-				vertices_[start_idx].tex_coord[0] = uv_start_.x + uv_size_.x;
-				vertices_[start_idx].tex_coord[1] = uv_start_.y + uv_size_.y;
+				vertex->position[0] = p->pos.x - up.x + right.x;
+				vertex->position[1] = p->pos.y - up.y + right.y;
+//				vertex->position[2] = p->pos.z;
+				vertex->color[0] = static_cast<unsigned char>(p->color.r * 255.0f);
+				vertex->color[1] = static_cast<unsigned char>(p->color.g * 255.0f);
+				vertex->color[2] = static_cast<unsigned char>(p->color.b * 255.0f);
+				vertex->color[3] = static_cast<unsigned char>(p->color.a * 255.0f);
+				vertex->tex_coord[0] = uv_start_.x + uv_size_.x;
+				vertex->tex_coord[1] = uv_start_.y + uv_size_.y;
+				
+				++vertex;
 				
 				++in_use_num;
 			}
 		}
 		
 		glBindBuffer(GL_ARRAY_BUFFER, render_data_.vertex_buffer);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex_3_pos_color_tex) * in_use_num * 4, vertices_);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex_2_pos_tex_color) * in_use_num * 4, vertices_);
 		
 		render_data_.vertex_count = in_use_num * 4;
 		render_data_.index_count = in_use_num * 6;
@@ -844,7 +842,7 @@ namespace ERI
 				}
 				else if (strcmp(node->name(), "box_emitter") == 0)
 				{
-					Vector3 size;
+					Vector2 size;
 					float rate = 1.0f;
 					float angle_min = 0.0f;
 					float angle_max = 0.0f;

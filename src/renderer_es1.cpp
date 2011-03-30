@@ -995,16 +995,15 @@ namespace ERI {
 	
 	void RendererES1::UpdateView(const Matrix4& view_matrix)
 	{
-		glLoadMatrixf(view_matrix.m);
+		current_view_matrix_ = view_matrix;
+		glLoadMatrixf(current_view_matrix_.m);
 		UpdateLightTransform();
 	}
 	
 	void RendererES1::UpdateView(const Vector3& eye, const Vector3& at, const Vector3& up)
 	{
 		MatrixLookAtRH(current_view_matrix_, eye, at, up);
-		
 		glLoadMatrixf(current_view_matrix_.m);
-		
 		UpdateLightTransform();
 	}
 	
