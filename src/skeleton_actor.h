@@ -80,7 +80,7 @@ namespace ERI
 	
 	struct SharedSkeleton
 	{
-		SharedSkeleton() : bounding(NULL) {}
+		SharedSkeleton() : skeleton_ref(NULL), bounding(NULL) {}
 		~SharedSkeleton();
 		
 		void CalculateBounding();
@@ -222,6 +222,11 @@ namespace ERI
 
 		AnimSetting		curr_anim_, next_anim_;
 	};
+	
+#pragma mark binary SharedSkeleton save/load function
+	
+	void SaveSharedSkeletonToBinaryFile(const SharedSkeleton* skel, const std::string& path);
+	SharedSkeleton* LoadSharedSkeletonFromBinaryFile(const std::string& path);
 	
 }
 
