@@ -125,7 +125,11 @@ static bool	in_multi_move;
 		[self convertPointByViewOrientation:&touch_pos];
 		[self convertPointByViewOrientation:&prev_touch_pos];
 		
-		ERI::Root::Ins().input_mgr()->Move(ERI::InputEvent((unsigned int)touch, touch_pos.x, touch_pos.y));
+		ERI::InputEvent e((unsigned int)touch, touch_pos.x, touch_pos.y);
+		e.dx = touch_pos.x - prev_touch_pos.x;
+		e.dy = touch_pos.y - prev_touch_pos.y;
+		
+		ERI::Root::Ins().input_mgr()->Move(e);
 		
 		//printf("touch[%x] move, timestamp %f\n", (unsigned int)touch, touch.timestamp);
 	}
@@ -135,15 +139,21 @@ static bool	in_multi_move;
 
 		UITouch* touch;
 		CGPoint touch_pos;
+		CGPoint prev_touch_pos;
 		for (int i = 0; i < now_touch_num; ++i)
 		{
 			touch = [[[event allTouches] allObjects] objectAtIndex:i];
 			touch_pos = [touch locationInView:touch.view];
+			prev_touch_pos = [touch previousLocationInView:touch.view];
+			
 			[self convertPointByViewOrientation:&touch_pos];
+			[self convertPointByViewOrientation:&prev_touch_pos];
 
 			events[i].uid = (unsigned int)touch;
 			events[i].x = touch_pos.x;
 			events[i].y = touch_pos.y;
+			events[i].dx = touch_pos.x - prev_touch_pos.x;
+			events[i].dy = touch_pos.y - prev_touch_pos.y;
 						
 			//printf("touch[%x] move, timestamp %f\n", (unsigned int)touch, touch.timestamp);
 		}
