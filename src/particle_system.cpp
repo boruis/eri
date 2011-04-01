@@ -584,6 +584,7 @@ namespace ERI
 		Particle* p;
 		
 		Vector2 up, right;
+		Color color;
 		
 		vertex_2_pos_tex_color* vertex = vertices_;
 		
@@ -592,6 +593,8 @@ namespace ERI
 			p = particles_[i];
 			if (p->in_use)
 			{
+				color = p->color * render_data_.color;
+				
 				up.x = 0.0f;
 				up.y = p->size.y * p->scale.y * 0.5f * system_scale_.y;
 				up.Rotate(p->rotate_angle);
@@ -602,11 +605,10 @@ namespace ERI
 				
 				vertex->position[0] = p->pos.x + up.x - right.x;
 				vertex->position[1] = p->pos.y + up.y - right.y;
-//				vertex->position[2] = p->pos.z;
-				vertex->color[0] = static_cast<unsigned char>(p->color.r * 255.0f);
-				vertex->color[1] = static_cast<unsigned char>(p->color.g * 255.0f);
-				vertex->color[2] = static_cast<unsigned char>(p->color.b * 255.0f);
-				vertex->color[3] = static_cast<unsigned char>(p->color.a * 255.0f);
+				vertex->color[0] = static_cast<unsigned char>(color.r * 255.0f);
+				vertex->color[1] = static_cast<unsigned char>(color.g * 255.0f);
+				vertex->color[2] = static_cast<unsigned char>(color.b * 255.0f);
+				vertex->color[3] = static_cast<unsigned char>(color.a * 255.0f);
 				vertex->tex_coord[0] = uv_start_.x;
 				vertex->tex_coord[1] = uv_start_.y;
 
@@ -614,11 +616,10 @@ namespace ERI
 				
 				vertex->position[0] = p->pos.x + up.x + right.x;
 				vertex->position[1] = p->pos.y + up.y + right.y;
-//				vertex->position[2] = p->pos.z;
-				vertex->color[0] = static_cast<unsigned char>(p->color.r * 255.0f);
-				vertex->color[1] = static_cast<unsigned char>(p->color.g * 255.0f);
-				vertex->color[2] = static_cast<unsigned char>(p->color.b * 255.0f);
-				vertex->color[3] = static_cast<unsigned char>(p->color.a * 255.0f);
+				vertex->color[0] = static_cast<unsigned char>(color.r * 255.0f);
+				vertex->color[1] = static_cast<unsigned char>(color.g * 255.0f);
+				vertex->color[2] = static_cast<unsigned char>(color.b * 255.0f);
+				vertex->color[3] = static_cast<unsigned char>(color.a * 255.0f);
 				vertex->tex_coord[0] = uv_start_.x + uv_size_.x;
 				vertex->tex_coord[1] = uv_start_.y;
 
@@ -626,11 +627,10 @@ namespace ERI
 				
 				vertex->position[0] = p->pos.x - up.x - right.x;
 				vertex->position[1] = p->pos.y - up.y - right.y;
-//				vertex->position[2] = p->pos.z;
-				vertex->color[0] = static_cast<unsigned char>(p->color.r * 255.0f);
-				vertex->color[1] = static_cast<unsigned char>(p->color.g * 255.0f);
-				vertex->color[2] = static_cast<unsigned char>(p->color.b * 255.0f);
-				vertex->color[3] = static_cast<unsigned char>(p->color.a * 255.0f);
+				vertex->color[0] = static_cast<unsigned char>(color.r * 255.0f);
+				vertex->color[1] = static_cast<unsigned char>(color.g * 255.0f);
+				vertex->color[2] = static_cast<unsigned char>(color.b * 255.0f);
+				vertex->color[3] = static_cast<unsigned char>(color.a * 255.0f);
 				vertex->tex_coord[0] = uv_start_.x;
 				vertex->tex_coord[1] = uv_start_.y + uv_size_.y;
 
@@ -638,11 +638,10 @@ namespace ERI
 				
 				vertex->position[0] = p->pos.x - up.x + right.x;
 				vertex->position[1] = p->pos.y - up.y + right.y;
-//				vertex->position[2] = p->pos.z;
-				vertex->color[0] = static_cast<unsigned char>(p->color.r * 255.0f);
-				vertex->color[1] = static_cast<unsigned char>(p->color.g * 255.0f);
-				vertex->color[2] = static_cast<unsigned char>(p->color.b * 255.0f);
-				vertex->color[3] = static_cast<unsigned char>(p->color.a * 255.0f);
+				vertex->color[0] = static_cast<unsigned char>(color.r * 255.0f);
+				vertex->color[1] = static_cast<unsigned char>(color.g * 255.0f);
+				vertex->color[2] = static_cast<unsigned char>(color.b * 255.0f);
+				vertex->color[3] = static_cast<unsigned char>(color.a * 255.0f);
 				vertex->tex_coord[0] = uv_start_.x + uv_size_.x;
 				vertex->tex_coord[1] = uv_start_.y + uv_size_.y;
 				
