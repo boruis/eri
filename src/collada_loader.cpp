@@ -14,8 +14,8 @@
 #include <fstream>
 #include <sstream>
 
+#include "shared_skeleton.h"
 #include "xml_helper.h"
-#include "skeleton_actor.h"
 
 using namespace rapidxml;
 
@@ -517,6 +517,8 @@ namespace ERI
 					
 					ASSERT(anim);
 					
+					printf("anim[%d]: start_frame:%d frame_num:%d\n", j, start_idx, section_frame_num);
+					
 					share_skeleton->anim_refs.push_back(anim);
 					
 					start_idx += section_frame_num;
@@ -527,6 +529,8 @@ namespace ERI
 				AnimClip* anim = CreateAnimClip(animation_array_[i], skeleton->nodes);
 				
 				ASSERT(anim);
+				
+				printf("anim[0]: start_frame:0 frame_num:%lu\n", anim->pose_samples.size());
 				
 				share_skeleton->anim_refs.push_back(anim);
 			}

@@ -12,6 +12,28 @@
 
 namespace ERI {
 	
+	RenderData::RenderData() :
+		vertex_buffer(0),
+		vertex_type(GL_TRIANGLE_STRIP),
+		vertex_format(POS_TEX_2),
+		vertex_count(0),
+		index_buffer(0),
+		index_count(0),
+		scale(Vector3(1, 1, 1)),
+		rotate_axis(Vector3(0, 0, 1)),
+		rotate_degree(0),
+		need_update_model_matrix(true),
+		need_update_world_model_matrix(true),
+		apply_identity_model_matrix(false),
+		is_tex_transform(false),
+		tex_scale(Vector2(1, 1)),
+		blend_src_factor(GL_SRC_ALPHA),
+		blend_dst_factor(GL_ONE_MINUS_SRC_ALPHA),
+		alpha_test_func(GL_GREATER),
+		alpha_test_ref(0.0f)
+	{
+	}
+	
 	RenderData::~RenderData()
 	{
 		if (vertex_buffer != 0)
