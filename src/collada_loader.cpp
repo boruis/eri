@@ -449,11 +449,28 @@ namespace ERI
 		}
 		
 		std::vector<int> joint_node_mapping;
+		std::vector<Mesh*> created_meshes;
 
 		int skin_num = skeleton->skin_refs.size();
 		for (int i = 0; i < skin_num; ++i)
 		{
 			Skin* skin = skeleton->skin_refs[i];
+			
+			bool is_created = false;
+			for (int m = 0; m < created_meshes.size(); ++m)
+			{
+				if (skin->mesh_ref == created_meshes[m])
+				{
+					is_created = true;
+					break;
+				}
+			}
+			
+			if (is_created)
+				continue;
+			
+			created_meshes.push_back(skin->mesh_ref);
+			
 			current_load_mesh_ = skin->mesh_ref;
 			GetVertexBufferSize();
 			
@@ -1619,6 +1636,13 @@ namespace ERI
 		if (GetAttrStr(node, "type", s) && s.compare("JOINT") == 0)
 		{
 			GetAttrStr(node, "sid", skeleton_node->joint_name);
+			
+			std::map<std::string, Skeleton*>::iterator skel_it = skeleton_map_.find(skeleton_node->name);
+			if (skel_it != skeleton_map_.end() && skel_it->second != skeleton)
+			{
+				for (int i = 0; i < skel_it->second->skin_refs.size(); ++i)
+					skeleton->skin_refs.push_back(skel_it->second->skin_refs[i]);
+			}
 		}
 		
 		skeleton->nodes.push_back(skeleton_node);

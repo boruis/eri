@@ -81,42 +81,44 @@ namespace ERI
 		
 		bounding = new Sphere;
 		
-		Vector3 min_pos, max_pos;
-		Vector3 pos, weight_pos, final_pos;
+		Vector3 min_pos, max_pos, pos;
 		
-		const Mesh* mesh = mesh_refs[0];
 		Vertex* vertex;
 		
-		void* single_buffer = malloc(mesh->vertex_size);
-		
-		int vertex_num = mesh->vertices.size();
-		for (int i = 0; i < vertex_num; ++i)
+		for (int k = 0; k < mesh_refs.size(); ++k)
 		{
-			vertex = mesh->vertices[i];
-			memcpy(single_buffer, vertex->data, mesh->vertex_size);
+			const Mesh* mesh = mesh_refs[k];
+			void* single_buffer = malloc(mesh->vertex_size);
 			
-			float* float_value = static_cast<float*>(single_buffer);
-			
-			final_pos.x = float_value[0];
-			final_pos.y = float_value[1];
-			final_pos.z = float_value[2];
-			
-			if (i == 0)
+			int vertex_num = mesh->vertices.size();
+			for (int i = 0; i < vertex_num; ++i)
 			{
-				min_pos = max_pos = final_pos;
+				vertex = mesh->vertices[i];
+				memcpy(single_buffer, vertex->data, mesh->vertex_size);
+				
+				float* float_value = static_cast<float*>(single_buffer);
+				
+				pos.x = float_value[0];
+				pos.y = float_value[1];
+				pos.z = float_value[2];
+				
+				if (k == 0 && i == 0)
+				{
+					min_pos = max_pos = pos;
+				}
+				else
+				{
+					if (pos.x < min_pos.x) min_pos.x = pos.x;
+					if (pos.y < min_pos.y) min_pos.y = pos.y;
+					if (pos.z < min_pos.z) min_pos.z = pos.z;
+					if (pos.x > max_pos.x) max_pos.x = pos.x;
+					if (pos.y > max_pos.y) max_pos.y = pos.y;
+					if (pos.z > max_pos.z) max_pos.z = pos.z;
+				}
 			}
-			else
-			{
-				if (final_pos.x < min_pos.x) min_pos.x = final_pos.x;
-				if (final_pos.y < min_pos.y) min_pos.y = final_pos.y;
-				if (final_pos.z < min_pos.z) min_pos.z = final_pos.z;
-				if (final_pos.x > max_pos.x) max_pos.x = final_pos.x;
-				if (final_pos.y > max_pos.y) max_pos.y = final_pos.y;
-				if (final_pos.z > max_pos.z) max_pos.z = final_pos.z;
-			}
+			
+			free(single_buffer);
 		}
-		
-		free(single_buffer);
 		
 		bounding->center = (min_pos + max_pos) * 0.5f;
 		pos = max_pos - min_pos;
@@ -312,50 +314,71 @@ namespace ERI
 	
 	int SkeletonIns::GetVertexBufferSize()
 	{
-		return (resource_ref_->mesh_refs[0]->vertex_size * resource_ref_->mesh_refs[0]->vertices.size());
+		int size = 0;
+		for (int k = 0; k < resource_ref_->mesh_refs.size(); ++k)
+		{
+			size += resource_ref_->mesh_refs[k]->vertex_size * resource_ref_->mesh_refs[k]->vertices.size();
+		}
+		
+		return size;
 	}
 	
 	int SkeletonIns::FillVertexBuffer(void* buffer)
 	{
 		unsigned char* buffer_data = static_cast<unsigned char*>(buffer);
 		
-		Mesh* mesh = resource_ref_->mesh_refs[0];
+		int total_vertex_num = 0, vertex_num;
+		Mesh* mesh;
 		Vertex* vertex;
+		void* single_buffer;
+		float* float_value;
+		Vector3 pos, weight_pos, final_pos;
+		int influence_num;
 		
-		void* single_buffer = malloc(mesh->vertex_size);
-		
-		int vertex_num = mesh->vertices.size();
-		for (int i = 0; i < vertex_num; ++i)
+		for (int k = 0; k < resource_ref_->mesh_refs.size(); ++k)
 		{
-			vertex = mesh->vertices[i];
-			memcpy(single_buffer, vertex->data, mesh->vertex_size);
+			mesh = resource_ref_->mesh_refs[k];
 			
-			float* float_value = static_cast<float*>(single_buffer);
+			single_buffer = malloc(mesh->vertex_size);
 			
-			Vector3 pos(float_value[0], float_value[1], float_value[2]);
-			Vector3 weight_pos, final_pos;
-			
-			// TODO: normal??
-			//Vector3 normal(float_value[3], float_value[4], float_value[5])
-			
-			int influence_num = vertex->influence_nodes.size();
-			for (int j = 0; j < influence_num; ++j)
+			vertex_num = mesh->vertices.size();
+			for (int i = 0; i < vertex_num; ++i)
 			{
-				weight_pos = node_ins_array_[vertex->influence_nodes[j]].matrix_palette * pos;
-				weight_pos *= vertex->influence_weights[j];
-				final_pos += weight_pos;
+				vertex = mesh->vertices[i];
+				memcpy(single_buffer, vertex->data, mesh->vertex_size);
+				
+				float_value = static_cast<float*>(single_buffer);
+				
+				pos.x = float_value[0];
+				pos.y = float_value[1];
+				pos.z = float_value[2];
+				Vector3 final_pos;
+				
+				// TODO: normal??
+				//Vector3 normal(float_value[3], float_value[4], float_value[5])
+				
+				influence_num = vertex->influence_nodes.size();
+				for (int j = 0; j < influence_num; ++j)
+				{
+					weight_pos = node_ins_array_[vertex->influence_nodes[j]].matrix_palette * pos;
+					weight_pos *= vertex->influence_weights[j];
+					final_pos += weight_pos;
+				}
+				
+				float_value[0] = final_pos.x;
+				float_value[1] = final_pos.y;
+				float_value[2] = final_pos.z;
+				
+				memcpy(buffer_data, single_buffer, mesh->vertex_size);
+				buffer_data += mesh->vertex_size;
 			}
 			
-			float_value[0] = final_pos.x;
-			float_value[1] = final_pos.y;
-			float_value[2] = final_pos.z;
+			free(single_buffer);
 			
-			memcpy(&buffer_data[mesh->vertex_size * i], single_buffer, mesh->vertex_size);
+			total_vertex_num += vertex_num;
 		}
 		
-		free(single_buffer);
-		
-		return vertex_num;
+		return total_vertex_num;
 	}
 	
 	void SkeletonIns::GetVertexInfo(GLenum& vertex_type, VertexFormat& vertex_format)
