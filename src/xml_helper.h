@@ -20,10 +20,11 @@ namespace ERI
 	
 	struct XmlParseData
 	{
-		XmlParseData() : buffer(NULL) {}
+		XmlParseData() : current_node(NULL), buffer(NULL) {}
 		~XmlParseData() { if (buffer) delete [] buffer; }
 		
 		rapidxml::xml_document<>	doc;
+		rapidxml::xml_node<>*		current_node;
 		char*						buffer;
 	};
 	
