@@ -23,6 +23,10 @@
 #   define ERI_PLATFORM ERI_PLATFORM_UNKNOW
 #endif
 
+#ifdef __APPLE__
+#include "TargetConditionals.h"
+#endif
+
 //
 
 #include <stddef.h>
