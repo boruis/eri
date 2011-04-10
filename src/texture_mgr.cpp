@@ -11,14 +11,24 @@
 
 #include "texture_mgr.h"
 
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
-#include "ios/texture_reader_uikit.h"
-#include "ios/texture_reader_pvr.h"
+#ifdef ERI_TEXTURE_READER_LIBPNG
 #include "texture_reader_libpng.h"
-#elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
-#include "texture_reader_bitmap_factory.h"
-#else
+#endif
+
+#ifdef ERI_TEXTURE_READER_FREEIMAGE
 #include "texture_reader_freeimage.h"
+#endif
+
+#ifdef ERI_TEXTURE_READER_UIKIT
+#include "ios/texture_reader_uikit.h"
+#endif
+
+#ifdef ERI_TEXTURE_READER_PVR
+#include "ios/texture_reader_pvr.h"
+#endif
+
+#ifdef ERI_TEXTURE_READER_BITMAP_FACTORY
+#include "android/texture_reader_bitmap_factory.h"
 #endif
 
 #include "texture_reader.h"
@@ -103,22 +113,31 @@ namespace ERI {
 		std::map<std::string, Texture*>::iterator it = texture_map_.find(resource_path);
 		if (it == texture_map_.end())
 		{
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
 			PreloadTextureInfo info;
 			info.path = resource_path;
+
+#ifdef ERI_ERI_TEXTURE_READER_PVR
 			if (resource_path.substr(resource_path.length() - 4, 4).compare(".pvr") == 0)
 				info.reader = new TextureReaderPVR(resource_path, false);
 			else
-				info.reader = new TextureReaderLibPNG(resource_path, false);
-				//info.reader = new TextureReaderUIImage(resource_path, false);
-			preload_textures_.push_back(info);
 #endif
+#if defined(ERI_ERI_TEXTURE_READER_UIKIT)
+				info.reader = new TextureReaderLibPNG(resource_path, false);
+#elif defined(ERI_ERI_TEXTURE_READER_LIBPNG)
+				info.reader = new TextureReaderUIImage(resource_path, false);
+#elif defined(ERI_TEXTURE_READER_FREEIMAGE)
+				info.reader = new TextureReaderFreeImage(resource_path, false);
+#else
+      ASSERT(0);
+#endif
+
+			preload_textures_.push_back(info);
 		}
 	}
 	
 	void TextureMgr::ConstructPreloadTextures()
 	{
-		int num = preload_textures_.size();
+		size_t num = preload_textures_.size();
 		for (int i = 0; i < num; ++i)
 		{
 			PreloadTextureInfo& info = preload_textures_[i];
@@ -145,16 +164,22 @@ namespace ERI {
 		if (it == texture_map_.end())
 		{
 			TextureReader* reader;
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
+      
+#ifdef ERI_TEXTURE_READER_PVR
 			if (resource_path.substr(resource_path.length() - 4, 4).compare(".pvr") == 0)
 				reader = new TextureReaderPVR(resource_path, true);
 			else
+#endif
+#if defined(ERI_TEXTURE_READER_UIKIT)
+				reader = new TextureReaderUIImage(resource_path, true);
+#elif defined(ERI_TEXTURE_READER_LIBPNG)
 				reader = new TextureReaderLibPNG(resource_path, true);
-			//reader = new TextureReaderUIImage(resource_path, true);
-#elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
-			reader = new TextureReaderBitmapFactory(resource_path);
+#elif defined(ERI_TEXTURE_READER_FREEIMAGE)
+				reader = new TextureReaderFreeImage(resource_path, true);
+#elif defined(ERI_TEXTURE_READER_BITMAP_FACTORY)
+				reader = new TextureReaderBitmapFactory(resource_path);
 #else
-			reader = new TextureReaderFreeImage(resource_path, true);
+      ASSERT(0);
 #endif
 
 			// TODO: check texture invalid number, maybe use int -1 is better
@@ -215,7 +240,7 @@ namespace ERI {
 		std::map<std::string, Texture*>::iterator it = texture_map_.find(txt + "_txt");
 		if (it == texture_map_.end())
 		{
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
+#ifdef ERI_TEXTURE_READER_UIKIT
 			TextureReaderUIFont reader(txt, font_name, font_size, w, h);
 #else
 			TextureReader reader(true);

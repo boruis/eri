@@ -141,7 +141,7 @@ namespace ERI {
 		if (!childs_.empty())
 		{
 			SceneActor* actor;
-			for (int i = childs_.size() - 1; i >= 0; --i)
+			for (int i = static_cast<int>(childs_.size()) - 1; i >= 0; --i)
 			{
 				actor = childs_[i]->GetHitActor(local_space_pos);
 				if (actor)
@@ -260,7 +260,7 @@ namespace ERI {
 		
 		Vector3 local_space_pos = world_space_pos;
 		
-		for (int i = parent_list.size() - 1; i >= 0; --i)
+		for (int i = static_cast<int>(parent_list.size()) - 1; i >= 0; --i)
 		{
 			local_space_pos = parent_list[i]->GetInvTransform() * local_space_pos;
 		}
@@ -500,7 +500,7 @@ namespace ERI {
 	{
 		render_data_.need_update_world_model_matrix = true;
 		
-		int child_num = childs_.size();
+		size_t child_num = childs_.size();
 		for (int i = 0; i < child_num; ++i)
 		{
 			childs_[i]->SetWorldTransformDirty();
@@ -1245,7 +1245,7 @@ namespace ERI {
 		else
 			sprintf(number_str, (!is_force_sign_ || number_ == 0) ? "%d" : "%+d", number_);
 		
-		now_len_ = strlen(number_str);
+		now_len_ = static_cast<int>(strlen(number_str));
 		
 		int unit_vertex_num = 6;
 		
@@ -1361,7 +1361,7 @@ namespace ERI {
 		
 		width = height = 0;
 		
-		int len = txt.length();
+		size_t len = txt.length();
 		
 		if (len == 0)
 			return;
@@ -1401,7 +1401,7 @@ namespace ERI {
 	
 	void TxtActor::UpdateVertexBuffer()
 	{
-		now_len_ = txt_.length();
+		now_len_ = static_cast<int>(txt_.length());
 		
 		int unit_vertex_num = is_use_line_ ? 8 : 6;
 		

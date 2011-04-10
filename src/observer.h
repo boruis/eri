@@ -58,7 +58,7 @@ public:
 	
 	void Notify(T& info)
 	{
-		int observer_num = observers_.size();
+		size_t observer_num = observers_.size();
 		for (int i = 0; i < observer_num; ++i)
 		{
 			observers_[i]->OnNotified(info);

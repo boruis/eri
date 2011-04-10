@@ -26,6 +26,7 @@ namespace ERI {
 		texture_data_(NULL)
 	{
 		std::string real_path(path);
+
 #if ERI_PLATFORM == ERI_PLATFORM_IOS || ERI_PLATFORM == ERI_PLATFORM_MAC
 		if (path[0] != '/')
 		{

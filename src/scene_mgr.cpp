@@ -64,14 +64,14 @@ namespace ERI {
 				if (actor_arrays_[i] == NULL)
 				{
 					actor_arrays_[i] = array;
-					array_idx = i;
+					array_idx = static_cast<int>(i);
 					break;
 				}
 			}
 			if (i == num)
 			{
 				actor_arrays_.push_back(array);
-				array_idx = num;
+				array_idx = static_cast<int>(num);
 			}
 			
 			texture_map_.insert(std::make_pair(texture_id, array_idx));
@@ -202,7 +202,7 @@ namespace ERI {
 	{
 		ASSERT(actor);
 		
-		int num = actors_.size();
+		size_t num = actors_.size();
 		for (int i = 0; i < num; ++i)
 		{
 			if (actors_[i] == actor)
@@ -225,7 +225,7 @@ namespace ERI {
 	{
 		SceneActor* actor;
 		
-		int num = actors_.size();
+		int num = static_cast<int>(actors_.size());
 		for (int i = num - 1; i >= 0; --i)
 		{
 			actor = actors_[i]->GetHitActor(pos);
@@ -474,7 +474,7 @@ namespace ERI {
 	
 	void SceneMgr::Render(Renderer* renderer)
 	{
-		int layer_num = layers_.size();
+		size_t layer_num = layers_.size();
 		for (int i = 0; i < layer_num; ++i)
 		{
 			if (layers_[i]->is_visible())
@@ -544,7 +544,7 @@ namespace ERI {
 		// TODO: 3D handle?
 		
 		SceneActor* actor;
-		for (int i = layers_.size() - 1; i >= 0; --i)
+		for (int i = static_cast<int>(layers_.size()) - 1; i >= 0; --i)
 		{
 			actor = layers_[i]->GetHitActor(pos);
 			if (actor)
@@ -563,7 +563,7 @@ namespace ERI {
 			default_cam_->SetProjectionModified();
 		}
 		
-		int layer_num = layers_.size();
+		size_t layer_num = layers_.size();
 		for (int i = 0; i < layer_num; ++i)
 		{
 			if (layers_[i]->cam())

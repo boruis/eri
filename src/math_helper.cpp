@@ -941,7 +941,7 @@ namespace ERI {
 		line.dir = ray.dir;
 		bool intersects = IsIntersectLineCircle2(line, circle, &t);
 
-		int intersection_count = t.size();
+		size_t intersection_count = t.size();
 
 		if (intersects)
 		{

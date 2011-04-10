@@ -57,7 +57,7 @@ namespace ERI {
 		NSMutableArray* keys = [[frames allKeys] mutableCopy];
 		[keys sortUsingSelector:@selector(compare:)];
 
-		int num = [keys count];
+		NSInteger num = [keys count];
 		for (int i = 0; i < num; ++i)
 		{
 			unit = [frames objectForKey:[keys objectAtIndex:i]];
