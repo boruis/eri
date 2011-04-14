@@ -33,11 +33,24 @@ namespace ERI {
 	template<typename T>
 	inline const T& Max(const T& a, const T& b) { return (a > b) ? a : b; }
 	template<typename T>
-	inline T Clamp(T a, const T& min_value, const T& max_value) { a = Min(a, max_value); a = Max(a, min_value); return a; }
+	inline T Clamp(T a, const T& min_value, const T& max_value)
+	{
+		ASSERT(min_value < max_value);
+		if (a < min_value) a = min_value;
+		else if (a > max_value) a = max_value;
+		return a;
+	}
 	template<typename T>
 	inline T Abs(const T& a) { return (a > 0) ? a : -a; }
 	
-	inline int Round(float a) { if (a > 0.0f) return static_cast<int>(a + 0.5f); else if (a < 0.0f) return static_cast<int>(a - 0.5f); else return 0; }
+	inline int Round(float a)
+	{
+		if (a > 0.0f)
+			return static_cast<int>(a + 0.5f);
+		else if (a < 0.0f)
+			return static_cast<int>(a - 0.5f);
+		else return 0;
+	}
 	
 #pragma mark Vector2
 	
