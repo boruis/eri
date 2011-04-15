@@ -71,6 +71,11 @@ namespace ERI {
 		if (handler_) handler_->KeyDown(characters, code);
 	}
 	
+	void InputMgr::KeyUp(const std::string& characters, InputKeyCode code /*= KEY_NONE*/)
+	{
+		if (handler_) handler_->KeyUp(characters, code);
+	}
+	
 	void InputMgr::Accelerate(const Vector3& g)
 	{
 		if (handler_) handler_->Accelerate(g);

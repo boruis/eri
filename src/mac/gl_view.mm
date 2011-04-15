@@ -105,13 +105,11 @@ float right_mouse_down_x, right_mouse_down_y;
 	ERI::Root::Ins().input_mgr()->Scroll(e);
 }
 
-- (void)keyDown:(NSEvent *)event
+static ERI::InputKeyCode TranslateKeyCode(int event_key_code)
 {
-	NSString *characters = [event characters];
-	NSLog(@"key %@\n", characters);
-	
 	ERI::InputKeyCode code = ERI::KEY_NONE;
-	switch ([event keyCode])
+	
+	switch (event_key_code)
 	{
 		case 0x33:
 			code = ERI::KEY_DELETE;
@@ -121,9 +119,48 @@ float right_mouse_down_x, right_mouse_down_y;
 			code = ERI::KEY_ESCAPE;
 			NSLog(@"key escape!");
 			break;
+		case 0x7b:
+			code = ERI::KEY_LEFT;
+			NSLog(@"key left!");
+			break;
+		case 0x7c:
+			code = ERI::KEY_RIGHT;
+			NSLog(@"key right!");
+			break;
+		case 0x7d:
+			code = ERI::KEY_DOWN;
+			NSLog(@"key down!");
+			break;
+		case 0x7e:
+			code = ERI::KEY_UP;
+			NSLog(@"key up!");
+			break;
 	}
 	
-	ERI::Root::Ins().input_mgr()->KeyDown([characters UTF8String], code);
+	return code;
+}
+
+- (void)keyDown:(NSEvent *)event
+{
+	// TODO: repeat handle
+	
+	if ([event isARepeat])
+		return;
+	
+	NSString *characters = [event characters];
+	NSLog(@"KeyDown %@\n", characters);
+	
+	ERI::Root::Ins().input_mgr()->KeyDown([characters UTF8String],
+										  TranslateKeyCode([event keyCode]));
+}
+
+- (void)keyUp:(NSEvent *)event
+{
+	NSString *characters = [event characters];
+	NSLog(@"KeyUp %@\n", characters);
+	
+	ERI::Root::Ins().input_mgr()->KeyUp([characters UTF8String],
+										TranslateKeyCode([event keyCode]));
 }
 
 - (void)reshape

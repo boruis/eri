@@ -29,7 +29,11 @@ namespace ERI {
 	{
 		KEY_NONE,
 		KEY_DELETE,
-		KEY_ESCAPE
+		KEY_ESCAPE,
+		KEY_LEFT,
+		KEY_RIGHT,
+		KEY_DOWN,
+		KEY_UP
 	};
 	
 	class InputHandler
@@ -46,6 +50,7 @@ namespace ERI {
 		virtual void OverMove(const InputEvent& event) {}
 		virtual void RightClick(const InputEvent& event) {}
 		virtual void KeyDown(const std::string& characters, InputKeyCode code) {}
+		virtual void KeyUp(const std::string& characters, InputKeyCode code) {}
 		
 		virtual void Accelerate(const Vector3& g) {}
 		virtual void Shake() {}
@@ -68,6 +73,7 @@ namespace ERI {
 		void OverMove(const InputEvent& event);
 		void RightClick(const InputEvent& event);
 		void KeyDown(const std::string& characters, InputKeyCode code = KEY_NONE);
+		void KeyUp(const std::string& characters, InputKeyCode code = KEY_NONE);
 
 		void Accelerate(const Vector3& g);
 		void Shake();
