@@ -179,29 +179,67 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 
+	case WM_KEYDOWN:
+		{
+			ERI::InputKeyCode code = ERI::KEY_NONE;
+
+			switch (wParam)
+			{
+				case VK_LEFT:
+					code = ERI::KEY_LEFT;
+					break;
+
+				case VK_RIGHT:
+					code = ERI::KEY_RIGHT;
+					break;
+
+				case VK_DOWN:
+					code = ERI::KEY_DOWN;
+					break;
+
+				case VK_UP:
+					code = ERI::KEY_UP;
+					break;
+
+				default:
+					break;
+			}
+
+			if (code != ERI::KEY_NONE)
+			{
+				ERI::Root::Ins().input_mgr()->KeyDown(std::string(), code);
+			}
+		}
+		break;
+
 	case WM_CHAR:
 		{
 			std::string characters;
 
 			ERI::InputKeyCode code = ERI::KEY_NONE;
-			if (wParam == VK_BACK)
+
+			switch (wParam)
 			{
-				code = ERI::KEY_DELETE;
-			}
-			else if (wParam == VK_ESCAPE)
-			{
-				code = ERI::KEY_ESCAPE;
-			}
-			else if (wParam == VK_RETURN)
-			{
-				characters = "\r";
-			}
-			else
-			{
-				char str[2];
-				str[1] = 0;
-				str[0] = wParam;
-				characters = str;
+				case VK_BACK:
+					code = ERI::KEY_DELETE;
+					break;
+
+				case VK_ESCAPE:
+					code = ERI::KEY_ESCAPE;
+					break;
+
+				case VK_RETURN:
+					characters = "\r";
+					break;
+
+				default:
+					{
+						char str[2];
+						str[1] = 0;
+						str[0] = wParam;
+						characters = str;
+					}
+					break;
 			}
 
 			ERI::Root::Ins().input_mgr()->KeyDown(characters, code);
