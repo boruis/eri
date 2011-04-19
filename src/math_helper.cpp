@@ -890,7 +890,7 @@ namespace ERI {
 		return IT_EMPTY;
 	}
 	
-	bool IsIntersectLineCircle2(const Line2& line, const Circle2& circle, std::vector<float>* out_intersect_length)
+	bool IsIntersectLineCircle2(const Line2& line, const Circle& circle, std::vector<float>* out_intersect_length)
 	{
 		// Intersection of a the line P+t*D and the circle |X-C| = R.  The line
 		// direction is unit length. The t value is a root to the quadratic
@@ -933,7 +933,7 @@ namespace ERI {
 		return intersection_count != 0;
 	}
 	
-	bool IsIntersectRayCircle2(const Ray2& ray, const Circle2& circle, std::vector<Vector2>* out_intersect_pos)
+	bool IsIntersectRayCircle2(const Ray2& ray, const Circle& circle, std::vector<Vector2>* out_intersect_pos)
 	{
 		std::vector<float> t;
 		Line2 line;
@@ -978,7 +978,7 @@ namespace ERI {
 		return intersection_count > 0;
 	}
 	
-	bool IsIntersectBoxCircle2(const Box2& box, const Circle2& circle)
+	bool IsIntersectBoxCircle2(const Box2& box, const Circle& circle)
 	{
 		float distance_squared = GetPointBox2DistanceSquared(circle.center, box);
 		return distance_squared <= (circle.radius * circle.radius);
@@ -1036,7 +1036,7 @@ namespace ERI {
 		return true;
 	}
 	
-	bool IsIntersectAABoxCircle2(const AABox2& box, const Circle2& circle)
+	bool IsIntersectAABoxCircle2(const AABox2& box, const Circle& circle)
 	{
 		float diff;
 		float squared_distance = 0.0f;
@@ -1068,6 +1068,65 @@ namespace ERI {
 		return squared_distance <= circle.radius;
 	}
 	
+	bool IsIntersectRayBox3(const Ray3& ray, const Box3& box)
+	{
+		float WdU[3], AWdU[3], DdU[3], ADdU[3], AWxDdU[3], RHS;
+		
+		Vector3 diff = ray.origin - box.center;
+		
+		WdU[0] = ray.dir.DotProduct(box.axis[0]);
+		AWdU[0] = Abs(WdU[0]);
+		DdU[0] = diff.DotProduct(box.axis[0]);
+		ADdU[0] = Abs(DdU[0]);
+		if (ADdU[0] > box.extent[0] && DdU[0] * WdU[0] >= 0.0f)
+		{
+			return false;
+		}
+		
+		WdU[1] = ray.dir.DotProduct(box.axis[1]);
+		AWdU[1] = Abs(WdU[1]);
+		DdU[1] = diff.DotProduct(box.axis[1]);
+		ADdU[1] = Abs(DdU[1]);
+		if (ADdU[1] > box.extent[1] && DdU[1] * WdU[1] >= 0.0f)
+		{
+			return false;
+		}
+		
+		WdU[2] = ray.dir.DotProduct(box.axis[2]);
+		AWdU[2] = Abs(WdU[2]);
+		DdU[2] = diff.DotProduct(box.axis[2]);
+		ADdU[2] = Abs(DdU[2]);
+		if (ADdU[2] > box.extent[2] && DdU[2] * WdU[2] >= 0.0f)
+		{
+			return false;
+		}
+		
+		Vector3 WxD = ray.dir.CrossProduct(diff);
+		
+		AWxDdU[0] = Abs(WxD.DotProduct(box.axis[0]));
+		RHS = box.extent[1] * AWdU[2] + box.extent[2] * AWdU[1];
+		if (AWxDdU[0] > RHS)
+		{
+			return false;
+		}
+		
+		AWxDdU[1] = Abs(WxD.DotProduct(box.axis[1]));
+		RHS = box.extent[0] * AWdU[2] + box.extent[2] * AWdU[0];
+		if (AWxDdU[1] > RHS)
+		{
+			return false;
+		}
+		
+		AWxDdU[2] = Abs(WxD.DotProduct(box.axis[2]));
+		RHS = box.extent[0] * AWdU[1] + box.extent[1] * AWdU[0];
+		if (AWxDdU[2] > RHS)
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
 	float SphereInFrustum(const Sphere& sphere, const Plane* frustum)
 	{
 		float d;
@@ -1080,6 +1139,36 @@ namespace ERI {
 		}
 		
 		return d + sphere.radius;
+	}
+
+	bool BoxInFrustum(const Box3& box, const Plane* frustum)
+	{
+		Vector3 vertices[8];
+		box.GetVertices(vertices);
+		
+		for (int p = 0; p < 6; ++p)
+		{
+			if (frustum[p].normal.DotProduct(vertices[0]) + frustum[p].d > 0)
+				continue;
+			if (frustum[p].normal.DotProduct(vertices[1]) + frustum[p].d > 0)
+				continue;
+			if (frustum[p].normal.DotProduct(vertices[2]) + frustum[p].d > 0)
+				continue;
+			if (frustum[p].normal.DotProduct(vertices[3]) + frustum[p].d > 0)
+				continue;
+			if (frustum[p].normal.DotProduct(vertices[4]) + frustum[p].d > 0)
+				continue;
+			if (frustum[p].normal.DotProduct(vertices[5]) + frustum[p].d > 0)
+				continue;
+			if (frustum[p].normal.DotProduct(vertices[6]) + frustum[p].d > 0)
+				continue;
+			if (frustum[p].normal.DotProduct(vertices[7]) + frustum[p].d > 0)
+				continue;
+			
+			return false;
+		}
+		
+		return true;
 	}
 	
 #pragma mark Random

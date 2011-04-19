@@ -342,6 +342,12 @@ namespace ERI {
 		Vector2	dir;
 	};
 	
+	struct Ray3
+	{
+		Vector3	origin;
+		Vector3	dir;
+	};
+	
 	struct Segment2
 	{
 		Segment2(const Vector2& _begin, const Vector2& _end) : begin(_begin), end(_end)
@@ -362,7 +368,7 @@ namespace ERI {
 		float	extent;
 	};
 	
-	struct Circle2
+	struct Circle
 	{
 		Vector2	center;
 		float	radius;
@@ -376,11 +382,47 @@ namespace ERI {
 	
 	struct Box2
 	{
+		Box2()
+		{
+			axis[0] = Vector2(1.0f, 0.0f);
+			axis[1] = Vector2(0.0f, 1.0f);
+		}
+		
 		Vector2	center;
 		Vector2	axis[2];
 		float	extent[2];
 	};
-	
+
+	struct Box3
+	{
+		Box3()
+		{
+			axis[0] = Vector3(1.0f, 0.0f, 0.0f);
+			axis[1] = Vector3(0.0f, 1.0f, 0.0f);
+			axis[2] = Vector3(0.0f, 0.0f, 1.0f);
+		}
+
+		void GetVertices(Vector3* vertices) const
+		{
+			Vector3 ext_axis0 = axis[0] * extent[0];
+			Vector3 ext_axis1 = axis[1] * extent[1];
+			Vector3 ext_axis2 = axis[2] * extent[2];
+			
+			vertices[0] = center - ext_axis0 - ext_axis1 - ext_axis2;
+			vertices[1] = center + ext_axis0 - ext_axis1 - ext_axis2;
+			vertices[2] = center + ext_axis0 + ext_axis1 - ext_axis2;
+			vertices[3] = center - ext_axis0 + ext_axis1 - ext_axis2;
+			vertices[4] = center - ext_axis0 - ext_axis1 + ext_axis2;
+			vertices[5] = center + ext_axis0 - ext_axis1 + ext_axis2;
+			vertices[6] = center + ext_axis0 + ext_axis1 + ext_axis2;
+			vertices[7] = center - ext_axis0 + ext_axis1 + ext_axis2;
+		}
+		
+		Vector3	center;
+		Vector3	axis[3];
+		float	extent[3];
+	};
+
 	struct AABox2
 	{
 		Vector2	min;
@@ -405,12 +447,14 @@ namespace ERI {
 	float GetPointSegment2DistanceSquared(const Vector2& point, const Segment2& segment);
 	float GetPointBox2DistanceSquared(const Vector2& point, const Box2& box);
 	IntersectionType CheckIntersectRayRay2(const Ray2& ray1, const Ray2& ray2, Vector2* out_intersect_pos);
-	bool IsIntersectLineCircle2(const Line2& line, const Circle2& circle, std::vector<float>* out_intersect_length);
-	bool IsIntersectRayCircle2(const Ray2& ray, const Circle2& circle, std::vector<Vector2>* out_intersect_pos);
-	bool IsIntersectBoxCircle2(const Box2& box, const Circle2& circle);
+	bool IsIntersectLineCircle2(const Line2& line, const Circle& circle, std::vector<float>* out_intersect_length);
+	bool IsIntersectRayCircle2(const Ray2& ray, const Circle& circle, std::vector<Vector2>* out_intersect_pos);
+	bool IsIntersectBoxCircle2(const Box2& box, const Circle& circle);
 	bool IsIntersectBoxBox2(const Box2& box1, const Box2& box2);
-	bool IsIntersectAABoxCircle2(const AABox2& box, const Circle2& circle);
+	bool IsIntersectAABoxCircle2(const AABox2& box, const Circle& circle);
+	bool IsIntersectRayBox3(const Ray3& ray, const Box3& box);
 	float SphereInFrustum(const Sphere& sphere, const Plane* frustum);
+	bool BoxInFrustum(const Box3& box, const Plane* frustum);
 
 #pragma mark Random
 	
