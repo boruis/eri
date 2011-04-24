@@ -55,7 +55,8 @@
 // assert
 
 #include <assert.h>
-#define ASSERT(exp)					assert(exp)
-#define ASSERT2(exp, description)	assert(exp)
+#define ASSERT(exp)								assert(exp)
+#define ASSERT2(exp, description)				assert(exp)
+#define ASSERT3(exp, description_format, ...)	assert(exp)
 
 #endif // ERI_PCH_H

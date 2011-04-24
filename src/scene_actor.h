@@ -374,48 +374,6 @@ namespace ERI {
 		bool		is_float_;
 		bool		is_force_sign_;
 	};
-	
-#pragma mark TxtActor
-	
-	struct Font;
-	
-	class TxtActor : public SceneActor
-	{
-	public:
-		TxtActor(const std::string& txt, const std::string& font_name, int font_size, bool is_pos_center = false);
-		virtual ~TxtActor();
-		
-		void SetTxt(const std::string& txt);
-
-		inline void set_area_border(float size) { area_border_ = size; }
-		
-		inline float width() { return width_; }
-		inline float height() { return height_; }
-		
-		inline const std::string& txt() { return txt_; }
-		
-		static void CalculateSize(const std::string& txt, const Font* font, int font_size, float& width, float& height);
-		
-	private:
-		virtual bool IsInArea(const Vector3& local_space_pos);
-		
-		void UpdateVertexBuffer();
-		
-		vertex_2_pos_tex*	vertices_;
-		int					now_len_max_;
-		int					now_len_;
-		
-		const Font*		font_;
-		int				font_size_;
-		bool			is_use_line_;
-
-		float			area_border_;
-		
-		float			width_, height_;
-		bool			is_pos_center_;
-		
-		std::string		txt_;
-	};
 
 }
 

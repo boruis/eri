@@ -52,6 +52,33 @@ namespace ERI {
 		else return 0;
 	}
 	
+	inline bool is_power_of_2(uint32_t val)
+	{
+		return (val & (val - 1)) == 0;
+	}
+	
+	inline uint32_t nex_power_of_2(uint32_t val)
+	{
+		--val;
+		val = val | (val >> 1);
+		val = val | (val >> 2);
+		val = val | (val >> 4);
+		val = val | (val >> 8);
+		val = val | (val >> 16);
+		return val + 1;
+	}
+
+	inline uint32_t prev_power_of_2(uint32_t val)
+	{
+		--val;
+		val = val | (val >> 1);
+		val = val | (val >> 2);
+		val = val | (val >> 4);
+		val = val | (val >> 8);
+		val = val | (val >> 16);
+		return val - (val >> 1);
+	}
+	
 #pragma mark Vector2
 	
 	struct Vector3;

@@ -38,8 +38,12 @@
 		42C5F07510C148030004232B /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 42C5F07410C148030004232B /* OpenGLES.framework */; };
 		42F60B651140D9D900CEA8FC /* demo_app.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 42F60B641140D9D900CEA8FC /* demo_app.cpp */; };
 		F612B190126B62EB002C8152 /* platform_helper_apple.mm in Sources */ = {isa = PBXBuildFile; fileRef = F612B18E126B62EB002C8152 /* platform_helper_apple.mm */; };
+		F6579B87136415B60049EBDB /* shared_skeleton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6579B81136415B60049EBDB /* shared_skeleton.cpp */; };
+		F6579B88136415B60049EBDB /* sys_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6579B83136415B60049EBDB /* sys_helper.cpp */; };
+		F6579B89136415B60049EBDB /* txt_actor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6579B85136415B60049EBDB /* txt_actor.cpp */; };
 		F66D438C126DF88200199D22 /* libpng.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F66D438B126DF88200199D22 /* libpng.a */; };
 		F6738130126E15A30033BBC7 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = F673812F126E15A30033BBC7 /* MainWindow.xib */; };
+		F6B60A2E13642C1A00F36718 /* libfreetype-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F6B60A2D13642C1A00F36718 /* libfreetype-ios.a */; };
 		F6D04216126DFE2C00FCA4ED /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F6D04215126DFE2C00FCA4ED /* libz.dylib */; };
 		F6E559E5126DF2FA00F8BE21 /* texture_reader_libpng.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6E559E3126DF2FA00F8BE21 /* texture_reader_libpng.cpp */; };
 /* End PBXBuildFile section */
@@ -111,8 +115,16 @@
 		42F60B641140D9D900CEA8FC /* demo_app.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = demo_app.cpp; path = ../../src/demo_app.cpp; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* eri-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "eri-Info.plist"; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.iphone.info-plist"; sourceTree = "<group>"; };
 		F612B18E126B62EB002C8152 /* platform_helper_apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = platform_helper_apple.mm; sourceTree = "<group>"; };
+		F6579B80136415B60049EBDB /* observer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = observer.h; path = ../../../src/observer.h; sourceTree = "<group>"; };
+		F6579B81136415B60049EBDB /* shared_skeleton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = shared_skeleton.cpp; path = ../../../src/shared_skeleton.cpp; sourceTree = "<group>"; };
+		F6579B82136415B60049EBDB /* shared_skeleton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = shared_skeleton.h; path = ../../../src/shared_skeleton.h; sourceTree = "<group>"; };
+		F6579B83136415B60049EBDB /* sys_helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sys_helper.cpp; path = ../../../src/sys_helper.cpp; sourceTree = "<group>"; };
+		F6579B84136415B60049EBDB /* sys_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sys_helper.h; path = ../../../src/sys_helper.h; sourceTree = "<group>"; };
+		F6579B85136415B60049EBDB /* txt_actor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = txt_actor.cpp; path = ../../../src/txt_actor.cpp; sourceTree = "<group>"; };
+		F6579B86136415B60049EBDB /* txt_actor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = txt_actor.h; path = ../../../src/txt_actor.h; sourceTree = "<group>"; };
 		F66D438B126DF88200199D22 /* libpng.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpng.a; path = ../../../3rd/libpng/libpng.a; sourceTree = SOURCE_ROOT; };
 		F673812F126E15A30033BBC7 /* MainWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainWindow.xib; sourceTree = "<group>"; };
+		F6B60A2D13642C1A00F36718 /* libfreetype-ios.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libfreetype-ios.a"; path = "../../../../3rd/freetype/libfreetype-ios.a"; sourceTree = "<group>"; };
 		F6D04215126DFE2C00FCA4ED /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		F6E559E3126DF2FA00F8BE21 /* texture_reader_libpng.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = texture_reader_libpng.cpp; path = ../../src/texture_reader_libpng.cpp; sourceTree = SOURCE_ROOT; };
 		F6E559E4126DF2FA00F8BE21 /* texture_reader_libpng.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = texture_reader_libpng.h; path = ../../src/texture_reader_libpng.h; sourceTree = SOURCE_ROOT; };
@@ -128,8 +140,9 @@
 				288765FD0DF74451002DB57D /* CoreGraphics.framework in Frameworks */,
 				42C5EF9810C134A40004232B /* QuartzCore.framework in Frameworks */,
 				42C5F07510C148030004232B /* OpenGLES.framework in Frameworks */,
-				F66D438C126DF88200199D22 /* libpng.a in Frameworks */,
 				F6D04216126DFE2C00FCA4ED /* libz.dylib in Frameworks */,
+				F66D438C126DF88200199D22 /* libpng.a in Frameworks */,
+				F6B60A2E13642C1A00F36718 /* libfreetype-ios.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -208,8 +221,9 @@
 				1DF5F4DF0D08C38300B7A737 /* UIKit.framework */,
 				1D30AB110D05D00D00671497 /* Foundation.framework */,
 				288765FC0DF74451002DB57D /* CoreGraphics.framework */,
-				F66D438B126DF88200199D22 /* libpng.a */,
 				F6D04215126DFE2C00FCA4ED /* libz.dylib */,
+				F66D438B126DF88200199D22 /* libpng.a */,
+				F6B60A2D13642C1A00F36718 /* libfreetype-ios.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -237,14 +251,16 @@
 				F612B18B126B62EB002C8152 /* apple */,
 				423386C81233C75D0077CD42 /* ios */,
 				423386D31233C75D0077CD42 /* pch.h */,
-				1B207BC31277BDAC006D3CDF /* mesh_loader.h */,
-				1B207AD71277B02A006D3CDF /* collada_loader.cpp */,
-				1B207AD81277B02A006D3CDF /* collada_loader.h */,
-				1B207ADB1277B02A006D3CDF /* xml_helper.cpp */,
-				1B207ADC1277B02A006D3CDF /* xml_helper.h */,
+				F6579B80136415B60049EBDB /* observer.h */,
 				423386D11233C75D0077CD42 /* math_helper.cpp */,
 				423386D21233C75D0077CD42 /* math_helper.h */,
+				F6579B83136415B60049EBDB /* sys_helper.cpp */,
+				F6579B84136415B60049EBDB /* sys_helper.h */,
+				1B207ADB1277B02A006D3CDF /* xml_helper.cpp */,
+				1B207ADC1277B02A006D3CDF /* xml_helper.h */,
 				423386D41233C75D0077CD42 /* platform_helper.h */,
+				423386DD1233C75D0077CD42 /* root.cpp */,
+				423386DE1233C75D0077CD42 /* root.h */,
 				423386C41233C75D0077CD42 /* font_mgr.cpp */,
 				423386C51233C75D0077CD42 /* font_mgr.h */,
 				423386C61233C75D0077CD42 /* input_mgr.cpp */,
@@ -258,20 +274,25 @@
 				423386DA1233C75D0077CD42 /* renderer_es1.h */,
 				423386DB1233C75D0077CD42 /* renderer_es2.cpp */,
 				423386DC1233C75D0077CD42 /* renderer_es2.h */,
-				423386DD1233C75D0077CD42 /* root.cpp */,
-				423386DE1233C75D0077CD42 /* root.h */,
 				423386E11233C75D0077CD42 /* scene_mgr.cpp */,
 				423386E21233C75D0077CD42 /* scene_mgr.h */,
 				423386DF1233C75D0077CD42 /* scene_actor.cpp */,
 				423386E01233C75D0077CD42 /* scene_actor.h */,
+				F6579B85136415B60049EBDB /* txt_actor.cpp */,
+				F6579B86136415B60049EBDB /* txt_actor.h */,
+				1B207BC31277BDAC006D3CDF /* mesh_loader.h */,
+				1B207AD71277B02A006D3CDF /* collada_loader.cpp */,
+				1B207AD81277B02A006D3CDF /* collada_loader.h */,
 				1B207AD91277B02A006D3CDF /* mesh_actor.cpp */,
 				1B207ADA1277B02A006D3CDF /* mesh_actor.h */,
 				1B99015812814F47008DE295 /* skeleton_actor.h */,
 				1B99015912814F47008DE295 /* skeleton_actor.cpp */,
-				423386E31233C75D0077CD42 /* texture_mgr.cpp */,
-				423386E41233C75D0077CD42 /* texture_mgr.h */,
+				F6579B81136415B60049EBDB /* shared_skeleton.cpp */,
+				F6579B82136415B60049EBDB /* shared_skeleton.h */,
 				1B956584126545FC00D123AF /* particle_system.cpp */,
 				1B956585126545FC00D123AF /* particle_system.h */,
+				423386E31233C75D0077CD42 /* texture_mgr.cpp */,
+				423386E41233C75D0077CD42 /* texture_mgr.h */,
 				423386E51233C75D0077CD42 /* texture_reader.h */,
 				F6E559E3126DF2FA00F8BE21 /* texture_reader_libpng.cpp */,
 				F6E559E4126DF2FA00F8BE21 /* texture_reader_libpng.h */,
@@ -376,6 +397,9 @@
 				1B207ADF1277B02A006D3CDF /* xml_helper.cpp in Sources */,
 				1B99015A12814F47008DE295 /* skeleton_actor.cpp in Sources */,
 				1BC745DD132A106900F14147 /* texture_reader_pvr.mm in Sources */,
+				F6579B87136415B60049EBDB /* shared_skeleton.cpp in Sources */,
+				F6579B88136415B60049EBDB /* sys_helper.cpp in Sources */,
+				F6579B89136415B60049EBDB /* txt_actor.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -392,11 +416,15 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = eri_Prefix.pch;
 				GCC_THUMB_SUPPORT = NO;
-				HEADER_SEARCH_PATHS = ../../../3rd/libpng;
+				HEADER_SEARCH_PATHS = (
+					../../../3rd/libpng,
+					../../../3rd/freetype,
+				);
 				INFOPLIST_FILE = "eri-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../3rd/libpng\"",
+					"\"$(SRCROOT)/../../../../3rd/freetype\"",
 				);
 				PRODUCT_NAME = eri;
 			};
@@ -410,11 +438,15 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = eri_Prefix.pch;
 				GCC_THUMB_SUPPORT = NO;
-				HEADER_SEARCH_PATHS = ../../../3rd/libpng;
+				HEADER_SEARCH_PATHS = (
+					../../../3rd/libpng,
+					../../../3rd/freetype,
+				);
 				INFOPLIST_FILE = "eri-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../3rd/libpng\"",
+					"\"$(SRCROOT)/../../../../3rd/freetype\"",
 				);
 				PRODUCT_NAME = eri;
 			};
@@ -428,10 +460,10 @@
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = ../../../3rd/libpng;
+				HEADER_SEARCH_PATHS = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 3.0;
 				PREBINDING = NO;
-				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "07C30C15-26F6-40AC-B7ED-365F8BBA51DF";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "1EF3D6E8-7BDF-456D-B270-112CB395C079";
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -444,9 +476,9 @@
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = ../../../3rd/libpng;
+				HEADER_SEARCH_PATHS = "";
 				PREBINDING = NO;
-				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "07C30C15-26F6-40AC-B7ED-365F8BBA51DF";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "1EF3D6E8-7BDF-456D-B270-112CB395C079";
 				SDKROOT = iphoneos;
 			};
 			name = Release;

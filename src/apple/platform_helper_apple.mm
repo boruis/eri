@@ -121,4 +121,26 @@ namespace ERI {
 		return true;
 	}
 	
+	int GetUnicodeFromUTF8(const std::string& str, int max_buff_length, uint32_t* buff)
+	{
+		NSString* utf8_str = [[NSString alloc] initWithUTF8String:str.c_str()];
+		
+		NSRange range;
+		range.location = 0;
+		range.length = [utf8_str length];
+		NSUInteger used_length;
+		
+		[utf8_str getBytes:buff
+				 maxLength:max_buff_length * sizeof(unsigned long)
+				usedLength:&used_length
+				  encoding:NSUTF32StringEncoding
+				   options:NSStringEncodingConversionAllowLossy
+					 range:range
+			remainingRange:NULL];
+
+		[utf8_str release];
+		
+		return used_length / 4;
+	}
+	
 }

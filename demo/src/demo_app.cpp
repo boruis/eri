@@ -11,15 +11,17 @@
 
 #include "root.h"
 #include "renderer.h"
+#include "font_mgr.h"
 #include "scene_mgr.h"
 #include "scene_actor.h"
+#include "txt_actor.h"
 
-ERI::CameraActor*	cam;
-ERI::TxtActor*		hello_txt;
-ERI::TxtActor*		fps_txt;
-ERI::NumberActor*	fps_number;
-ERI::SpriteActor*	pic;
-ERI::SpriteActor*	pic_shadow;
+static ERI::CameraActor*	cam;
+static ERI::TxtActor*		hello_txt;
+static ERI::TxtActor*		fps_txt;
+static ERI::NumberActor*	fps_number;
+static ERI::SpriteActor*	pic;
+static ERI::SpriteActor*	pic_shadow;
 
 DemoApp::DemoApp()
 {
@@ -36,14 +38,23 @@ DemoApp::DemoApp()
 	cam->AddToScene(ui_layer);
 	ERI::Root::Ins().scene_mgr()->SetCurrentCam(cam);
 	
-	hello_txt = new ERI::TxtActor("Hello! eri.", "georgia", static_cast<int>(32 * content_scale), true);
+#ifdef ERI_FONT_FREETYPE
+	ERI::Root::Ins().font_mgr()->GetFont("media/DroidSansFallback.ttf", 32);
+	hello_txt = new ERI::TxtActor("media/DroidSansFallback.ttf", static_cast<int>(32 * content_scale), true, true);
+	hello_txt->SetTxt("哈囉！阿深。");
+#else
+	hello_txt = new ERI::TxtActor("media/georgia.fnt", static_cast<int>(32 * content_scale), true, true);
+	hello_txt->SetTxt("Hello! eri.");
+#endif
+  
 	hello_txt->AddToScene(ui_layer);
 	hello_txt->SetTextureFilter(ERI::FILTER_LINEAR, ERI::FILTER_LINEAR);
 	hello_txt->SetDepthWrite(false);
 	hello_txt->SetPos(-50 * content_scale, 6 * content_scale);
 	hello_txt->SetColor(ERI::Color(1.0f, 0.8f, 0.2f));
 	
-	fps_txt = new ERI::TxtActor("current fps is", "nokiafc22", static_cast<int>(16 * content_scale), true);
+	fps_txt = new ERI::TxtActor("media/nokiafc22.fnt", static_cast<int>(16 * content_scale), true);
+	fps_txt->SetTxt("current fps is");
 	fps_txt->AddToScene(ui_layer);
 	fps_txt->SetPos(-110 * content_scale, -30 * content_scale);
 	fps_txt->SetColor(ERI::Color(0.4f, 0.4f, 0.4f));

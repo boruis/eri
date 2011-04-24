@@ -18,6 +18,7 @@
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		F612B1A5126B6374002C8152 /* gl_view.mm in Sources */ = {isa = PBXBuildFile; fileRef = F612B1A4126B6374002C8152 /* gl_view.mm */; };
 		F6327603126B520D005C23B6 /* platform_helper_apple.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6327602126B520D005C23B6 /* platform_helper_apple.mm */; };
+		F6AC86A81360EFB60067F913 /* sys_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6AC86A61360EFB60067F913 /* sys_helper.cpp */; };
 		F6B3AAE31269C68E009303FA /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6B3AAE21269C68E009303FA /* OpenGL.framework */; };
 		F6B3AB4E1269CC2E009303FA /* font_mgr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6B3AB311269CC2E009303FA /* font_mgr.cpp */; };
 		F6B3AB4F1269CC2E009303FA /* input_mgr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6B3AB331269CC2E009303FA /* input_mgr.cpp */; };
@@ -33,6 +34,9 @@
 		F6B3AB8F1269D224009303FA /* texture_reader_freeimage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6B3AB8D1269D224009303FA /* texture_reader_freeimage.cpp */; };
 		F6B3ABA71269D966009303FA /* libfreeimage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F6B3ABA61269D966009303FA /* libfreeimage.a */; };
 		F6B3ACB21269DB52009303FA /* media in Resources */ = {isa = PBXBuildFile; fileRef = F6B3ACB11269DB52009303FA /* media */; };
+		F6B60A2C13642B8D00F36718 /* libfreetype.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F6B60A2B13642B8D00F36718 /* libfreetype.dylib */; };
+		F6E5DB131363BDCD00D71F1A /* txt_actor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6E5DB111363BDCD00D71F1A /* txt_actor.cpp */; };
+		F6F1B5A013643297008F5876 /* shared_skeleton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6F1B59E13643297008F5876 /* shared_skeleton.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -64,6 +68,8 @@
 		F612B1A3126B6374002C8152 /* gl_view.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gl_view.h; sourceTree = "<group>"; };
 		F612B1A4126B6374002C8152 /* gl_view.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = gl_view.mm; sourceTree = "<group>"; };
 		F6327602126B520D005C23B6 /* platform_helper_apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = platform_helper_apple.mm; sourceTree = "<group>"; };
+		F6AC86A61360EFB60067F913 /* sys_helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sys_helper.cpp; path = ../../src/sys_helper.cpp; sourceTree = "<group>"; };
+		F6AC86A71360EFB60067F913 /* sys_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sys_helper.h; path = ../../src/sys_helper.h; sourceTree = "<group>"; };
 		F6B3AAE21269C68E009303FA /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		F6B3AB311269CC2E009303FA /* font_mgr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = font_mgr.cpp; path = ../../src/font_mgr.cpp; sourceTree = SOURCE_ROOT; };
 		F6B3AB321269CC2E009303FA /* font_mgr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = font_mgr.h; path = ../../src/font_mgr.h; sourceTree = SOURCE_ROOT; };
@@ -97,6 +103,12 @@
 		F6B3AB8E1269D224009303FA /* texture_reader_freeimage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = texture_reader_freeimage.h; path = ../../src/texture_reader_freeimage.h; sourceTree = SOURCE_ROOT; };
 		F6B3ABA61269D966009303FA /* libfreeimage.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libfreeimage.a; path = ../../../3rd/FreeImage/libfreeimage.a; sourceTree = SOURCE_ROOT; };
 		F6B3ACB11269DB52009303FA /* media */ = {isa = PBXFileReference; lastKnownFileType = folder; name = media; path = ../media; sourceTree = SOURCE_ROOT; };
+		F6B60A2B13642B8D00F36718 /* libfreetype.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libfreetype.dylib; path = usr/local/lib/libfreetype.dylib; sourceTree = SDKROOT; };
+		F6E5DB111363BDCD00D71F1A /* txt_actor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 2; lastKnownFileType = sourcecode.cpp.cpp; name = txt_actor.cpp; path = ../../src/txt_actor.cpp; sourceTree = "<group>"; tabWidth = 2; usesTabs = 0; };
+		F6E5DB121363BDCD00D71F1A /* txt_actor.h */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 2; lastKnownFileType = sourcecode.c.h; name = txt_actor.h; path = ../../src/txt_actor.h; sourceTree = "<group>"; tabWidth = 2; usesTabs = 0; };
+		F6F1B59D13643297008F5876 /* observer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = observer.h; path = ../../src/observer.h; sourceTree = "<group>"; };
+		F6F1B59E13643297008F5876 /* shared_skeleton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = shared_skeleton.cpp; path = ../../src/shared_skeleton.cpp; sourceTree = "<group>"; };
+		F6F1B59F13643297008F5876 /* shared_skeleton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = shared_skeleton.h; path = ../../src/shared_skeleton.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -107,6 +119,7 @@
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 				F6B3AAE31269C68E009303FA /* OpenGL.framework in Frameworks */,
 				F6B3ABA71269D966009303FA /* libfreeimage.a in Frameworks */,
+				F6B60A2C13642B8D00F36718 /* libfreetype.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -172,8 +185,11 @@
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 			);
+			indentWidth = 4;
 			name = eri;
 			sourceTree = "<group>";
+			tabWidth = 4;
+			usesTabs = 1;
 		};
 		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
 			isa = PBXGroup;
@@ -198,6 +214,7 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				F6B60A2B13642B8D00F36718 /* libfreetype.dylib */,
 				F6B3ABA61269D966009303FA /* libfreeimage.a */,
 				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
 				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
@@ -230,43 +247,50 @@
 			children = (
 				F6327601126B520D005C23B6 /* apple */,
 				F612B1A2126B6374002C8152 /* mac */,
-				1B9DA94B129681D100285E72 /* collada_loader.cpp */,
-				1B9DA94C129681D100285E72 /* collada_loader.h */,
-				1B9DA94D129681D100285E72 /* mesh_actor.cpp */,
-				1B9DA94E129681D100285E72 /* mesh_actor.h */,
-				1B9DA94F129681D100285E72 /* mesh_loader.h */,
-				1B9DA950129681D100285E72 /* skeleton_actor.cpp */,
-				1B9DA951129681D100285E72 /* skeleton_actor.h */,
+				F6B3AB3B1269CC2E009303FA /* pch.h */,
+				F6F1B59D13643297008F5876 /* observer.h */,
+				F6B3AB361269CC2E009303FA /* math_helper.cpp */,
+				F6B3AB371269CC2E009303FA /* math_helper.h */,
+				F6AC86A61360EFB60067F913 /* sys_helper.cpp */,
+				F6AC86A71360EFB60067F913 /* sys_helper.h */,
 				1B9DA952129681D100285E72 /* xml_helper.cpp */,
 				1B9DA953129681D100285E72 /* xml_helper.h */,
-				F6B3AB8D1269D224009303FA /* texture_reader_freeimage.cpp */,
-				F6B3AB8E1269D224009303FA /* texture_reader_freeimage.h */,
+				F6B3AB3C1269CC2E009303FA /* platform_helper.h */,
+				F6B3AB451269CC2E009303FA /* root.cpp */,
+				F6B3AB461269CC2E009303FA /* root.h */,
 				F6B3AB311269CC2E009303FA /* font_mgr.cpp */,
 				F6B3AB321269CC2E009303FA /* font_mgr.h */,
 				F6B3AB331269CC2E009303FA /* input_mgr.cpp */,
 				F6B3AB341269CC2E009303FA /* input_mgr.h */,
 				F6B3AB351269CC2E009303FA /* material_data.h */,
-				F6B3AB361269CC2E009303FA /* math_helper.cpp */,
-				F6B3AB371269CC2E009303FA /* math_helper.h */,
-				F6B3AB391269CC2E009303FA /* particle_system.cpp */,
-				F6B3AB3A1269CC2E009303FA /* particle_system.h */,
-				F6B3AB3B1269CC2E009303FA /* pch.h */,
-				F6B3AB3C1269CC2E009303FA /* platform_helper.h */,
 				F6B3AB3D1269CC2E009303FA /* render_context.h */,
 				F6B3AB3E1269CC2E009303FA /* render_data.cpp */,
 				F6B3AB3F1269CC2E009303FA /* render_data.h */,
+				F6B3AB441269CC2E009303FA /* renderer.h */,
 				F6B3AB401269CC2E009303FA /* renderer_es1.cpp */,
 				F6B3AB411269CC2E009303FA /* renderer_es1.h */,
-				F6B3AB441269CC2E009303FA /* renderer.h */,
-				F6B3AB451269CC2E009303FA /* root.cpp */,
-				F6B3AB461269CC2E009303FA /* root.h */,
-				F6B3AB471269CC2E009303FA /* scene_actor.cpp */,
-				F6B3AB481269CC2E009303FA /* scene_actor.h */,
 				F6B3AB491269CC2E009303FA /* scene_mgr.cpp */,
 				F6B3AB4A1269CC2E009303FA /* scene_mgr.h */,
+				F6B3AB471269CC2E009303FA /* scene_actor.cpp */,
+				F6B3AB481269CC2E009303FA /* scene_actor.h */,
+				F6E5DB111363BDCD00D71F1A /* txt_actor.cpp */,
+				F6E5DB121363BDCD00D71F1A /* txt_actor.h */,
+				1B9DA94F129681D100285E72 /* mesh_loader.h */,
+				1B9DA94B129681D100285E72 /* collada_loader.cpp */,
+				1B9DA94C129681D100285E72 /* collada_loader.h */,
+				1B9DA94D129681D100285E72 /* mesh_actor.cpp */,
+				1B9DA94E129681D100285E72 /* mesh_actor.h */,
+				1B9DA950129681D100285E72 /* skeleton_actor.cpp */,
+				1B9DA951129681D100285E72 /* skeleton_actor.h */,
+				F6F1B59E13643297008F5876 /* shared_skeleton.cpp */,
+				F6F1B59F13643297008F5876 /* shared_skeleton.h */,
+				F6B3AB391269CC2E009303FA /* particle_system.cpp */,
+				F6B3AB3A1269CC2E009303FA /* particle_system.h */,
 				F6B3AB4B1269CC2E009303FA /* texture_mgr.cpp */,
 				F6B3AB4C1269CC2E009303FA /* texture_mgr.h */,
 				F6B3AB4D1269CC2E009303FA /* texture_reader.h */,
+				F6B3AB8D1269D224009303FA /* texture_reader_freeimage.cpp */,
+				F6B3AB8E1269D224009303FA /* texture_reader_freeimage.h */,
 			);
 			name = ERI;
 			sourceTree = "<group>";
@@ -357,6 +381,9 @@
 				1B9DA955129681D100285E72 /* mesh_actor.cpp in Sources */,
 				1B9DA956129681D100285E72 /* skeleton_actor.cpp in Sources */,
 				1B9DA957129681D100285E72 /* xml_helper.cpp in Sources */,
+				F6AC86A81360EFB60067F913 /* sys_helper.cpp in Sources */,
+				F6E5DB131363BDCD00D71F1A /* txt_actor.cpp in Sources */,
+				F6F1B5A013643297008F5876 /* shared_skeleton.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -393,11 +420,16 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = eri_Prefix.pch;
+				HEADER_SEARCH_PATHS = (
+					../../../3rd/FreeImage,
+					../../../3rd/freetype,
+				);
 				INFOPLIST_FILE = "eri-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../3rd/FreeImage\"",
+					"\"$(SRCROOT)/../../../../3rd/freetype\"",
 				);
 				PRODUCT_NAME = eri;
 			};
@@ -411,11 +443,16 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = eri_Prefix.pch;
+				HEADER_SEARCH_PATHS = (
+					../../../3rd/FreeImage,
+					../../../3rd/freetype,
+				);
 				INFOPLIST_FILE = "eri-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../../../3rd/FreeImage\"",
+					"\"$(SRCROOT)/../../../../3rd/freetype\"",
 				);
 				PRODUCT_NAME = eri;
 			};
@@ -429,7 +466,7 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = ../../../3rd/FreeImage;
+				HEADER_SEARCH_PATHS = "";
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
 				SDKROOT = macosx10.6;
@@ -443,7 +480,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = ../../../3rd/FreeImage;
+				HEADER_SEARCH_PATHS = "";
 				PREBINDING = NO;
 				SDKROOT = macosx10.6;
 			};

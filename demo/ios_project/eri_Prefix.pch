@@ -7,4 +7,6 @@
     #import <UIKit/UIKit.h>
 #endif
 
+//#define ERI_FONT_FREETYPE
+
 #include "pch.h"
