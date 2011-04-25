@@ -200,4 +200,11 @@ namespace ERI
 		return true;
 	}
 
+	int GetUnicodeFromUTF8(const std::string& str, int max_buff_length, uint32_t* buff)
+	{
+		// TODO: implement ...
+
+		return 0;
+	}
+
 }

@@ -38,11 +38,9 @@ std::string GetAbsolutePath(const std::string& path)
 
 std::string GetDir(const std::string& path)
 {
-#if ERI_PLATFORM == ERI_PLATFORM_WIN
-	size_t pos = path.rfind('\\');
-#else
 	size_t pos = path.rfind('/');
-#endif
+	if (pos == std::string::npos)
+		pos = path.rfind('\\');
 
 	if (pos != std::string::npos)
 		return path.substr(0, pos + 1);
@@ -52,11 +50,9 @@ std::string GetDir(const std::string& path)
 
 std::string GetFileName(const std::string& path)
 {
-#if ERI_PLATFORM == ERI_PLATFORM_WIN
-	size_t pos = path.rfind('\\');
-#else
 	size_t pos = path.rfind('/');
-#endif
+	if (pos == std::string::npos)
+		pos = path.rfind('\\');
 	
 	if (pos != std::string::npos)
 		return path.substr(pos + 1);
@@ -67,11 +63,9 @@ std::string GetFileName(const std::string& path)
 void SeperateDirFileName(const std::string& path,
 						 std::string& out_dir, std::string& out_file_name)
 {
-#if ERI_PLATFORM == ERI_PLATFORM_WIN
-	size_t pos = path.rfind('\\');
-#else
 	size_t pos = path.rfind('/');
-#endif
+	if (pos == std::string::npos)
+		pos = path.rfind('\\');
 	
 	if (pos != std::string::npos)
 	{

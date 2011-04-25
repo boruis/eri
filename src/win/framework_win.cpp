@@ -37,6 +37,40 @@ static int mouse_down_x = 0;
 static int mouse_down_y = 0;
 static int right_mouse_down_x = 0;
 static int right_mouse_down_y = 0;
+static int mouse_move_x = 0;
+static int mouse_move_y = 0;
+
+static ERI::InputKeyCode TranslateKeyCode(WPARAM event_key_code)
+{
+	ERI::InputKeyCode code = ERI::KEY_NONE;
+	
+	switch (event_key_code)
+	{
+		case VK_BACK:
+			code = ERI::KEY_BACKSPACE;
+			break;
+		case VK_DELETE:
+			code = ERI::KEY_DELETE;
+			break;
+		case VK_ESCAPE:
+			code = ERI::KEY_ESCAPE;
+			break;
+		case VK_LEFT:
+			code = ERI::KEY_LEFT;
+			break;
+		case VK_RIGHT:
+			code = ERI::KEY_RIGHT;
+			break;
+		case VK_DOWN:
+			code = ERI::KEY_DOWN;
+			break;
+		case VK_UP:
+			code = ERI::KEY_UP;
+			break;
+	}
+	
+	return code;
+}
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -89,6 +123,11 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			InputEvent e;
 			e.x = screen_x;
 			e.y = screen_y;
+
+			e.dx = screen_x - mouse_move_x;
+			e.dy = -(screen_y - mouse_move_y);
+			mouse_move_x = screen_x;
+			mouse_move_y = screen_y;
 
 			if (wParam & MK_LBUTTON)
 				Root::Ins().input_mgr()->Move(e);
@@ -181,30 +220,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_KEYDOWN:
 		{
-			ERI::InputKeyCode code = ERI::KEY_NONE;
-
-			switch (wParam)
-			{
-				case VK_LEFT:
-					code = ERI::KEY_LEFT;
-					break;
-
-				case VK_RIGHT:
-					code = ERI::KEY_RIGHT;
-					break;
-
-				case VK_DOWN:
-					code = ERI::KEY_DOWN;
-					break;
-
-				case VK_UP:
-					code = ERI::KEY_UP;
-					break;
-
-				default:
-					break;
-			}
-
+			ERI::InputKeyCode code = TranslateKeyCode(wParam);
 			if (code != ERI::KEY_NONE)
 			{
 				ERI::Root::Ins().input_mgr()->KeyDown(std::string(), code);
@@ -212,37 +228,29 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 
+	case WM_KEYUP:
+		{
+			ERI::InputKeyCode code = TranslateKeyCode(wParam);
+			if (code != ERI::KEY_NONE)
+			{
+				ERI::Root::Ins().input_mgr()->KeyUp(std::string(), code);
+			}
+		}
+		break;
+
 	case WM_CHAR:
 		{
 			std::string characters;
-
-			ERI::InputKeyCode code = ERI::KEY_NONE;
-
-			switch (wParam)
+			ERI::InputKeyCode code = TranslateKeyCode(wParam);
+			if (code == ERI::KEY_NONE)
 			{
-				case VK_BACK:
-					code = ERI::KEY_DELETE;
-					break;
+				char str[2];
+				str[1] = 0;
+				str[0] = wParam;
+				characters = str;
 
-				case VK_ESCAPE:
-					code = ERI::KEY_ESCAPE;
-					break;
-
-				case VK_RETURN:
-					characters = "\r";
-					break;
-
-				default:
-					{
-						char str[2];
-						str[1] = 0;
-						str[0] = wParam;
-						characters = str;
-					}
-					break;
+				ERI::Root::Ins().input_mgr()->KeyDown(characters, code);
 			}
-
-			ERI::Root::Ins().input_mgr()->KeyDown(characters, code);
 		}
 		break;
 	}

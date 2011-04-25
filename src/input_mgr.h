@@ -29,6 +29,7 @@ namespace ERI {
 	{
 		KEY_NONE,
 		KEY_DELETE,
+		KEY_BACKSPACE,
 		KEY_ESCAPE,
 		KEY_LEFT,
 		KEY_RIGHT,

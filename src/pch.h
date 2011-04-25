@@ -50,6 +50,12 @@
 
 //
 
+#if ERI_PLATFORM == ERI_PLATFORM_WIN
+typedef unsigned int uint32_t;
+#endif
+
+//
+
 #include <stddef.h>
 
 // assert
