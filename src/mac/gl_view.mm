@@ -111,9 +111,13 @@ static ERI::InputKeyCode TranslateKeyCode(int event_key_code)
 	
 	switch (event_key_code)
 	{
-		case 0x33:
+		case 0x75:
 			code = ERI::KEY_DELETE;
 			NSLog(@"key delete!");
+			break;
+		case 0x33:
+			code = ERI::KEY_BACKSPACE;
+			NSLog(@"key backspace!");
 			break;
 		case 0x35:
 			code = ERI::KEY_ESCAPE;
