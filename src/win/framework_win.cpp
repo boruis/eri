@@ -40,6 +40,22 @@ static int right_mouse_down_y = 0;
 static int mouse_move_x = 0;
 static int mouse_move_y = 0;
 
+static unsigned int GetFunctionKeyStatus()
+{
+	unsigned int status = 0;
+
+	if (GetKeyState(VK_SHIFT) & 0xFF00)
+		status |= ERI::FUNC_SHIFT;
+	if (GetKeyState(VK_CONTROL) & 0xFF00)
+		status |= ERI::FUNC_CTRL;
+	if (GetKeyState(VK_MENU) & 0xFF00)
+		status |= ERI::FUNC_ALT;
+	if (GetKeyState(VK_APPS) & 0xFF00)
+		status |= ERI::FUNC_CMD;
+	
+	return status;
+}
+
 static ERI::InputKeyCode TranslateKeyCode(WPARAM event_key_code)
 {
 	ERI::InputKeyCode code = ERI::KEY_NONE;
@@ -154,6 +170,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			InputEvent e;
 			e.x = screen_x;
 			e.y = screen_y;
+			e.function_key_status = GetFunctionKeyStatus();
 
 			mouse_down_x = screen_x;
 			mouse_down_y = screen_y;
@@ -183,6 +200,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			InputEvent e;
 			e.x = screen_x;
 			e.y = screen_y;
+			e.function_key_status = GetFunctionKeyStatus();
 
 			Root::Ins().input_mgr()->Release(e);
 
@@ -205,6 +223,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				InputEvent e;
 				e.x = screen_x;
 				e.y = screen_y;
+				e.function_key_status = GetFunctionKeyStatus();
 				Root::Ins().input_mgr()->RightClick(e);
 			}
 
@@ -228,36 +247,41 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_KEYDOWN:
 		{
-			ERI::InputKeyCode code = TranslateKeyCode(wParam);
-			if (code != ERI::KEY_NONE)
+			ERI::InputKeyEvent e;
+			e.code = TranslateKeyCode(wParam);
+			e.function_key_status = GetFunctionKeyStatus();
+			if (e.code != ERI::KEY_NONE)
 			{
-				ERI::Root::Ins().input_mgr()->KeyDown(std::string(), code);
+				ERI::Root::Ins().input_mgr()->KeyDown(e);
 			}
 		}
 		break;
 
 	case WM_KEYUP:
 		{
-			ERI::InputKeyCode code = TranslateKeyCode(wParam);
-			if (code != ERI::KEY_NONE)
+			ERI::InputKeyEvent e;
+			e.code = TranslateKeyCode(wParam);
+			e.function_key_status = GetFunctionKeyStatus();
+			if (e.code != ERI::KEY_NONE)
 			{
-				ERI::Root::Ins().input_mgr()->KeyUp(std::string(), code);
+				ERI::Root::Ins().input_mgr()->KeyUp(e);
 			}
 		}
 		break;
 
 	case WM_CHAR:
 		{
-			std::string characters;
-			ERI::InputKeyCode code = TranslateKeyCode(wParam);
-			if (code == ERI::KEY_NONE)
+			ERI::InputKeyEvent e;
+			e.code = TranslateKeyCode(wParam);
+			e.function_key_status = GetFunctionKeyStatus();
+			if (e.code == ERI::KEY_NONE)
 			{
 				char str[2];
 				str[1] = 0;
 				str[0] = wParam;
-				characters = str;
+				e.characters = str;
 
-				ERI::Root::Ins().input_mgr()->KeyDown(characters, code);
+				ERI::Root::Ins().input_mgr()->KeyDown(e);
 			}
 		}
 		break;
