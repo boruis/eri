@@ -66,14 +66,14 @@ namespace ERI {
 		if (handler_) handler_->RightClick(event);
 	}
 
-	void InputMgr::KeyDown(const std::string& characters, InputKeyCode code /*= KEY_NONE*/)
+	void InputMgr::KeyDown(const InputKeyEvent& event)
 	{
-		if (handler_) handler_->KeyDown(characters, code);
+		if (handler_) handler_->KeyDown(event);
 	}
 	
-	void InputMgr::KeyUp(const std::string& characters, InputKeyCode code /*= KEY_NONE*/)
+	void InputMgr::KeyUp(const InputKeyEvent& event)
 	{
-		if (handler_) handler_->KeyUp(characters, code);
+		if (handler_) handler_->KeyUp(event);
 	}
 	
 	void InputMgr::Accelerate(const Vector3& g)

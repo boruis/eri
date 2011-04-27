@@ -16,6 +16,17 @@
 float mouse_down_x, mouse_down_y;
 float right_mouse_down_x, right_mouse_down_y;
 
+static unsigned int GetFunctionKeyStatus(unsigned int flags)
+{
+	unsigned int status = 0;
+	if (flags & NSShiftKeyMask) status |= ERI::FUNC_SHIFT;
+	if (flags & NSControlKeyMask) status |= ERI::FUNC_CTRL;
+	if (flags & NSAlternateKeyMask) status |= ERI::FUNC_ALT;
+	if (flags & NSCommandKeyMask) status |= ERI::FUNC_CMD;
+	
+	return status;
+}
+
 @implementation GLView
 
 - (id)initWithFrame:(NSRect)frame
@@ -35,8 +46,9 @@ float right_mouse_down_x, right_mouse_down_y;
 - (void)mouseDown:(NSEvent *)event
 {
 	NSPoint pos = [self convertPoint:[event locationInWindow] fromView:nil];
-
+	
 	ERI::InputEvent e(0, pos.x, pos.y);
+	e.function_key_status = GetFunctionKeyStatus([event modifierFlags]);
 	ERI::Root::Ins().input_mgr()->Press(e);
 	
 	mouse_down_x = pos.x;
@@ -74,8 +86,9 @@ float right_mouse_down_x, right_mouse_down_y;
 - (void)mouseUp:(NSEvent *)event
 {
 	NSPoint pos = [self convertPoint:[event locationInWindow] fromView:nil];
-		
+	
 	ERI::InputEvent e(0, pos.x, pos.y);
+	e.function_key_status = GetFunctionKeyStatus([event modifierFlags]);
 	ERI::Root::Ins().input_mgr()->Release(e);
 	
 	if (ERI::Abs(pos.x - mouse_down_x) < 10 && ERI::Abs(pos.y - mouse_down_y) < 10)
@@ -91,6 +104,7 @@ float right_mouse_down_x, right_mouse_down_y;
 	if (ERI::Abs(pos.x - right_mouse_down_x) < 10 && ERI::Abs(pos.y - right_mouse_down_y) < 10)
 	{
 		ERI::InputEvent e(0, pos.x, pos.y);
+		e.function_key_status = GetFunctionKeyStatus([event modifierFlags]);
 		ERI::Root::Ins().input_mgr()->RightClick(e);
 	}
 }
@@ -154,8 +168,12 @@ static ERI::InputKeyCode TranslateKeyCode(int event_key_code)
 	NSString *characters = [event characters];
 	NSLog(@"KeyDown %@\n", characters);
 	
-	ERI::Root::Ins().input_mgr()->KeyDown([characters UTF8String],
-										  TranslateKeyCode([event keyCode]));
+	ERI::InputKeyEvent e;
+	e.characters = [characters UTF8String];
+	e.code = TranslateKeyCode([event keyCode]);
+	e.function_key_status = GetFunctionKeyStatus([event modifierFlags]);
+	
+	ERI::Root::Ins().input_mgr()->KeyDown(e);
 }
 
 - (void)keyUp:(NSEvent *)event
@@ -163,8 +181,12 @@ static ERI::InputKeyCode TranslateKeyCode(int event_key_code)
 	NSString *characters = [event characters];
 	NSLog(@"KeyUp %@\n", characters);
 	
-	ERI::Root::Ins().input_mgr()->KeyUp([characters UTF8String],
-										TranslateKeyCode([event keyCode]));
+	ERI::InputKeyEvent e;
+	e.characters = [characters UTF8String];
+	e.code = TranslateKeyCode([event keyCode]);
+	e.function_key_status = GetFunctionKeyStatus([event modifierFlags]);
+	
+	ERI::Root::Ins().input_mgr()->KeyUp(e);
 }
 
 - (void)reshape

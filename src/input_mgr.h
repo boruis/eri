@@ -16,15 +16,6 @@ namespace ERI {
 	
 	struct Vector3;
 	
-	struct InputEvent
-	{
-		InputEvent() {}
-		InputEvent(unsigned int _uid, int _x, int _y) : uid(_uid), x(_x), y(_y), dx(0), dy(0) {}
-		
-		unsigned int	uid;
-		int				x, y, dx, dy;
-	};
-	
 	enum InputKeyCode
 	{
 		KEY_NONE,
@@ -35,6 +26,33 @@ namespace ERI {
 		KEY_RIGHT,
 		KEY_DOWN,
 		KEY_UP
+	};
+	
+	enum FunctionKeyFlag
+	{
+		FUNC_SHIFT	= 0x01,
+		FUNC_CTRL	= 0x02,
+		FUNC_ALT	= 0x04,
+		FUNC_CMD	= 0x08
+	};
+	
+	struct InputEvent
+	{
+		InputEvent(unsigned int _uid, int _x, int _y)
+			: uid(_uid), x(_x), y(_y), dx(0), dy(0), function_key_status(0) {}
+		
+		unsigned int	uid;
+		int				x, y, dx, dy;
+		unsigned int	function_key_status;
+	};
+	
+	struct InputKeyEvent
+	{
+		InputKeyEvent() : code(KEY_NONE), function_key_status(0) {}
+		
+		std::string		characters;
+		InputKeyCode	code;
+		unsigned int	function_key_status;
 	};
 	
 	class InputHandler
@@ -50,8 +68,8 @@ namespace ERI {
 		virtual void Scroll(const InputEvent& event) {}
 		virtual void OverMove(const InputEvent& event) {}
 		virtual void RightClick(const InputEvent& event) {}
-		virtual void KeyDown(const std::string& characters, InputKeyCode code) {}
-		virtual void KeyUp(const std::string& characters, InputKeyCode code) {}
+		virtual void KeyDown(const InputKeyEvent& event) {}
+		virtual void KeyUp(const InputKeyEvent& event) {}
 		
 		virtual void Accelerate(const Vector3& g) {}
 		virtual void Shake() {}
@@ -73,13 +91,13 @@ namespace ERI {
 		void Scroll(const InputEvent& event);
 		void OverMove(const InputEvent& event);
 		void RightClick(const InputEvent& event);
-		void KeyDown(const std::string& characters, InputKeyCode code = KEY_NONE);
-		void KeyUp(const std::string& characters, InputKeyCode code = KEY_NONE);
+		void KeyDown(const InputKeyEvent& event);
+		void KeyUp(const InputKeyEvent& event);
 
 		void Accelerate(const Vector3& g);
 		void Shake();
 		
-		void set_handler(InputHandler* handler) { handler_ = handler; }
+		inline void set_handler(InputHandler* handler) { handler_ = handler; }
 		
 	private:
 		InputHandler*	handler_;
