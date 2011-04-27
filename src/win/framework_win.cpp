@@ -138,6 +138,14 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 
+	case WM_MOUSEWHEEL:
+		{
+			InputEvent e;
+			e.dy = GET_WHEEL_DELTA_WPARAM(wParam) / 50;
+			Root::Ins().input_mgr()->Scroll(e);
+		}
+		break;
+
 	case WM_LBUTTONDOWN:
 		{
 			int screen_x = LOWORD(lParam);
