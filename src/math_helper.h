@@ -479,6 +479,7 @@ namespace ERI {
 	bool IsIntersectBoxCircle2(const Box2& box, const Circle& circle);
 	bool IsIntersectBoxBox2(const Box2& box1, const Box2& box2);
 	bool IsIntersectAABoxCircle2(const AABox2& box, const Circle& circle);
+	bool IsIntersectAABoxAABox2(const AABox2& box1, const AABox2& box2);
 	bool IsIntersectRayBox3(const Ray3& ray, const Box3& box);
 	float SphereInFrustum(const Sphere& sphere, const Plane* frustum);
 	bool BoxInFrustum(const Box3& box, const Plane* frustum);

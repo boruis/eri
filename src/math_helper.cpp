@@ -1065,7 +1065,32 @@ namespace ERI {
 			squared_distance += diff * diff;
 		}
 		
-		return squared_distance <= circle.radius;
+		return squared_distance <= (circle.radius * circle.radius);
+	}
+	
+	bool IsIntersectAABoxAABox2(const AABox2& box1, const AABox2& box2)
+	{
+		// process X
+		float min_min_diff = box1.min.x - box2.min.x;
+		float min_max_diff = box1.min.x - box2.max.x;
+		float max_min_diff = box1.max.x - box2.min.x;
+		float max_max_diff = box1.max.x - box2.max.x;
+		if (min_min_diff * min_max_diff > 0.0f &&
+			max_min_diff * max_max_diff > 0.0f &&
+			min_min_diff * max_min_diff > 0.0f)
+			return false;
+		
+		// process Y
+		min_min_diff = box1.min.y - box2.min.y;
+		min_max_diff = box1.min.y - box2.max.y;
+		max_min_diff = box1.max.y - box2.min.y;
+		max_max_diff = box1.max.y - box2.max.y;
+		if (min_min_diff * min_max_diff > 0.0f &&
+			max_min_diff * max_max_diff > 0.0f &&
+			min_min_diff * max_min_diff > 0.0f)
+			return false;
+
+		return true;
 	}
 	
 	bool IsIntersectRayBox3(const Ray3& ray, const Box3& box)

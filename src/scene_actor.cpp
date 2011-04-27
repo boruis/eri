@@ -81,7 +81,7 @@ namespace ERI {
 	
 	void SceneActor::AddChild(SceneActor* actor)
 	{
-		ASSERT(actor);
+		ASSERT(actor && this != actor);
 		
 		if (actor->parent_)
 			actor->parent_->RemoveChild(actor);
