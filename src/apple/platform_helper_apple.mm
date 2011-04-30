@@ -140,7 +140,7 @@ namespace ERI {
 
 		[utf8_str release];
 		
-		return used_length / 4;
+		return static_cast<int>(used_length) / 4;
 	}
 	
 }

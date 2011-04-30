@@ -22,7 +22,7 @@ int CreateUnicodeArray(const std::string& txt, bool is_utf8, uint32_t*& out_char
   
   if (is_utf8)
   {
-    int max_buff_size = txt.length() * 2;
+    int max_buff_size = static_cast<int>(txt.length()) * 2;
     out_chars = new uint32_t[max_buff_size];
     length = GetUnicodeFromUTF8(txt, max_buff_size, out_chars);
   }
@@ -33,7 +33,7 @@ int CreateUnicodeArray(const std::string& txt, bool is_utf8, uint32_t*& out_char
     for (int i = 0; i < txt.length(); ++i)
       out_chars[i] = txt[i];
     
-    length = txt.length();
+    length = static_cast<int>(txt.length());
   }
   
   return length;

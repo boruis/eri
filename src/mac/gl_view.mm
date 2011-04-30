@@ -16,7 +16,7 @@
 float mouse_down_x, mouse_down_y;
 float right_mouse_down_x, right_mouse_down_y;
 
-static unsigned int GetFunctionKeyStatus(unsigned int flags)
+static unsigned int GetFunctionKeyStatus(unsigned long flags)
 {
 	unsigned int status = 0;
 	if (flags & NSShiftKeyMask) status |= ERI::FUNC_SHIFT;
