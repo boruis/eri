@@ -471,6 +471,11 @@ namespace ERI {
 	{
 		material_data_.depth_write = enable;
 	}
+
+	void SceneActor::SetCullFace(bool enable)
+	{
+		material_data_.cull_face = enable;
+	}
 	
 	bool SceneActor::IsInFrustum()
 	{

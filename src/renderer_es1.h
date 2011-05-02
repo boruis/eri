@@ -89,6 +89,7 @@ namespace ERI {
 		virtual void EnableLight(bool enable);
 		virtual void EnableDepthTest(bool enable);
 		virtual void EnableDepthWrite(bool enable);
+		virtual void EnableCullFace(bool enable);
 		
 		virtual void EnableTextureUnit(int idx, const TextureUnit& unit);
 		virtual void DisableTextureUnit(int idx);
@@ -158,6 +159,7 @@ namespace ERI {
 		bool depth_write_enable_;
 		bool blend_enable_;
 		bool alpha_test_enable_;
+		bool cull_face_enable_;
 		
 		bool texture_enable_;
 		bool texture_unit_enable_[MAX_TEXTURE_UNIT];

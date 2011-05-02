@@ -95,6 +95,7 @@ namespace ERI {
 		vertex_color_enable_(false),
 		light_enable_(false),
 		depth_test_enable_(true),
+		cull_face_enable_(true),
 		depth_write_enable_(true),
 		blend_enable_(false),
 		alpha_test_enable_(false),
@@ -575,6 +576,7 @@ namespace ERI {
 		EnableLight(data->accept_light);
 		EnableDepthTest(data->depth_test);
 		EnableDepthWrite(data->depth_write);
+		EnableCullFace(data->cull_face);
 		
 		texture_enable_ = (data->used_unit > 0);
 		
@@ -625,7 +627,20 @@ namespace ERI {
 				glDepthMask(GL_FALSE);
 		}
 	}
-	
+
+	void RendererES1::EnableCullFace(bool enable)
+	{
+		if (cull_face_enable_ != enable)
+		{
+			cull_face_enable_ = enable;
+			
+			if (enable)
+				glEnable(GL_CULL_FACE);
+			else
+				glDisable(GL_CULL_FACE);
+		}
+	}
+
 	void RendererES1::EnableTextureUnit(int idx, const TextureUnit& unit)
 	{
 		GLenum tex_enum = GL_TEXTURE0 + idx;

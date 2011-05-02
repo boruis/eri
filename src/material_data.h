@@ -39,6 +39,7 @@ namespace ERI {
 			opacity_type(OPACITY_ALPHA_BLEND),
 			depth_test(true),
 			depth_write(true),
+			cull_face(true),
 			accept_light(false)
 		{
 		}
@@ -69,6 +70,7 @@ namespace ERI {
 		OpacityType		opacity_type;
 		bool			depth_test;
 		bool			depth_write;
+		bool			cull_face;
 		bool			accept_light;
 	};
 	

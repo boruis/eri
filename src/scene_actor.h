@@ -129,6 +129,7 @@ namespace ERI {
 		
 		void SetDepthTest(bool enable);
 		void SetDepthWrite(bool enable);
+		void SetCullFace(bool enable);
 
 		inline const MaterialData& material() { return material_data_; }
 		
