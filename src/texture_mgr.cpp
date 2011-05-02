@@ -214,9 +214,17 @@ namespace ERI {
 		ASSERT(!name.empty() && width > 0 && height > 0 && data);
 		
 		std::map<std::string, Texture*>::iterator it = texture_map_.find(name);
-		
-		ASSERT(it == texture_map_.end());
-		
+
+		if (it != texture_map_.end())
+		{
+			it->second->width = width;
+			it->second->height = height;
+
+			UpdateTexture(it->second, data);
+
+			return it->second;
+		}
+
 		unsigned int texture_id = Root::Ins().renderer()->GenerateTexture(data, width, height, RGBA);
 		if (texture_id == 0)
 			return NULL;

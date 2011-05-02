@@ -85,12 +85,7 @@ class SpriteTxtMeshConstructor : public TxtMeshConstructor
   virtual void Construct()
   {
     bool first_construct = owner_->material_data_.used_unit == 0;
-    
-    if (!first_construct)
-    {
-      Root::Ins().texture_mgr()->ReleaseTexture(tex_name_);
-    }
-    
+        
     uint32_t* chars;
     int length = CreateUnicodeArray(owner_->txt_, owner_->is_utf8_, chars);
 
@@ -103,14 +98,16 @@ class SpriteTxtMeshConstructor : public TxtMeshConstructor
                                                             height);
     
     delete [] chars;
-    
-    owner_->SetMaterial(tex);
-    owner_->width_ = width;
-    owner_->height_ = height;
-    
+
     if (first_construct)
+    {
+      owner_->SetMaterial(tex);
       owner_->SetTextureFilter(owner_->font_ref_->filter_min(),
                                owner_->font_ref_->filter_min());
+    }
+    
+    owner_->width_ = width;
+    owner_->height_ = height;
     
     if (owner_->render_data_.vertex_buffer == 0)
 		{
