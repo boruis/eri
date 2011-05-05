@@ -1243,5 +1243,55 @@ namespace ERI {
 		
 		return min + UnitRandom() * (max - min);
 	}
+	
+#pragma mark CatmullRomSpline
+	
+	/*
+	 q(t) = 0.5 * ((2 * P1) +
+	 (-P0 + P2) * t +
+	 (2 * P0 - 5 * P1 + 4 * P2 - P3) * t^2 +
+	 (-P0 + 3 * P1- 3 * P2 + P3) * t^3)
+	 */
+	
+	void CatmullRomSpline::SetControlPoints(const Vector2& p0,
+											const Vector2& p1,
+											const Vector2& p2,
+											const Vector2& p3)
+	{
+		f1 = p1 * 2;
+		f2 = p2 - p0;
+		f3 = p0 * 2 - p1 * 5 + p2 * 4 - p3;
+		f4 = p1 * 3 - p0 - p2 * 3 + p3;
+	}
+	
+	Vector2 CatmullRomSpline::GetPoint(float t)
+	{
+		ASSERT(t >= 0 && t <= 1.0f);
+		
+		return (f1 + f2 * t + f3 * (t * t) + f4 * (t * t * t)) * 0.5f;
+	}
+	
+#pragma mark CubicBezierSpline
+	
+	/* usually won't pass througn p1, p2
+	 q(t) = (1 - t)^3 * p0 + 3 * (1 - t)^2 * t * p1 + 3 * (1 - t) * t^2 * p2 + t^3 * p3
+	 */
+	
+	void CubicBezierSpline::SetControlPoints(const Vector2& p0,
+											 const Vector2& p1,
+											 const Vector2& p2,
+											 const Vector2& p3)
+	{
+		f1 = p0;
+		f2 = p1 * 3;
+		f3 = p2 * 3;
+		f4 = p3;
+	}
+	
+	Vector2 CubicBezierSpline::GetPoint(float t)
+	{
+		float ct = 1 - t;
+		return f1 * ct * ct * ct + f2 * ct * ct * t + f3 * ct * t * t + f4 * t * t * t;
+	}
 
 }

@@ -490,6 +490,38 @@ namespace ERI {
 	int RangeRandom(int min, int max);
 	float RangeRandom(float min, float max);
 	
+#pragma mark CatmullRomSpline
+	
+	class CatmullRomSpline
+	{
+	public:
+		void SetControlPoints(const Vector2& p0,
+							  const Vector2& p1,
+							  const Vector2& p2,
+							  const Vector2& p3);
+		
+		Vector2 GetPoint(float t);
+		
+	private:
+		Vector2	f1, f2, f3, f4;
+	};
+	
+#pragma mark CubicBezierSpline
+	
+	class CubicBezierSpline
+	{
+	public:
+		void SetControlPoints(const Vector2& p0,
+							  const Vector2& p1,
+							  const Vector2& p2,
+							  const Vector2& p3);
+		
+		Vector2 GetPoint(float t);
+		
+	private:
+		Vector2	f1, f2, f3, f4;
+	};
+	
 #pragma mark Color
 	
 	struct Color
