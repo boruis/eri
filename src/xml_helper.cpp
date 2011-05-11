@@ -189,48 +189,53 @@ namespace ERI
 	
 	rapidxml::xml_node<>* CreateNode(rapidxml::xml_document<>& doc, const char* name)
 	{
-		char* alloc_value = doc.allocate_string(name);
-		return doc.allocate_node(rapidxml::node_element, alloc_value);
+		char* alloc_name = doc.allocate_string(name);
+		return doc.allocate_node(rapidxml::node_element, alloc_name);
 	}
 	
 	void PutAttrBool(rapidxml::xml_document<>& doc, rapidxml::xml_node<>* node, const char* name, bool value)
 	{
+		char* alloc_name = doc.allocate_string(name);
 		char* alloc_value = doc.allocate_string(value ? "true" : "false");
-		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(name, alloc_value);
+		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(alloc_name, alloc_value);
 		node->append_attribute(attr);
 	}
 	
 	void PutAttrInt(rapidxml::xml_document<>& doc, rapidxml::xml_node<>* node, const char* name, int value)
 	{
+		char* alloc_name = doc.allocate_string(name);
 		char buf[32];
 		sprintf(buf, "%d", value);
 		char* alloc_value = doc.allocate_string(buf);
-		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(name, alloc_value);
+		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(alloc_name, alloc_value);
 		node->append_attribute(attr);
 	}
 	
 	void PutAttrFloat(rapidxml::xml_document<>& doc, rapidxml::xml_node<>* node, const char* name, float value)
 	{
+		char* alloc_name = doc.allocate_string(name);
 		char buf[32];
 		sprintf(buf, "%f", value);
 		char* alloc_value = doc.allocate_string(buf);
-		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(name, alloc_value);
+		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(alloc_name, alloc_value);
 		node->append_attribute(attr);
 	}
 	
 	void PutAttrStr(rapidxml::xml_document<>& doc, rapidxml::xml_node<>* node, const char* name, const std::string& value)
 	{
+		char* alloc_name = doc.allocate_string(name);
 		char* alloc_value = doc.allocate_string(value.c_str());
-		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(name, alloc_value);
+		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(alloc_name, alloc_value);
 		node->append_attribute(attr);
 	}
 	
 	void PutAttrColor(rapidxml::xml_document<>& doc, rapidxml::xml_node<>* node, const char* name, const Color& value)
 	{
+		char* alloc_name = doc.allocate_string(name);
 		char buf[64];
 		sprintf(buf, "%f,%f,%f,%f", value.r, value.g, value.b, value.a);
 		char* alloc_value = doc.allocate_string(buf);
-		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(name, alloc_value);
+		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(alloc_name, alloc_value);
 		node->append_attribute(attr);
 	}
 
