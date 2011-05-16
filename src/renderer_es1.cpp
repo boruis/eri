@@ -1008,6 +1008,11 @@ namespace ERI {
 		glClearColor(bg_color_.r, bg_color_.g, bg_color_.b, bg_color_.a);
 	}
 	
+	const Color& RendererES1::GetBgColor()
+	{
+		return bg_color_;
+	}
+	
 	void RendererES1::UpdateView(const Matrix4& view_matrix)
 	{
 		current_view_matrix_ = view_matrix;

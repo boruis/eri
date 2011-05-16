@@ -113,6 +113,7 @@ namespace ERI {
 		virtual void ReleaseRenderToTexture(int texture_id, int frame_buffer);
 		
 		virtual void SetBgColor(const Color& color);
+		virtual const Color& GetBgColor();
 		
 		virtual void UpdateView(const Matrix4& view_matrix);
 		virtual void UpdateView(const Vector3& eye, const Vector3& at, const Vector3& up);
