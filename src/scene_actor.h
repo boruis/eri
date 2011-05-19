@@ -74,6 +74,7 @@ namespace ERI {
 		void BlendMultiply();
 		void BlendReplace();
 		void AlphaTestGreater(int alpha_value);
+		void DepthTestEqual();
 		
 		//
 		// transform

@@ -110,7 +110,8 @@ namespace ERI {
 		//blend_src_factor_(GL_ONE),
 		//blend_dst_factor_(GL_ONE_MINUS_SRC_ALPHA),
 		alpha_test_func_(GL_GREATER),
-		alpha_test_ref_(0.0f)
+		alpha_test_ref_(0.0f),
+		depth_test_func_(GL_LESS)
 	{
 		memset(frame_buffers_, 0, sizeof(frame_buffers_));
 		memset(texture_unit_enable_, 0, sizeof(texture_unit_enable_));
@@ -320,6 +321,13 @@ namespace ERI {
 				alpha_test_func_ = data->alpha_test_func;
 				alpha_test_ref_ = data->alpha_test_ref;
 				glAlphaFunc(alpha_test_func_, alpha_test_ref_);
+			}
+			
+			if (depth_test_enable_ &&
+				depth_test_func_ != data->depth_test_func)
+			{
+				depth_test_func_ = data->depth_test_func;
+				glDepthFunc(depth_test_func_);
 			}
 			
 			glBindBuffer(GL_ARRAY_BUFFER, data->vertex_buffer);

@@ -177,6 +177,8 @@ namespace ERI {
 		GLenum		alpha_test_func_;
 		GLclampf	alpha_test_ref_;
 		
+		GLenum		depth_test_func_;
+		
 		LightInfo light_infos_[MAX_LIGHT];
 		
 		Matrix4		current_view_matrix_;

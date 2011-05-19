@@ -212,6 +212,11 @@ namespace ERI {
 		render_data_.alpha_test_func = GL_GREATER;
 		render_data_.alpha_test_ref = alpha_value / 255.0f;
 	}
+
+	void SceneActor::DepthTestEqual()
+	{
+		render_data_.depth_test_func = GL_EQUAL;
+	}
 	
 	const Matrix4& SceneActor::GetTransform()
 	{

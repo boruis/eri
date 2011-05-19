@@ -119,15 +119,14 @@ namespace ERI {
 		Vector2	tex_scale;
 		Vector2 tex_translate;
 		
-		// color
 		Color	color;
 		
-		// blend
 		GLenum blend_src_factor, blend_dst_factor;
 		
-		// alpha test
 		GLenum		alpha_test_func;
 		GLclampf	alpha_test_ref;
+
+		GLenum	depth_test_func;
 	};
 
 }
