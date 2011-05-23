@@ -108,6 +108,26 @@ namespace ERI
 		
 		return NULL;
 	}
+	
+	rapidxml::xml_attribute<>* GetAttrVector2(rapidxml::xml_node<>* node, const char* name, Vector2& out_value)
+	{
+		rapidxml::xml_attribute<>* attr = node->first_attribute(name);
+		if (attr)
+		{
+			std::string s = attr->value();
+			size_t pos = s.find(',');
+			
+			if (pos != std::string::npos)
+			{
+				out_value.x = static_cast<float>(atof(s.substr(0, pos).c_str()));
+				out_value.y = static_cast<float>(atof(s.substr(pos + 1).c_str()));
+			}
+			
+			return attr;
+		}
+		
+		return NULL;	
+	}
 
 	rapidxml::xml_attribute<>* GetAttrColor(rapidxml::xml_node<>* node, const char* name, Color& out_value)
 	{
@@ -225,6 +245,16 @@ namespace ERI
 	{
 		char* alloc_name = doc.allocate_string(name);
 		char* alloc_value = doc.allocate_string(value.c_str());
+		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(alloc_name, alloc_value);
+		node->append_attribute(attr);
+	}
+	
+	void PutAttrVector2(rapidxml::xml_document<>& doc, rapidxml::xml_node<>* node, const char* name, const Vector2& value)
+	{
+		char* alloc_name = doc.allocate_string(name);
+		char buf[32];
+		sprintf(buf, "%f,%f", value.x, value.y);
+		char* alloc_value = doc.allocate_string(buf);
 		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(alloc_name, alloc_value);
 		node->append_attribute(attr);
 	}
