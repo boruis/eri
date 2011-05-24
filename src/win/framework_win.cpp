@@ -59,7 +59,7 @@ static unsigned int GetFunctionKeyStatus()
 static ERI::InputKeyCode TranslateKeyCode(WPARAM event_key_code)
 {
 	ERI::InputKeyCode code = ERI::KEY_NONE;
-	
+
 	switch (event_key_code)
 	{
 		case VK_BACK:
@@ -82,6 +82,23 @@ static ERI::InputKeyCode TranslateKeyCode(WPARAM event_key_code)
 			break;
 		case VK_UP:
 			code = ERI::KEY_UP;
+			break;
+	}
+	
+	return code;
+}
+
+static ERI::InputKeyCode TranslateCharKeyCode(WPARAM event_key_code)
+{
+	ERI::InputKeyCode code = ERI::KEY_NONE;
+
+	switch (event_key_code)
+	{
+		case VK_BACK:
+			code = ERI::KEY_BACKSPACE;
+			break;
+		case VK_ESCAPE:
+			code = ERI::KEY_ESCAPE;
 			break;
 	}
 	
@@ -272,7 +289,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_CHAR:
 		{
 			ERI::InputKeyEvent e;
-			e.code = TranslateKeyCode(wParam);
+			e.code = TranslateCharKeyCode(wParam);
 			e.function_key_status = GetFunctionKeyStatus();
 			if (e.code == ERI::KEY_NONE)
 			{
