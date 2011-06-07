@@ -136,8 +136,8 @@ namespace ERI {
 		
 		//
 
-		inline void set_visible(bool visible) { visible_ = visible; }
-		inline bool visible() { return visible_; }
+		void SetVisible(bool visible, bool inherit = false);
+		inline bool visible() { return visible_ && inherit_visible_; }
 		
 		inline void set_user_data(UserData* data) { user_data_ = data; }
 		inline UserData* user_data() { return user_data_; }
@@ -162,7 +162,7 @@ namespace ERI {
 		SceneActor*					parent_;
 		std::vector<SceneActor*>	childs_;
 
-		bool			visible_;
+		bool			visible_, inherit_visible_;
 		bool			is_view_depth_dirty_;
 		
 		UserData*		user_data_;

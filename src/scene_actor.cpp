@@ -25,6 +25,7 @@ namespace ERI {
 		layer_(NULL),
 		parent_(NULL),
 		visible_(true),
+		inherit_visible_(true),
 		is_view_depth_dirty_(true),
 		user_data_(NULL),
 		bounding_sphere_(NULL),
@@ -127,7 +128,7 @@ namespace ERI {
 	
 	SceneActor* SceneActor::GetHitActor(const Vector3& parent_space_pos)
 	{
-		if (!visible_)
+		if (!visible())
 			return NULL;
 		
 		if (render_data_.need_update_model_matrix)
@@ -154,7 +155,7 @@ namespace ERI {
 	
 	void SceneActor::Render(Renderer* renderer)
 	{
-		if (!visible_)
+		if (!visible())
 			return;
 		
 		if (!IsInFrustum())
@@ -480,6 +481,27 @@ namespace ERI {
 	void SceneActor::SetCullFace(bool enable)
 	{
 		material_data_.cull_face = enable;
+	}
+	
+	void SceneActor::SetVisible(bool visible, bool inherit /*= false*/)
+	{
+		bool original_visible = visible_ && inherit_visible_;
+		
+		if (inherit)
+			inherit_visible_ = visible;
+		else
+			visible_ = visible;
+		
+		bool current_visible = visible_ && inherit_visible_;
+				
+		if (current_visible != original_visible)
+		{
+			int child_num = childs_.size();
+			for (int i = 0; i < child_num; ++i)
+			{
+				childs_[i]->SetVisible(current_visible, true);
+			}
+		}
 	}
 	
 	bool SceneActor::IsInFrustum()
