@@ -95,10 +95,10 @@ namespace ERI {
 		vertex_color_enable_(false),
 		light_enable_(false),
 		depth_test_enable_(true),
-		cull_face_enable_(true),
 		depth_write_enable_(true),
 		blend_enable_(false),
 		alpha_test_enable_(false),
+		cull_face_enable_(true),
 		texture_enable_(false),
 		now_active_texture_unit_(0),
 		now_client_active_texture_unit_(0),
@@ -585,6 +585,7 @@ namespace ERI {
 		EnableDepthTest(data->depth_test);
 		EnableDepthWrite(data->depth_write);
 		EnableCullFace(data->cull_face);
+		EnableColorWrite(data->color_write);
 		
 		texture_enable_ = (data->used_unit > 0);
 		
@@ -646,6 +647,19 @@ namespace ERI {
 				glEnable(GL_CULL_FACE);
 			else
 				glDisable(GL_CULL_FACE);
+		}
+	}
+	
+	void RendererES1::EnableColorWrite(ColorFlags enable)
+	{
+		if (color_write_enable_ != enable)
+		{
+			color_write_enable_ = enable;
+			
+			glColorMask(color_write_enable_.r,
+						color_write_enable_.g,
+						color_write_enable_.b,
+						color_write_enable_.a);
 		}
 	}
 

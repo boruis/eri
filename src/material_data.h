@@ -32,6 +32,32 @@ namespace ERI {
 		TextureEnvs		envs;
 	};
 	
+	struct ColorFlags
+	{
+		ColorFlags() : r(true), g(true), b(true), a(true) {}
+		
+		inline bool operator == (const ColorFlags& rhs)
+		{
+			return (r == rhs.r &&
+					g == rhs.g &&
+					b == rhs.b &&
+					a == rhs.a);
+		}
+		
+		inline bool operator != (const ColorFlags& rhs)
+		{
+			return (r != rhs.r ||
+					g != rhs.g ||
+					b != rhs.b ||
+					a != rhs.a);
+		}
+		
+		unsigned int r : 1;
+		unsigned int g : 1;
+		unsigned int b : 1;
+		unsigned int a : 1;
+	};
+	
 	struct MaterialData
 	{
 		MaterialData() :
@@ -72,6 +98,8 @@ namespace ERI {
 		bool			depth_write;
 		bool			cull_face;
 		bool			accept_light;
+		
+		ColorFlags		color_write;
 	};
 	
 }

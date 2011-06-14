@@ -75,6 +75,7 @@ namespace ERI {
 		void BlendReplace();
 		void AlphaTestGreater(int alpha_value);
 		void DepthTestEqual();
+		void DepthTestAlways();
 		
 		//
 		// transform
@@ -131,6 +132,7 @@ namespace ERI {
 		void SetDepthTest(bool enable);
 		void SetDepthWrite(bool enable);
 		void SetCullFace(bool enable);
+		void SetColorWrite(bool r_enable, bool g_enable, bool b_enable, bool a_enable);
 
 		inline const MaterialData& material() { return material_data_; }
 		

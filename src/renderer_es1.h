@@ -86,13 +86,14 @@ namespace ERI {
 		virtual void EnableAlphaTest(bool enable);
 		virtual void EnableMaterial(const MaterialData* data);
 		
-		virtual void EnableLight(bool enable);
-		virtual void EnableDepthTest(bool enable);
-		virtual void EnableDepthWrite(bool enable);
-		virtual void EnableCullFace(bool enable);
+		void EnableLight(bool enable);
+		void EnableDepthTest(bool enable);
+		void EnableDepthWrite(bool enable);
+		void EnableCullFace(bool enable);
+		void EnableColorWrite(ColorFlags enable);
 		
-		virtual void EnableTextureUnit(int idx, const TextureUnit& unit);
-		virtual void DisableTextureUnit(int idx);
+		void EnableTextureUnit(int idx, const TextureUnit& unit);
+		void DisableTextureUnit(int idx);
 		
 		virtual void ObtainLight(int& idx);
 		virtual void ReleaseLight(int idx);
@@ -161,6 +162,8 @@ namespace ERI {
 		bool blend_enable_;
 		bool alpha_test_enable_;
 		bool cull_face_enable_;
+		
+		ColorFlags	color_write_enable_;
 		
 		bool texture_enable_;
 		bool texture_unit_enable_[MAX_TEXTURE_UNIT];

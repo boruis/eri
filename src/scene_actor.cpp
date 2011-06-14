@@ -218,7 +218,12 @@ namespace ERI {
 	{
 		render_data_.depth_test_func = GL_EQUAL;
 	}
-	
+
+	void SceneActor::DepthTestAlways()
+	{
+		render_data_.depth_test_func = GL_ALWAYS;
+	}
+
 	const Matrix4& SceneActor::GetTransform()
 	{
 		if (render_data_.need_update_model_matrix)
@@ -470,17 +475,29 @@ namespace ERI {
 	
 	void SceneActor::SetDepthTest(bool enable)
 	{
+		// TODO: actually, disable depth test will disable depth write 
+		
 		material_data_.depth_test = enable;
 	}
 	
 	void SceneActor::SetDepthWrite(bool enable)
 	{
+		// TODO: actually, disable depth test will disable depth write
+		
 		material_data_.depth_write = enable;
 	}
 
 	void SceneActor::SetCullFace(bool enable)
 	{
 		material_data_.cull_face = enable;
+	}
+	
+	void SceneActor::SetColorWrite(bool r_enable, bool g_enable, bool b_enable, bool a_enable)
+	{
+		material_data_.color_write.r = r_enable;
+		material_data_.color_write.g = g_enable;
+		material_data_.color_write.b = b_enable;
+		material_data_.color_write.a = a_enable;
 	}
 	
 	void SceneActor::SetVisible(bool visible, bool inherit /*= false*/)

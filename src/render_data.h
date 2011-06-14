@@ -113,6 +113,8 @@ namespace ERI {
 		
 		Vector3	world_view_pos;
 		
+		// TODO: move to MaterialData?
+		
 		// texture
 		// TODO: multi-texture?
 		bool	is_tex_transform;
