@@ -163,9 +163,14 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			mouse_move_y = screen_y;
 
 			if (wParam & MK_LBUTTON)
+			{
+				e.function_key_status = GetFunctionKeyStatus();
 				Root::Ins().input_mgr()->Move(e);
+			}
 			else
+			{
 				Root::Ins().input_mgr()->OverMove(e);
+			}
 
 			return 0;
 		}
@@ -175,6 +180,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			InputEvent e;
 			e.dy = GET_WHEEL_DELTA_WPARAM(wParam) / 50;
+			e.function_key_status = GetFunctionKeyStatus();
 			Root::Ins().input_mgr()->Scroll(e);
 		}
 		break;
@@ -240,7 +246,6 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				InputEvent e;
 				e.x = screen_x;
 				e.y = screen_y;
-				e.function_key_status = GetFunctionKeyStatus();
 				Root::Ins().input_mgr()->RightClick(e);
 			}
 
