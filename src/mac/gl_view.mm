@@ -80,6 +80,7 @@ static unsigned int GetFunctionKeyStatus(unsigned long flags)
 	ERI::InputEvent e(0, pos.x, pos.y);
 	e.dx = [event deltaX];
 	e.dy = [event deltaY];
+	e.function_key_status = GetFunctionKeyStatus([event modifierFlags]);
 	ERI::Root::Ins().input_mgr()->Move(e);
 }
 
@@ -104,7 +105,6 @@ static unsigned int GetFunctionKeyStatus(unsigned long flags)
 	if (ERI::Abs(pos.x - right_mouse_down_x) < 10 && ERI::Abs(pos.y - right_mouse_down_y) < 10)
 	{
 		ERI::InputEvent e(0, pos.x, pos.y);
-		e.function_key_status = GetFunctionKeyStatus([event modifierFlags]);
 		ERI::Root::Ins().input_mgr()->RightClick(e);
 	}
 }
@@ -116,6 +116,7 @@ static unsigned int GetFunctionKeyStatus(unsigned long flags)
 	ERI::InputEvent e(0, pos.x, pos.y);
 	e.dx = [event deltaX];
 	e.dy = [event deltaY];
+	e.function_key_status = GetFunctionKeyStatus([event modifierFlags]);
 	ERI::Root::Ins().input_mgr()->Scroll(e);
 }
 
