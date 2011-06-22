@@ -462,6 +462,8 @@ namespace ERI {
 		float	d;
 	};
 	
+	void CalculateSmallestAABox2(const std::vector<Vector2> points, AABox2& out_box);
+	
 #pragma mark Intersection
 	
 	enum IntersectionType

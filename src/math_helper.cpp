@@ -793,6 +793,26 @@ namespace ERI {
         }
 	}
 	
+#pragma mark Geometry
+	
+	void CalculateSmallestAABox2(const std::vector<Vector2> points, AABox2& out_box)
+	{
+		int num = points.size();
+		if (num <= 0)
+			return;
+		
+		out_box.min = out_box.max = points[0];
+		
+		for (int i = 1; i < num; ++i)
+		{
+			if (points[i].x < out_box.min.x) out_box.min.x = points[i].x;
+			else if (points[i].x > out_box.max.x) out_box.max.x = points[i].x;
+
+			if (points[i].y < out_box.min.y) out_box.min.y = points[i].y;
+			else if (points[i].y > out_box.max.y) out_box.max.y = points[i].y;
+		}
+	}
+	
 #pragma mark Intersection
 	
 	float GetPointSegment2DistanceSquared(const Vector2& point, const Segment2& segment)
