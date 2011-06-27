@@ -202,12 +202,18 @@ namespace ERI {
 		render_data_.blend_dst_factor = GL_ZERO;
 	}
 	
+	void SceneActor::BlendMultiply2x()
+	{
+		render_data_.blend_src_factor = GL_DST_COLOR;
+		render_data_.blend_dst_factor = GL_SRC_COLOR;
+	}
+	
 	void SceneActor::BlendReplace()
 	{
 		render_data_.blend_src_factor = GL_ONE;
 		render_data_.blend_dst_factor = GL_ZERO;
 	}
-	
+
 	void SceneActor::AlphaTestGreater(int alpha_value)
 	{
 		render_data_.alpha_test_func = GL_GREATER;
@@ -584,6 +590,7 @@ namespace ERI {
 		is_look_at_offset_(true),
 		ortho_zoom_(1.0f),
 		perspective_fov_y_(Math::PI / 3.0f),
+		far_z_(1000.0f),
 		is_view_modified_(true),
 		is_projection_modified_(true),
 		is_view_need_update_(true),
@@ -638,6 +645,15 @@ namespace ERI {
 		ASSERT(fov_y > 0);
 		
 		perspective_fov_y_ = fov_y;
+		
+		SetProjectionModified();
+	}
+	
+	void CameraActor::SetFarZ(float far_z)
+	{
+		ASSERT(far_z > 0);
+		
+		far_z_ = far_z;
 		
 		SetProjectionModified();
 	}
@@ -725,14 +741,14 @@ namespace ERI {
 			MatrixOrthoRH(projection_matrix_,
 						  renderer->backing_width() / ortho_zoom_,
 						  renderer->backing_height() / ortho_zoom_,
-						  -1000, 1000);
+						  -far_z_, far_z_);
 		}
 		else
 		{
 			MatrixPerspectiveFovRH(projection_matrix_,
 								   perspective_fov_y_,
 								   static_cast<float>(renderer->backing_width()) / renderer->backing_height(),
-								   1, 1000);
+								   1, far_z_);
 		}
 		
 		is_projection_modified_ = false;

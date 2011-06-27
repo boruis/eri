@@ -189,6 +189,9 @@ namespace ERI {
 		glEnableClientState(GL_VERTEX_ARRAY);
 		
 		glBlendFunc(blend_src_factor_, blend_dst_factor_);
+		
+		float ambient[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+		glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient);
 
 		SetBgColor(bg_color_);
 		

@@ -72,6 +72,7 @@ namespace ERI {
 		void BlendNormal();
 		void BlendAdd();
 		void BlendMultiply();
+		void BlendMultiply2x();
 		void BlendReplace();
 		void AlphaTestGreater(int alpha_value);
 		void DepthTestEqual();
@@ -200,6 +201,7 @@ namespace ERI {
 		
 		void SetOrthoZoom(float zoom);
 		void SetPerspectiveFov(float fov_y);
+		void SetFarZ(float far_z);
 
 		void UpdateViewMatrix();
 		void UpdateProjectionMatrix();
@@ -232,6 +234,7 @@ namespace ERI {
 		
 		float		ortho_zoom_;
 		float		perspective_fov_y_;
+		float		far_z_;
 		
 		bool		is_view_modified_, is_projection_modified_;
 		bool		is_view_need_update_, is_projection_need_update_;
