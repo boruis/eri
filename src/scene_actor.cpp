@@ -1114,6 +1114,20 @@ namespace ERI {
 		}
 	}
 	
+	void SpriteActor::CreateBounding()
+	{
+		if (!bounding_sphere_)
+			bounding_sphere_ = new Sphere;
+
+		bounding_sphere_->center = Vector3(offset_);
+		bounding_sphere_->radius = size_.Length() * 0.5f;
+		
+		if (!bounding_sphere_world_)
+			bounding_sphere_world_ = new Sphere;
+
+		bounding_sphere_world_->radius = bounding_sphere_->radius;
+	}
+	
 	bool SpriteActor::IsInArea(const Vector3& local_space_pos)
 	{
 		if (local_space_pos.x >= (offset_.x - 0.5f * size_.x - area_border_)

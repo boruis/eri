@@ -300,6 +300,8 @@ namespace ERI {
 		
 		void SetTxt(const std::string& txt, const std::string& font_name, float font_size);
 		void SetUseLine(bool use_line);
+		
+		void CreateBounding();
 
 		inline void set_is_dynamic_draw(bool is_dynamic_draw) { is_dynamic_draw_ = is_dynamic_draw; }
 		inline void set_area_border(float border) { area_border_ = border; }
