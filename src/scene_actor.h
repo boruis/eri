@@ -304,8 +304,8 @@ namespace ERI {
 		inline void set_is_dynamic_draw(bool is_dynamic_draw) { is_dynamic_draw_ = is_dynamic_draw; }
 		inline void set_area_border(float border) { area_border_ = border; }
 		
-		inline const Vector2& size() { return size_; }
-		inline const Vector2& offset() { return offset_; }
+		inline const Vector2& size() const { return size_; }
+		inline const Vector2& offset() const { return offset_; }
 		
 	private:
 		virtual bool IsInArea(const Vector3& local_space_pos);
