@@ -113,7 +113,7 @@ void SeperateFileNameBaseExtension(const std::string& file_name,
 	}
 }
 	
-void ReplaceBackslashToSlash(std::string str)
+void ReplaceBackslashToSlash(std::string& str)
 {
 	int length = str.length();
 	for (int i = 0; i < length; ++i)
