@@ -25,6 +25,8 @@ std::string GetFileNameExtension(const std::string& file_name);
 std::string GetFileNameBase(const std::string& file_name);
 void SeperateFileNameBaseExtension(const std::string& file_name,
 								   std::string& out_base, std::string& out_extension);
+
+void ReplaceBackslashToSlash(std::string str);
 	
 bool GetFileContentString(const std::string& path, std::string& out_content);
 	

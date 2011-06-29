@@ -112,6 +112,16 @@ void SeperateFileNameBaseExtension(const std::string& file_name,
 		out_extension.clear();
 	}
 }
+	
+void ReplaceBackslashToSlash(std::string str)
+{
+	int length = str.length();
+	for (int i = 0; i < length; ++i)
+	{
+		if (str[i] == '\\')
+			str[i] = '/';
+	}
+}
 
 bool GetFileContentString(const std::string& path, std::string& out_content)
 {
