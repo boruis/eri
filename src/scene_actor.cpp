@@ -633,8 +633,8 @@ namespace ERI {
 		ASSERT(zoom > 0);
 		
 		ortho_zoom_ = zoom;
-		SetScale(Vector3(1 / ortho_zoom_, 1 / ortho_zoom_, 1 / ortho_zoom_));
-		//SetScale(1 / ortho_zoom_, 1 / ortho_zoom_);
+		//SetScale(Vector3(1 / ortho_zoom_, 1 / ortho_zoom_, 1 / ortho_zoom_));
+		SetScale(1 / ortho_zoom_, 1 / ortho_zoom_);
 		
 		SetProjectionModified();
 	}
