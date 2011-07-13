@@ -220,6 +220,16 @@ namespace ERI {
 		render_data_.alpha_test_ref = alpha_value / 255.0f;
 	}
 
+	void SceneActor::DepthTestLess()
+	{
+		render_data_.depth_test_func = GL_LESS;
+	}
+	
+	void SceneActor::DepthTestGreater()
+	{
+		render_data_.depth_test_func = GL_GREATER;
+	}
+	
 	void SceneActor::DepthTestEqual()
 	{
 		render_data_.depth_test_func = GL_EQUAL;
@@ -228,11 +238,6 @@ namespace ERI {
 	void SceneActor::DepthTestNotEqual()
 	{
 		render_data_.depth_test_func = GL_NOTEQUAL;
-	}
-
-	void SceneActor::DepthTestGreater()
-	{
-		render_data_.depth_test_func = GL_GREATER;
 	}
 
 	void SceneActor::DepthTestAlways()
