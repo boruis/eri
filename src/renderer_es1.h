@@ -116,6 +116,8 @@ namespace ERI {
 		virtual void SetBgColor(const Color& color);
 		virtual const Color& GetBgColor();
 		
+		virtual void SetClearDepth(float clamped_depth);
+		
 		virtual void UpdateView(const Matrix4& view_matrix);
 		virtual void UpdateView(const Vector3& eye, const Vector3& at, const Vector3& up);
 		

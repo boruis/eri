@@ -76,6 +76,8 @@ namespace ERI {
 		void BlendReplace();
 		void AlphaTestGreater(int alpha_value);
 		void DepthTestEqual();
+		void DepthTestNotEqual();
+		void DepthTestGreater();
 		void DepthTestAlways();
 		
 		//
@@ -295,6 +297,8 @@ namespace ERI {
 		
 		void SetTexScale(float u_scale, float v_scale, bool is_tex2 = false);
 		void SetTexScroll(float u_scroll, float v_scroll, bool is_tex2 = false);
+		void SetTexScaleScroll(const Vector2& scale, const Vector2& scroll, bool is_tex2 = false);
+		
 		void SetTexArea(int start_x, int start_y, int width, int height, bool is_tex2 = false);
 		void SetTexAreaUV(float start_u, float start_v, float width, float height, bool is_tex2 = false);
 		

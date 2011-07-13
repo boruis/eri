@@ -1038,6 +1038,11 @@ namespace ERI {
 		return bg_color_;
 	}
 	
+	void RendererES1::SetClearDepth(float clamped_depth)
+	{
+		glClearDepth(clamped_depth);
+	}
+	
 	void RendererES1::UpdateView(const Matrix4& view_matrix)
 	{
 		current_view_matrix_ = view_matrix;

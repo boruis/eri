@@ -225,6 +225,16 @@ namespace ERI {
 		render_data_.depth_test_func = GL_EQUAL;
 	}
 
+	void SceneActor::DepthTestNotEqual()
+	{
+		render_data_.depth_test_func = GL_NOTEQUAL;
+	}
+
+	void SceneActor::DepthTestGreater()
+	{
+		render_data_.depth_test_func = GL_GREATER;
+	}
+
 	void SceneActor::DepthTestAlways()
 	{
 		render_data_.depth_test_func = GL_ALWAYS;
@@ -1039,6 +1049,23 @@ namespace ERI {
 		{
 			tex_scroll_.x = u_scroll;
 			tex_scroll_.y = v_scroll;
+		}
+		
+		UpdateVertexBuffer();
+	}
+	
+	void SpriteActor::SetTexScaleScroll(const Vector2& scale, const Vector2& scroll, bool is_tex2 /*= false*/)
+	{
+		if (is_tex2)
+		{
+			tex_scale2_ = scale;
+			tex_scroll2_ = scroll;
+			is_use_tex2_ = true;
+		}
+		else
+		{
+			tex_scale_ = scale;
+			tex_scroll_ = scroll;
 		}
 		
 		UpdateVertexBuffer();
