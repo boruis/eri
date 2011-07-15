@@ -17,6 +17,8 @@
 #include "shared_skeleton.h"
 #include "xml_helper.h"
 
+//#define SHOW_DEBUG_SKEL
+
 using namespace rapidxml;
 
 namespace ERI
@@ -376,14 +378,14 @@ namespace ERI
 		
 		// TODO: wrong usage, find out correct one
 		
-		int skel_idx = 0;
 		int max_node = 0;
 		std::map<std::string, Skeleton*>::iterator skel_it;
-		for (skel_it = skeleton_map_.begin(); skel_it != skeleton_map_.end(); ++skel_it, ++skel_idx)
+		for (skel_it = skeleton_map_.begin(); skel_it != skeleton_map_.end(); ++skel_it)
 		{
 			Skeleton* current_skel = skel_it->second;
 			
-			printf("skel[%d]: %d node, %d skin\n", skel_idx,
+#ifdef SHOW_DEBUG_SKEL
+			printf("skel[%s]: %d node, %d skin\n", skel_it->first.c_str(),
 						 static_cast<int>(current_skel->nodes.size()),
 						 static_cast<int>(current_skel->skin_refs.size()));
 			
@@ -393,11 +395,16 @@ namespace ERI
 							 current_skel->nodes[i]->name.c_str(),
 							 current_skel->nodes[i]->parent_idx);
 			}
+#endif
 			
 			if (current_skel->nodes.size() > max_node)
 			{
 				max_node = current_skel->nodes.size();
 				skeleton = current_skel;
+
+#ifdef SHOW_DEBUG_SKEL
+				printf("current skel -> %s\n", skel_it->first.c_str());
+#endif
 			}
 		}
 		
@@ -516,8 +523,10 @@ namespace ERI
 					anim = CreateAnimClip(animation_array_[i], skeleton->nodes, start_idx, section_frame_num);
 					
 					ASSERT(anim);
-					
+
+#ifdef SHOW_DEBUG_SKEL
 					printf("anim[%d]: start_frame:%d frame_num:%d\n", j, start_idx, section_frame_num);
+#endif
 					
 					share_skeleton->anim_refs.push_back(anim);
 					
@@ -529,8 +538,10 @@ namespace ERI
 				AnimClip* anim = CreateAnimClip(animation_array_[i], skeleton->nodes);
 				
 				ASSERT(anim);
-				
+
+#ifdef SHOW_DEBUG_SKEL
 				printf("anim[0]: start_frame:0 frame_num:%lu\n", anim->pose_samples.size());
+#endif
 				
 				share_skeleton->anim_refs.push_back(anim);
 			}
@@ -955,6 +966,7 @@ namespace ERI
 					}
 					
 					skin = new Skin;
+					skin->name = s;
 					skin_id = s;
 					
 					ASSERT(skin_map_.find(skin_id) == skin_map_.end());
@@ -1209,6 +1221,11 @@ namespace ERI
 		}
 	}
 	
+	bool ColladaLoader::SortCompareSkin(Skin* skin1, Skin* skin2)
+	{
+		return (skin1->name.compare(skin2->name) < 0);
+	}
+	
 	void ColladaLoader::ParseLibraryVisualScenes(rapidxml::xml_node<>* node)
 	{
 		node = node->first_node("visual_scene");
@@ -1219,17 +1236,19 @@ namespace ERI
 		
 		xml_node<>* node2;
 		xml_node<>* node3;
-		std::string s;
+		std::string s, s2;
 		
-		Skeleton* skeletion;
+		Skeleton* skeleton;
 		Skin* skin;
 		
-		node = root_node->first_node("node");
-		while (node)
+		std::vector<xml_node<>*> skin_nodes;
+		if (FindNodes(root_node, "instance_controller", skin_nodes))
 		{
-			node2 = FindNode(node, "instance_controller");
-			if (node2)
+			int num = skin_nodes.size();
+			for (int i = 0; i < num; ++i)
 			{
+				node2 = skin_nodes[i];
+				
 				if (GetAttrStr(node2, "url", s))
 				{
 					if (s[0] == '#')
@@ -1244,50 +1263,75 @@ namespace ERI
 					node3 = node2->first_node("skeleton");
 					while (node3)
 					{
-						s = node3->value();
-						if (!s.empty())
+						s2 = node3->value();
+						if (!s2.empty())
 						{
-							if (s[0] == '#')
-								s = s.substr(1);
+							if (s2[0] == '#')
+								s2 = s2.substr(1);
 							
-							std::map<std::string, Skeleton*>::iterator skel_it = skeleton_map_.find(s);
+							std::map<std::string, Skeleton*>::iterator skel_it = skeleton_map_.find(s2);
 							
 							if (skel_it == skeleton_map_.end())
 							{
-								skeletion = new Skeleton;
-								skeleton_map_[s] = skeletion;
+								skeleton = new Skeleton;
+								skeleton_map_[s2] = skeleton;
 							}
 							else
 							{
-								skeletion = skel_it->second;
+								skeleton = skel_it->second;
 							}
-
-							skeletion->skin_refs.push_back(skin);
+							
+							skeleton->skin_refs.push_back(skin);
 						}
 						
 						node3 = node3->next_sibling("skeleton");
 					}
 				}
 			}
-			
-			node = node->next_sibling("node");
 		}
 		
 		std::map<std::string, Skeleton*>::iterator skel_it;
+		std::string skeleton_name;
 		node = root_node->first_node("node");
 		while (node)
 		{
+			skeleton = NULL;
+			
 			if (GetAttrStr(node, "id", s))
 			{
 				skel_it = skeleton_map_.find(s);
 				if (skel_it != skeleton_map_.end())
 				{
-					skeletion = skel_it->second;
-					ParseSkeletonNode(node, skeletion, -1);
+					skeleton = skel_it->second;
+					skeleton_name = s;
 				}
-				else if(FindSkeletonNode(node->first_node("node"), skeletion))
+				else
 				{
-					ParseSkeletonNode(node, skeletion, -1);
+					FindSkeletonNode(node->first_node("node"), skeleton, skeleton_name);
+				}
+				
+				if (skeleton)
+				{
+#ifdef SHOW_DEBUG_SKEL
+					printf("---- start parsing skel[%s]\n", skeleton_name.c_str());
+#endif
+					
+					ParseSkeletonNode(node, skeleton, -1);
+					
+					// ------------------------------------------------------------
+					// meshes render order effected by the corresponding skins' order
+					// ------------------------------------------------------------
+					
+					std::sort(skeleton->skin_refs.begin(), skeleton->skin_refs.end(), SortCompareSkin);
+
+#ifdef SHOW_DEBUG_SKEL
+					for (int i = 0; i < skeleton->skin_refs.size(); ++i)
+					{
+						printf("*** skin_refs[%d] %s\n", i, skeleton->skin_refs[i]->name.c_str());
+					}
+					
+					printf("----\n");
+#endif
 				}
 			}
 			
@@ -1637,15 +1681,52 @@ namespace ERI
 		skeleton_node->name = s;
 		skeleton_node->parent_idx = parent_idx;
 		
+#ifdef SHOW_DEBUG_SKEL
+		printf("parse skel node %s\n", s.c_str());
+#endif
+		
 		if (GetAttrStr(node, "type", s) && s.compare("JOINT") == 0)
 		{
 			GetAttrStr(node, "sid", skeleton_node->joint_name);
 			
+#ifdef SHOW_DEBUG_SKEL
+			printf("skel node %s is JOINT %s\n",
+				   skeleton_node->name.c_str(),
+				   skeleton_node->joint_name.c_str());
+#endif
+			
 			std::map<std::string, Skeleton*>::iterator skel_it = skeleton_map_.find(skeleton_node->name);
 			if (skel_it != skeleton_map_.end() && skel_it->second != skeleton)
 			{
-				for (int i = 0; i < skel_it->second->skin_refs.size(); ++i)
-					skeleton->skin_refs.push_back(skel_it->second->skin_refs[i]);
+#ifdef SHOW_DEBUG_SKEL
+				printf("skel %s exist, push skin refs into current skel\n",
+					   skeleton_node->name.c_str());
+#endif
+				
+				int exist_num = skeleton->skin_refs.size();
+				int add_num = skel_it->second->skin_refs.size();
+				bool already_have;
+				for (int i = 0; i < add_num; ++i)
+				{
+					already_have = false;
+					for (int j = 0; j < exist_num; ++j)
+					{
+						if (skeleton->skin_refs[j] == skel_it->second->skin_refs[i])
+						{
+							already_have = true;
+							break;
+						}
+					}
+					
+					if (!already_have)
+					{
+						skeleton->skin_refs.push_back(skel_it->second->skin_refs[i]);
+						
+#ifdef SHOW_DEBUG_SKEL
+						printf("  pushed skin[%s]\n", skeleton->skin_refs.back()->name.c_str());
+#endif
+					}
+				}
 			}
 		}
 		
@@ -1679,7 +1760,7 @@ namespace ERI
 		}
 	}
 	
-	bool ColladaLoader::FindSkeletonNode(rapidxml::xml_node<>* node, Skeleton*& out_skeleton)
+	bool ColladaLoader::FindSkeletonNode(rapidxml::xml_node<>* node, Skeleton*& out_skeleton, std::string& out_skeleton_name)
 	{
 		if (!node)
 			return false;
@@ -1695,11 +1776,12 @@ namespace ERI
 				if (skel_it != skeleton_map_.end())
 				{
 					out_skeleton = skel_it->second;
+					out_skeleton_name = s;
 					return true;
 				}
 				else
 				{
-					if (FindSkeletonNode(node->first_node("node"), out_skeleton))
+					if (FindSkeletonNode(node->first_node("node"), out_skeleton, out_skeleton_name))
 						return true;
 				}
 			}
@@ -1725,26 +1807,30 @@ namespace ERI
 		return -1;
 	}
 	
-	rapidxml::xml_node<>* ColladaLoader::FindNode(rapidxml::xml_node<>* node, const char* name)
+	bool ColladaLoader::FindNodes(rapidxml::xml_node<>* node, const char* name, std::vector<rapidxml::xml_node<>*>& out_nodes)
 	{
 		if (!node)
-			return NULL;
+			return false;
 		
 		if (strcmp(node->name(), name) == 0)
-			return node;
+		{
+			out_nodes.push_back(node);
+			return true;
+		}
 		
-		rapidxml::xml_node<>* node2;
+		bool got = false;
+		
 		node = node->first_node();
 		while (node)
 		{
-			node2 = FindNode(node, name);
-			if (node2)
-				return node2;
+			if (FindNodes(node, name, out_nodes))
+				got = true;
 			
 			node = node->next_sibling();
 		}
 		
-		return NULL;
+		return got;
 	}
+
 
 }

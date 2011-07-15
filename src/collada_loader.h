@@ -118,6 +118,7 @@ namespace ERI
 		{
 			~Skin();
 			
+			std::string						name;
 			Mesh*							mesh_ref;
 			Matrix4							bind_shape_matrix;
 			std::map<std::string, Src*>		src_map;
@@ -190,6 +191,8 @@ namespace ERI
 		
 		//
 		
+		static bool SortCompareSkin(Skin* skin1, Skin* skin2);
+		
 		void ParseLibraryGeometries(rapidxml::xml_node<>* node);
 		void ParseLibraryControllers(rapidxml::xml_node<>* node);
 		void ParseLibraryVisualScenes(rapidxml::xml_node<>* node);
@@ -199,11 +202,11 @@ namespace ERI
 		Input* ParseInput(rapidxml::xml_node<>* node, bool is_need_offset);
 		
 		void ParseSkeletonNode(rapidxml::xml_node<>* node, Skeleton* skeleton, int parent_idx);
-		bool FindSkeletonNode(rapidxml::xml_node<>* node, Skeleton*& out_skeleton);
+		bool FindSkeletonNode(rapidxml::xml_node<>* node, Skeleton*& out_skeleton, std::string& out_skeleton_name);
 		
 		int FindMatchJointIdx(Skin* skin, const std::string& joint_name);
 		
-		rapidxml::xml_node<>* FindNode(rapidxml::xml_node<>* node, const char* name);
+		bool FindNodes(rapidxml::xml_node<>* node, const char* name, std::vector<rapidxml::xml_node<>*>& out_nodes);
 		
 		//
 		
