@@ -377,6 +377,8 @@ namespace ERI {
 	
 	struct Segment2
 	{
+		Segment2() {}
+		
 		Segment2(const Vector2& _begin, const Vector2& _end) : begin(_begin), end(_end)
 		{
 			ComputeCenterDirExtent();
@@ -470,14 +472,20 @@ namespace ERI {
 	{
 		IT_EMPTY,
 		IT_POINT,
-		IT_COLINEAR
+		IT_COLINEAR,
+		IT_SEGMENT
 	};
 
 	float GetPointSegment2DistanceSquared(const Vector2& point, const Segment2& segment);
 	float GetPointBox2DistanceSquared(const Vector2& point, const Box2& box);
-	IntersectionType CheckIntersectRayRay2(const Ray2& ray1, const Ray2& ray2, Vector2* out_intersect_pos);
-	bool IsIntersectLineCircle2(const Line2& line, const Circle& circle, std::vector<float>* out_intersect_length);
-	bool IsIntersectRayCircle2(const Ray2& ray, const Circle& circle, std::vector<Vector2>* out_intersect_pos);
+	IntersectionType CheckIntersectRayRay2(const Ray2& ray1, const Ray2& ray2,
+										   Vector2* out_intersect_pos);
+	IntersectionType CheckIntersectSegmentSegment2(const Segment2& segment1, const Segment2& segment2,
+												   float* out_intersect_percents, Vector2* out_intersect_pos);
+	bool IsIntersectLineCircle2(const Line2& line, const Circle& circle,
+								std::vector<float>* out_intersect_length);
+	bool IsIntersectRayCircle2(const Ray2& ray, const Circle& circle,
+							   std::vector<Vector2>* out_intersect_pos);
 	bool IsIntersectBoxCircle2(const Box2& box, const Circle& circle);
 	bool IsIntersectBoxBox2(const Box2& box1, const Box2& box2);
 	bool IsIntersectAABoxCircle2(const AABox2& box, const Circle& circle);

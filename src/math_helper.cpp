@@ -867,7 +867,8 @@ namespace ERI {
 		return sqr_distance;
 	}
 	
-	IntersectionType CheckIntersectRayRay2(const Ray2& ray1, const Ray2& ray2, Vector2* out_intersect_pos)
+	IntersectionType CheckIntersectRayRay2(const Ray2& ray1, const Ray2& ray2,
+										   Vector2* out_intersect_pos)
 	{
 		Vector2 origin_diff = ray2.origin - ray1.origin;
 		
@@ -910,7 +911,75 @@ namespace ERI {
 		return IT_EMPTY;
 	}
 	
-	bool IsIntersectLineCircle2(const Line2& line, const Circle& circle, std::vector<float>* out_intersect_length)
+	IntersectionType CheckIntersectSegmentSegment2(const Segment2& segment1, const Segment2& segment2,
+												   float* out_intersect_percents, Vector2* out_intersect_pos)
+	{
+		// The intersection of two lines is a solution to P0+s0*D0 = P1+s1*D1.
+		// Rewrite this as s0*D0 - s1*D1 = P1 - P0 = Q.  If D0.Dot(Perp(D1)) = 0,
+		// the lines are parallel.  Additionally, if Q.Dot(Perp(D1)) = 0, the
+		// lines are the same.  If D0.Dot(Perp(D1)) is not zero, then
+		//   s0 = Q.Dot(Perp(D1))/D0.Dot(Perp(D1))
+		// produces the point of intersection.  Also,
+		//   s1 = Q.Dot(Perp(D0))/D0.Dot(Perp(D1))
+
+		IntersectionType intersection_type = IT_EMPTY;
+		float parameter[2];
+
+		Vector2 origin_diff = segment2.center - segment1.center;
+		
+		float D0DotPerpD1 = segment1.dir.CrossProduct(segment2.dir);
+		if (Abs(D0DotPerpD1) > Math::ZERO_TOLERANCE)
+		{
+			// Lines intersect in a single point.
+			float invD0DotPerpD1 = 1.0f / D0DotPerpD1;
+			float diffDotPerpD0 = origin_diff.CrossProduct(segment1.dir);
+			float diffDotPerpD1 = origin_diff.CrossProduct(segment2.dir);
+			parameter[0] = diffDotPerpD1*invD0DotPerpD1;
+			parameter[1] = diffDotPerpD0*invD0DotPerpD1;
+			
+			intersection_type = IT_POINT;
+		}
+		else
+		{
+			// Lines are parallel.
+			origin_diff.Normalize();
+			
+			float diffNDotPerpD1 = origin_diff.CrossProduct(segment2.dir);
+			if (Abs(diffNDotPerpD1) <= Math::ZERO_TOLERANCE)
+			{
+				// Lines are colinear.
+				intersection_type = IT_SEGMENT;
+			}
+		}
+		
+		if (intersection_type == IT_POINT)
+		{
+			// Test whether the line-line intersection is on the segments.
+			if (Abs(parameter[0]) <= segment1.extent &&
+				Abs(parameter[1]) <= segment2.extent)
+			{
+				if (out_intersect_percents)
+				{
+					out_intersect_percents[0] = (parameter[0] + segment1.extent) / (segment1.extent * 2);
+					out_intersect_percents[1] = (parameter[1] + segment2.extent) / (segment2.extent * 2);
+				}
+				
+				if (out_intersect_pos)
+				{
+					(*out_intersect_pos) = segment1.center + segment1.dir * parameter[0];
+				}
+			}
+			else
+			{
+				intersection_type = IT_EMPTY;
+			}
+		}
+		
+		return intersection_type;
+	}
+	
+	bool IsIntersectLineCircle2(const Line2& line, const Circle& circle,
+								std::vector<float>* out_intersect_length)
 	{
 		// Intersection of a the line P+t*D and the circle |X-C| = R.  The line
 		// direction is unit length. The t value is a root to the quadratic
@@ -953,7 +1022,8 @@ namespace ERI {
 		return intersection_count != 0;
 	}
 	
-	bool IsIntersectRayCircle2(const Ray2& ray, const Circle& circle, std::vector<Vector2>* out_intersect_pos)
+	bool IsIntersectRayCircle2(const Ray2& ray, const Circle& circle,
+							   std::vector<Vector2>* out_intersect_pos)
 	{
 		std::vector<float> t;
 		Line2 line;
