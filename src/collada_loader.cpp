@@ -13,6 +13,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 #include "shared_skeleton.h"
 #include "xml_helper.h"
