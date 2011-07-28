@@ -309,6 +309,9 @@ namespace ERI {
 	{
 		render_data_.translate.x = x;
 		render_data_.translate.y = y;
+		
+		// TODO: depth dirty depend on camera setting
+		
 		SetTransformDirty();
 	}
 	
@@ -321,7 +324,7 @@ namespace ERI {
 	{
 		render_data_.rotate_degree = degree;
 		render_data_.rotate_axis = Vector3(0, 0, 1);
-		SetTransformDirty();
+		SetTransformDirty(false);
 	}
 	
 	float SceneActor::GetRotate() const
@@ -333,7 +336,7 @@ namespace ERI {
 	{
 		render_data_.scale.x = x;
 		render_data_.scale.y = y;
-		SetTransformDirty();
+		SetTransformDirty(false);
 	}
 	
 	Vector2 SceneActor::GetScale() const
@@ -344,6 +347,9 @@ namespace ERI {
 	void SceneActor::SetPos(const Vector3& pos)
 	{
 		render_data_.translate = pos;
+		
+		// TODO: depth dirty depend on camera setting
+		
 		SetTransformDirty();
 	}
 	
@@ -356,7 +362,7 @@ namespace ERI {
 	{
 		render_data_.rotate_degree = degree;
 		render_data_.rotate_axis = axis;
-		SetTransformDirty();
+		SetTransformDirty(false);
 	}
 	
 	void SceneActor::GetRotate(float& out_degree, Vector3& out_axis) const
@@ -368,7 +374,7 @@ namespace ERI {
 	void SceneActor::SetScale(const Vector3& scale)
 	{
 		render_data_.scale = scale;
-		SetTransformDirty();
+		SetTransformDirty(false);
 	}
 	
 	const Vector3& SceneActor::GetScale3() const
@@ -559,14 +565,14 @@ namespace ERI {
 		return true;
 	}
 	
-	void SceneActor::SetTransformDirty()
+	void SceneActor::SetTransformDirty(bool is_depth_dirty /*= true*/)
 	{
 		render_data_.need_update_model_matrix = true;
 
-		SetWorldTransformDirty();
+		SetWorldTransformDirty(is_depth_dirty);
 	}
 	
-	void SceneActor::SetWorldTransformDirty()
+	void SceneActor::SetWorldTransformDirty(bool is_depth_dirty /*= true*/)
 	{
 		render_data_.need_update_world_model_matrix = true;
 		
@@ -576,8 +582,11 @@ namespace ERI {
 			childs_[i]->SetWorldTransformDirty();
 		}
 		
-		is_view_depth_dirty_ = true;
-		if (layer_) layer_->SetSortDirty();
+		if (is_depth_dirty)
+		{
+			is_view_depth_dirty_ = true;
+			if (layer_) layer_->SetSortDirty();
+		}
 	}
 	
 	void SceneActor::SetTexture(int idx, const Texture* tex)
