@@ -538,6 +538,15 @@ namespace ERI {
 		
 		return screen_pos;
 	}
+	
+	Vector3 SceneMgr::CamToCamPos(const Vector3& pos_in_cam1, CameraActor* cam1, CameraActor* cam2)
+	{
+		ASSERT(cam1 && cam2);
+		
+		// TODO: perspective?
+		
+		return (pos_in_cam1 - cam1->GetPos3()) * (cam1->ortho_zoom() / cam2->ortho_zoom()) + cam2->GetPos3();
+	}
 
 	SceneActor* SceneMgr::GetHitActor(const Vector3& pos)
 	{

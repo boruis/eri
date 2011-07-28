@@ -142,6 +142,7 @@ namespace ERI {
 
 		Vector3 ScreenToWorldPos(int screen_x, int screen_y, CameraActor* cam = NULL);
 		Vector2 WorldToScreenPos(const Vector3& world_pos, CameraActor* cam = NULL);
+		Vector3 CamToCamPos(const Vector3& pos_in_cam1, CameraActor* cam1, CameraActor* cam2);
 		SceneActor* GetHitActor(const Vector3& pos);
 		
 		void OnViewportResize();
