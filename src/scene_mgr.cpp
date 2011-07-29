@@ -29,24 +29,29 @@ namespace ERI {
 	
 	void TextureActorGroup::Render(Renderer* renderer)
 	{
-		size_t num = actor_arrays_.size();
-		for (size_t i = 0; i < num; ++i)
+		is_rendering_ = true;
+		
+		size_t array_num = actor_arrays_.size();
+		for (size_t i = 0; i < array_num; ++i)
 		{
 			if (actor_arrays_[i] != NULL)
 			{
 				ActorArray& actors = *actor_arrays_[i];
-				size_t num = actors.size();
-				for (size_t j = 0; j < num; ++j)
+				size_t actor_num = actors.size();
+				for (size_t j = 0; j < actor_num; ++j)
 				{
 					actors[j]->Render(renderer);
 				}
 			}
 		}
+		
+		is_rendering_ = false;
 	}
 	
 	void TextureActorGroup::AddActor(SceneActor* actor)
 	{
 		ASSERT(actor);
+		ASSERT(!is_rendering_);
 		
 		int array_idx = -1;
 		int texture_id = actor->material().GetSingleTextureId();
@@ -87,6 +92,7 @@ namespace ERI {
 	void TextureActorGroup::RemoveActor(SceneActor* actor)
 	{
 		ASSERT(actor);
+		ASSERT(!is_rendering_);
 		
 		RemoveActorByTextureId(actor, actor->material().GetSingleTextureId());
 	}
@@ -135,6 +141,7 @@ namespace ERI {
 	void TextureActorGroup::RemoveActorByTextureId(SceneActor* actor, int texture_id)
 	{
 		ASSERT(actor);
+		ASSERT(!is_rendering_);
 		
 		std::map<int, int>::iterator it = texture_map_.find(texture_id);
 		
@@ -178,6 +185,8 @@ namespace ERI {
 	
 	void SortActorGroup::Render(Renderer* renderer)
 	{
+		is_rendering_ = true;
+		
 		if (is_sort_dirty_)
 		{
 			std::sort(actors_.begin(), actors_.end(), SortCompareSceneActor);
@@ -189,11 +198,14 @@ namespace ERI {
 		{
 			actors_[i]->Render(renderer);
 		}
+		
+		is_rendering_ = false;
 	}
 	
 	void SortActorGroup::AddActor(SceneActor* actor)
 	{
 		ASSERT(actor);
+		ASSERT(!is_rendering_);
 		
 		actors_.push_back(actor);
 	}
@@ -201,7 +213,8 @@ namespace ERI {
 	void SortActorGroup::RemoveActor(SceneActor* actor)
 	{
 		ASSERT(actor);
-		
+		ASSERT(!is_rendering_);
+
 		size_t num = actors_.size();
 		for (int i = 0; i < num; ++i)
 		{

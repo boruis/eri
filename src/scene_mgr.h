@@ -27,6 +27,7 @@ namespace ERI {
 	class ActorGroup
 	{
 	public:
+		ActorGroup() : is_rendering_(false) {}
 		virtual ~ActorGroup() {}
 		
 		virtual void Render(Renderer* renderer) = 0;
@@ -37,6 +38,8 @@ namespace ERI {
 
 		// TODO: should remove this fuction
 		virtual SceneActor* GetHitActor(const Vector3& pos) = 0;
+		
+		bool	is_rendering_;
 	};
 	
 	class TextureActorGroup : public ActorGroup
