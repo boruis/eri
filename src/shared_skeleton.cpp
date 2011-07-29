@@ -1,9 +1,9 @@
 //
 //  shared_skeleton.cpp
-//  dae2skelmesh
+//  eri
 //
-//  Created by chiayu on 2011/4/6.
-//  Copyright 2011年 __MyCompanyName__. All rights reserved.
+//  Created by exe on 2011/4/6.
+//  Copyright 2011 cobbler. All rights reserved.
 //
 
 #include "shared_skeleton.h"
