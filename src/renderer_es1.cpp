@@ -164,6 +164,15 @@ namespace ERI {
 			return false;
 		}
 		
+		//
+		
+		const char* extensions = (char*) glGetString(GL_EXTENSIONS);
+		caps_.is_support_non_power_of_2_texture =
+			strstr(extensions, "GL_ARB_texture_non_power_of_two") != 0 ||
+			strstr(extensions, "GL_APPLE_texture_2D_limited_npot") != 0;
+		
+		//
+		
 		clear_bits_ = GL_COLOR_BUFFER_BIT;
 		
 		if (use_depth_buffer_)

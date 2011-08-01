@@ -34,10 +34,20 @@ namespace ERI {
 	struct RenderData;
 	struct MaterialData;
 	
+	struct Caps
+	{
+		Caps() : is_support_non_power_of_2_texture(false) {}
+		
+		bool	is_support_non_power_of_2_texture;
+	};
+	
 	class Renderer
 	{
 	public:
-		Renderer() : view_orientation_(PORTRAIT_HOME_BOTTOM), content_scale_(1.0f) {}
+		Renderer()
+			: view_orientation_(PORTRAIT_HOME_BOTTOM),
+			content_scale_(1.0f) {}
+		
 		virtual ~Renderer() {}
 		
 		virtual bool Init(bool use_depth_buffer) = 0;
@@ -99,16 +109,18 @@ namespace ERI {
 		virtual void UpdateOrthoProjection(float zoom, float near, float far) = 0;
 		virtual void UpdatePerspectiveProjection(float fov_y, float aspect, float near, float far) = 0;
 		virtual void UpdatePerspectiveProjection(float fov_y, float near, float far) = 0;
-	
-		virtual void SetViewOrientation(ViewOrientation orientaion) = 0;
 		
+		virtual void SetViewOrientation(ViewOrientation orientaion) = 0;
 		inline ViewOrientation view_orientation() { return view_orientation_; }
 		
 		inline void set_content_scale(float scale) { content_scale_ = scale; }
 		inline float content_scale() { return content_scale_; }
 		
+		inline const Caps& caps() { return caps_; }
+		
 	protected:
 		ViewOrientation	view_orientation_;
+		Caps			caps_;
 		
 	private:
 		float			content_scale_;

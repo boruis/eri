@@ -123,6 +123,101 @@ namespace ERI {
 		
         fclose(f);
 		
+		if (!Root::Ins().renderer()->caps().is_support_non_power_of_2_texture)
+		{
+			if (!is_power_of_2(width_))
+			{
+				int new_width = next_power_of_2(width_);
+
+				void* new_texture_data = malloc(new_width * height_ * 4);
+				memset(new_texture_data, 255, new_width * height_ * 4);
+				unsigned char* src_data = static_cast<unsigned char*>(texture_data_);
+				unsigned char* dst_data = static_cast<unsigned char*>(new_texture_data);
+				
+				float col_mapping, ratio;
+				int begin_idx;
+				unsigned char *begin_texel, *end_texel, *result_texel;
+				for (int row = 0; row < height_; ++row)
+				{
+					for (int col = 0; col < new_width; ++col)
+					{
+						col_mapping = static_cast<float>(col) / (new_width - 1) * (width_ - 1);
+						begin_idx = static_cast<int>(col_mapping);
+						
+						ratio = col_mapping - begin_idx;
+						if (ratio > 0.0f)
+						{
+							begin_texel = src_data + (row * width_ + begin_idx) * 4;
+							end_texel = src_data + (row * width_ + begin_idx + 1) * 4;
+							result_texel = dst_data + (row * new_width + col) * 4;
+							
+							result_texel[0] = static_cast<unsigned char>(begin_texel[0] * (1 - ratio) + end_texel[0] * ratio);
+							result_texel[1] = static_cast<unsigned char>(begin_texel[1] * (1 - ratio) + end_texel[1] * ratio);
+							result_texel[2] = static_cast<unsigned char>(begin_texel[2] * (1 - ratio) + end_texel[2] * ratio);
+							result_texel[3] = static_cast<unsigned char>(begin_texel[3] * (1 - ratio) + end_texel[3] * ratio);
+						}
+						else
+						{
+							memcpy(dst_data + (row * new_width + col) * 4,
+								   src_data + (row * width_ + begin_idx) * 4, 4);
+						}
+					}
+				}
+							
+				free(texture_data_);
+				texture_data_ = new_texture_data;
+				
+				printf("non power of 2 texture width %d -> %d\n", width_, new_width);
+				width_ = new_width;
+			}
+
+			if (!is_power_of_2(height_))
+			{
+				int new_height = next_power_of_2(height_);
+				
+				void* new_texture_data = malloc(width_ * new_height * 4);
+				memset(new_texture_data, 255, width_ * new_height * 4);
+				unsigned char* src_data = static_cast<unsigned char*>(texture_data_);
+				unsigned char* dst_data = static_cast<unsigned char*>(new_texture_data);
+				
+				float row_mapping, ratio;
+				int begin_idx;
+				unsigned char *begin_texel, *end_texel, *result_texel;
+				for (int row = 0; row < new_height; ++row)
+				{
+					for (int col = 0; col < width_; ++col)
+					{
+						row_mapping = static_cast<float>(row) / (new_height - 1) * (height_ - 1);
+						begin_idx = static_cast<int>(row_mapping);
+						
+						ratio = row_mapping - begin_idx;
+						if (ratio > 0.0f)
+						{
+							begin_texel = src_data + (begin_idx * width_ + col) * 4;
+							end_texel = src_data + ((begin_idx + 1) * width_ + col) * 4;
+							result_texel = dst_data + (row * width_ + col) * 4;
+							
+							result_texel[0] = static_cast<unsigned char>(begin_texel[0] * (1 - ratio) + end_texel[0] * ratio);
+							result_texel[1] = static_cast<unsigned char>(begin_texel[1] * (1 - ratio) + end_texel[1] * ratio);
+							result_texel[2] = static_cast<unsigned char>(begin_texel[2] * (1 - ratio) + end_texel[2] * ratio);
+							result_texel[3] = static_cast<unsigned char>(begin_texel[3] * (1 - ratio) + end_texel[3] * ratio);
+						}
+						else
+						{
+							memcpy(dst_data + (row * width_ + col) * 4,
+								   src_data + (begin_idx * width_ + col) * 4, 4);
+						}
+					}
+				}
+							
+				free(texture_data_);
+				texture_data_ = new_texture_data;
+				
+				printf("non power of 2 texture height %d -> %d\n", height_, new_height);
+				height_ = new_height;
+			}
+		}
+
 		if (generate_immediately)
 		{
 			Generate();

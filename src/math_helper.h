@@ -57,7 +57,7 @@ namespace ERI {
 		return (val & (val - 1)) == 0;
 	}
 	
-	inline uint32_t nex_power_of_2(uint32_t val)
+	inline uint32_t next_power_of_2(uint32_t val)
 	{
 		--val;
 		val = val | (val >> 1);
