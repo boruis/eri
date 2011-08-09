@@ -130,7 +130,9 @@ namespace ERI
 		void SetAnim(const AnimSetting& setting);
 		void SetTimePercent(float time_percent);
 		
-		void PlayAnim(const AnimSetting& setting, bool wait_current_finish = true);
+		void PlayAnim(const AnimSetting& setting,
+					  bool wait_current_finish = true,
+					  bool recover_current_loop = true);
 		
 		int	GetAnimIdx();
 		
@@ -145,6 +147,7 @@ namespace ERI
 		int				vertex_buffer_size_;
 
 		AnimSetting		curr_anim_, next_anim_;
+		bool			recover_loop_;
 	};
 	
 }

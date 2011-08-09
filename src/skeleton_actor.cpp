@@ -398,15 +398,15 @@ namespace ERI
 		
 		if (next_anim_.idx != -1 && skeleton_ins_->IsAnimEnd())
 		{
-			// TODO: use is_loop to recognize recover anim not a good idea ...
-			
-			if (!next_anim_.is_loop)
+			if (recover_loop_ && !next_anim_.is_loop && curr_anim_.is_loop)
 			{
 				AnimSetting old_anim = curr_anim_;
 
 				skeleton_ins_->SetAnim(next_anim_);
 				curr_anim_ = next_anim_;
 				next_anim_ = old_anim;
+				
+				recover_loop_ = false;
 			}
 			else
 			{
@@ -434,7 +434,9 @@ namespace ERI
 		UpdateVertexBuffer();
 	}
 	
-	void SkeletonActor::PlayAnim(const AnimSetting& setting, bool wait_current_finish /*= true*/)
+	void SkeletonActor::PlayAnim(const AnimSetting& setting,
+								 bool wait_current_finish /*= true*/,
+								 bool recover_current_loop /*= true*/)
 	{
 		if (setting == curr_anim_)
 		{
@@ -444,11 +446,12 @@ namespace ERI
 		if (wait_current_finish)
 		{
 			next_anim_ = setting;
+			recover_loop_ = recover_current_loop;
 			skeleton_ins_->CancelLoop();
 		}
 		else
 		{
-			if (curr_anim_.is_loop)
+			if (recover_current_loop && !setting.is_loop && curr_anim_.is_loop)
 				next_anim_ = curr_anim_;
 			
 			SetAnim(setting);
