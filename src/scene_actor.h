@@ -135,7 +135,7 @@ namespace ERI {
 		
 		void SetDepthTest(bool enable);
 		void SetDepthWrite(bool enable);
-		void SetCullFace(bool enable);
+		void SetCullFace(bool enable, bool cull_front);
 		void SetColorWrite(bool r_enable, bool g_enable, bool b_enable, bool a_enable);
 
 		inline const MaterialData& material() { return material_data_; }

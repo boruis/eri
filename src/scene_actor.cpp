@@ -514,9 +514,10 @@ namespace ERI {
 		material_data_.depth_write = enable;
 	}
 
-	void SceneActor::SetCullFace(bool enable)
+	void SceneActor::SetCullFace(bool enable, bool cull_front)
 	{
 		material_data_.cull_face = enable;
+		material_data_.cull_front = cull_front;
 	}
 	
 	void SceneActor::SetColorWrite(bool r_enable, bool g_enable, bool b_enable, bool a_enable)

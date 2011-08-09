@@ -66,6 +66,7 @@ namespace ERI {
 			depth_test(true),
 			depth_write(true),
 			cull_face(true),
+			cull_front(false),
 			accept_light(false)
 		{
 		}
@@ -97,6 +98,7 @@ namespace ERI {
 		bool			depth_test;
 		bool			depth_write;
 		bool			cull_face;
+		bool			cull_front;
 		bool			accept_light;
 		
 		ColorFlags		color_write;

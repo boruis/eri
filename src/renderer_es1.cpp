@@ -99,6 +99,7 @@ namespace ERI {
 		blend_enable_(false),
 		alpha_test_enable_(false),
 		cull_face_enable_(true),
+		cull_front_(false),
 		texture_enable_(false),
 		now_active_texture_unit_(0),
 		now_client_active_texture_unit_(0),
@@ -596,7 +597,7 @@ namespace ERI {
 		EnableLight(data->accept_light);
 		EnableDepthTest(data->depth_test);
 		EnableDepthWrite(data->depth_write);
-		EnableCullFace(data->cull_face);
+		EnableCullFace(data->cull_face, data->cull_front);
 		EnableColorWrite(data->color_write);
 		
 		texture_enable_ = (data->used_unit > 0);
@@ -649,7 +650,7 @@ namespace ERI {
 		}
 	}
 
-	void RendererES1::EnableCullFace(bool enable)
+	void RendererES1::EnableCullFace(bool enable, bool cull_front)
 	{
 		if (cull_face_enable_ != enable)
 		{
@@ -659,6 +660,12 @@ namespace ERI {
 				glEnable(GL_CULL_FACE);
 			else
 				glDisable(GL_CULL_FACE);
+		}
+		
+		if (cull_face_enable_ && cull_front_ != cull_front)
+		{
+			cull_front_ = cull_front;
+			glCullFace(cull_front_ ? GL_FRONT : GL_BACK);
 		}
 	}
 	

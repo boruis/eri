@@ -89,7 +89,7 @@ namespace ERI {
 		void EnableLight(bool enable);
 		void EnableDepthTest(bool enable);
 		void EnableDepthWrite(bool enable);
-		void EnableCullFace(bool enable);
+		void EnableCullFace(bool enable, bool cull_front);
 		void EnableColorWrite(ColorFlags enable);
 		
 		void EnableTextureUnit(int idx, const TextureUnit& unit);
@@ -164,6 +164,7 @@ namespace ERI {
 		bool blend_enable_;
 		bool alpha_test_enable_;
 		bool cull_face_enable_;
+		bool cull_front_;
 		
 		ColorFlags	color_write_enable_;
 		
