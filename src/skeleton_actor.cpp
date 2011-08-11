@@ -453,6 +453,8 @@ namespace ERI
 		{
 			if (recover_current_loop && !setting.is_loop && curr_anim_.is_loop)
 				next_anim_ = curr_anim_;
+			else
+				next_anim_.idx = -1;
 			
 			SetAnim(setting);
 		}
