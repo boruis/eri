@@ -240,7 +240,7 @@ SharedSkeleton* LoadSharedSkeletonFromBinaryFile(const std::string& path)
 {
 	SharedSkeleton* skel = new SharedSkeleton;
 	
-	std::ifstream ifs(path.c_str(), std::ios::in/* | std::ios::binary*/);
+	std::ifstream ifs(path.c_str(), std::ios::in | std::ios::binary);
 	
 	if (ifs.fail())
 	{
