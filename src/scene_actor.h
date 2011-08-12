@@ -177,8 +177,8 @@ namespace ERI {
 		Sphere*			bounding_sphere_world_;
 		
 	private:
-		void SetTransformDirty(bool is_depth_dirty = true);
-		void SetWorldTransformDirty(bool is_depth_dirty = true);
+		void SetTransformDirty();
+		void SetWorldTransformDirty(bool is_depth_dirty, bool is_child_depth_dirty);
 		
 		void SetTexture(int idx, const Texture* tex);
 	};

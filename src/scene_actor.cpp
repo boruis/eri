@@ -307,12 +307,18 @@ namespace ERI {
 	
 	void SceneActor::SetPos(float x, float y)
 	{
+		// TODO: depth dirty depend on camera setting ...
+
 		render_data_.translate.x = x;
 		render_data_.translate.y = y;
 		
-		// TODO: depth dirty depend on camera setting
-		
 		SetTransformDirty();
+		
+#ifdef ERI_2D_VIEW
+		SetWorldTransformDirty(false, false);
+#else
+		SetWorldTransformDirty(true, true);
+#endif
 	}
 	
 	Vector2 SceneActor::GetPos() const
@@ -323,8 +329,14 @@ namespace ERI {
 	void SceneActor::SetRotate(float degree)
 	{
 		render_data_.rotate_degree = degree;
-		render_data_.rotate_axis = Vector3(0, 0, 1);
-		SetTransformDirty(false);
+		
+		SetTransformDirty();
+		
+#ifdef ERI_2D_VIEW
+		SetWorldTransformDirty(false, render_data_.rotate_axis.x != 0.f || render_data_.rotate_axis.y != 0.f);
+#else
+		SetWorldTransformDirty(false, true);
+#endif
 	}
 	
 	float SceneActor::GetRotate() const
@@ -336,7 +348,14 @@ namespace ERI {
 	{
 		render_data_.scale.x = x;
 		render_data_.scale.y = y;
-		SetTransformDirty(false);
+		
+		SetTransformDirty();
+		
+#ifdef ERI_2D_VIEW
+		SetWorldTransformDirty(false, false);
+#else
+		SetWorldTransformDirty(false, true);
+#endif
 	}
 	
 	Vector2 SceneActor::GetScale() const
@@ -346,11 +365,21 @@ namespace ERI {
 	
 	void SceneActor::SetPos(const Vector3& pos)
 	{
+		// TODO: depth dirty depend on camera setting ...
+
+#ifdef ERI_2D_VIEW
+		bool z_modify = render_data_.translate.z != pos.z;
+#endif
+
 		render_data_.translate = pos;
 		
-		// TODO: depth dirty depend on camera setting
-		
 		SetTransformDirty();
+		
+#ifdef ERI_2D_VIEW
+		SetWorldTransformDirty(z_modify, z_modify);
+#else
+		SetWorldTransformDirty(true, true);
+#endif
 	}
 	
 	const Vector3& SceneActor::GetPos3() const
@@ -362,7 +391,14 @@ namespace ERI {
 	{
 		render_data_.rotate_degree = degree;
 		render_data_.rotate_axis = axis;
-		SetTransformDirty(false);
+		
+		SetTransformDirty();
+		
+#ifdef ERI_2D_VIEW
+		SetWorldTransformDirty(false, axis.x != 0.f || axis.y != 0.f);
+#else
+		SetWorldTransformDirty(false, true);
+#endif
 	}
 	
 	void SceneActor::GetRotate(float& out_degree, Vector3& out_axis) const
@@ -374,7 +410,14 @@ namespace ERI {
 	void SceneActor::SetScale(const Vector3& scale)
 	{
 		render_data_.scale = scale;
-		SetTransformDirty(false);
+		
+		SetTransformDirty();
+		
+#ifdef ERI_2D_VIEW
+		SetWorldTransformDirty(false, scale.z != 0.f);
+#else
+		SetWorldTransformDirty(false, true);
+#endif
 	}
 	
 	const Vector3& SceneActor::GetScale3() const
@@ -566,21 +609,19 @@ namespace ERI {
 		return true;
 	}
 	
-	void SceneActor::SetTransformDirty(bool is_depth_dirty /*= true*/)
+	void SceneActor::SetTransformDirty()
 	{
 		render_data_.need_update_model_matrix = true;
-
-		SetWorldTransformDirty(is_depth_dirty);
 	}
 	
-	void SceneActor::SetWorldTransformDirty(bool is_depth_dirty /*= true*/)
+	void SceneActor::SetWorldTransformDirty(bool is_depth_dirty, bool is_child_depth_dirty)
 	{
 		render_data_.need_update_world_model_matrix = true;
 		
 		size_t child_num = childs_.size();
 		for (int i = 0; i < child_num; ++i)
 		{
-			childs_[i]->SetWorldTransformDirty();
+			childs_[i]->SetWorldTransformDirty(is_child_depth_dirty, is_child_depth_dirty);
 		}
 		
 		if (is_depth_dirty)
