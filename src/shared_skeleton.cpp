@@ -138,6 +138,12 @@ void SaveSharedSkeletonToBinaryFile(const SharedSkeleton* skel, const std::strin
 	
 	std::ofstream ofs(path.c_str(), std::ios::out | std::ios::binary);
 	
+	if (ofs.fail())
+	{
+		printf("save file [%s] failed\n", path.c_str());
+		return;
+	}
+	
 	bool have_skeleton = skel->skeleton_ref ? true : false;
 	ofs.write(reinterpret_cast<char*>(&have_skeleton), sizeof(have_skeleton));
 	if (skel->skeleton_ref)
@@ -235,6 +241,12 @@ SharedSkeleton* LoadSharedSkeletonFromBinaryFile(const std::string& path)
 	SharedSkeleton* skel = new SharedSkeleton;
 	
 	std::ifstream ifs(path.c_str(), std::ios::in/* | std::ios::binary*/);
+	
+	if (ifs.fail())
+	{
+		printf("load file [%s] failed\n", path.c_str());
+		return NULL;
+	}
 	
 	bool have_skeleton;
 	ifs.read(reinterpret_cast<char*>(&have_skeleton), sizeof(have_skeleton));
