@@ -335,6 +335,8 @@ namespace ERI
 			
 			time_end_idx = pose_sample->times.size() - 1;
 			if (!anim_setting_.is_blend_begin) time_end_idx -= 1;
+			
+			if (time_end_idx < 0) time_end_idx = 0;
 			ASSERT(time_end_idx >= 0);
 			
 			sample_duration = pose_sample->times[time_end_idx];
