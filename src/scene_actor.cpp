@@ -439,7 +439,7 @@ namespace ERI {
 		return render_data_.world_view_pos.z;
 	}
 	
-	void SceneActor::SetMaterial(const std::string& texture_path, TextureFilter filter_min /*= FILTER_NEAREST*/, TextureFilter filter_mag /*= FILTER_NEAREST*/)
+	const Texture* SceneActor::SetMaterial(const std::string& texture_path, TextureFilter filter_min /*= FILTER_NEAREST*/, TextureFilter filter_mag /*= FILTER_NEAREST*/)
 	{
 		const Texture* tex = NULL;
 
@@ -462,6 +462,8 @@ namespace ERI {
 		{
 			material_data_.used_unit = 0;
 		}
+		
+		return tex;
 	}
 	
 	void SceneActor::SetMaterial(const Texture* tex, TextureFilter filter_min /*= FILTER_NEAREST*/, TextureFilter filter_mag /*= FILTER_NEAREST*/)
@@ -482,17 +484,30 @@ namespace ERI {
 		}
 	}
 	
-	void SceneActor::AddMaterial(const std::string& texture_path, TextureFilter filter_min /*= FILTER_NEAREST*/, TextureFilter filter_mag /*= FILTER_NEAREST*/)
+	const Texture* SceneActor::AddMaterial(const std::string& texture_path, TextureFilter filter_min /*= FILTER_NEAREST*/, TextureFilter filter_mag /*= FILTER_NEAREST*/)
 	{
 		ASSERT(material_data_.used_unit < MAX_TEXTURE_UNIT);
 		
-		int idx = material_data_.used_unit;
-		SetTexture(idx, Root::Ins().texture_mgr()->GetTexture(texture_path));
+		const Texture* tex = NULL;
 		
-		++material_data_.used_unit;
+		if (texture_path.length() > 0)
+		{
+			tex = Root::Ins().texture_mgr()->GetTexture(texture_path);
+		}
 		
-		material_data_.texture_units[idx].params.filter_min = filter_min;
-		material_data_.texture_units[idx].params.filter_mag = filter_mag;
+		if (tex)
+		{
+			int idx = material_data_.used_unit;
+			
+			SetTexture(idx, tex);
+			
+			++material_data_.used_unit;
+			
+			material_data_.texture_units[idx].params.filter_min = filter_min;
+			material_data_.texture_units[idx].params.filter_mag = filter_mag;
+		}
+		
+		return tex;
 	}
 	
 	void SceneActor::AddMaterial()
@@ -500,6 +515,13 @@ namespace ERI {
 		ASSERT(material_data_.used_unit < MAX_TEXTURE_UNIT);
 		
 		++material_data_.used_unit;
+	}
+	
+	const Texture* SceneActor::GetTexture(int idx)
+	{
+		ASSERT(idx < material_data_.used_unit);
+		
+		return material_data_.texture_units[idx].texture;
 	}
 	
 	void SceneActor::SetTextureFilter(TextureFilter filter_min, TextureFilter filter_mag)

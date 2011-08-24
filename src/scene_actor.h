@@ -121,10 +121,12 @@ namespace ERI {
 		
 		inline void set_accept_light(bool accept) { material_data_.accept_light = accept; }
 		
-		void SetMaterial(const std::string& texture_path, TextureFilter filter_min = FILTER_NEAREST, TextureFilter filter_mag = FILTER_NEAREST);
+		const Texture* SetMaterial(const std::string& texture_path, TextureFilter filter_min = FILTER_NEAREST, TextureFilter filter_mag = FILTER_NEAREST);
 		void SetMaterial(const Texture* tex, TextureFilter filter_min = FILTER_NEAREST, TextureFilter filter_mag = FILTER_NEAREST);
-		void AddMaterial(const std::string& texture_path, TextureFilter filter_min = FILTER_NEAREST, TextureFilter filter_mag = FILTER_NEAREST);
+		const Texture* AddMaterial(const std::string& texture_path, TextureFilter filter_min = FILTER_NEAREST, TextureFilter filter_mag = FILTER_NEAREST);
 		void AddMaterial();
+		
+		const Texture* GetTexture(int idx);
 		
 		void SetTextureFilter(TextureFilter filter_min, TextureFilter filter_mag);
 		void SetTextureWrap(TextureWrap wrap_s, TextureWrap wrap_t);
