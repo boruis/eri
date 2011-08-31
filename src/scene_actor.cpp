@@ -519,7 +519,8 @@ namespace ERI {
 	
 	const Texture* SceneActor::GetTexture(int idx)
 	{
-		ASSERT(idx < material_data_.used_unit);
+		if (idx >= material_data_.used_unit)
+			return NULL;
 		
 		return material_data_.texture_units[idx].texture;
 	}
