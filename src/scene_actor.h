@@ -78,6 +78,8 @@ namespace ERI {
 		void DepthTestLess();
 		void DepthTestGreater();
 		void DepthTestEqual();
+		void DepthTestLEqual();
+		void DepthTestGEqual();
 		void DepthTestNotEqual();
 		void DepthTestAlways();
 		

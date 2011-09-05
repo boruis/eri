@@ -234,6 +234,16 @@ namespace ERI {
 	{
 		render_data_.depth_test_func = GL_EQUAL;
 	}
+	
+	void SceneActor::DepthTestLEqual()
+	{
+		render_data_.depth_test_func = GL_LEQUAL;
+	}
+	
+	void SceneActor::DepthTestGEqual()
+	{
+		render_data_.depth_test_func = GL_GEQUAL;
+	}
 
 	void SceneActor::DepthTestNotEqual()
 	{
