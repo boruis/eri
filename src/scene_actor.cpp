@@ -604,6 +604,19 @@ namespace ERI {
 		material_data_.color_write.a = a_enable;
 	}
 	
+	void SceneActor::CreateSphereBounding(float radius)
+	{
+		if (!bounding_sphere_)
+			bounding_sphere_ = new Sphere;
+		
+		bounding_sphere_->radius = radius;
+		
+		if (!bounding_sphere_world_)
+			bounding_sphere_world_ = new Sphere;
+		
+		bounding_sphere_world_->radius = bounding_sphere_->radius;
+	}
+	
 	void SceneActor::SetVisible(bool visible, bool inherit /*= false*/)
 	{
 		bool original_visible = visible_ && inherit_visible_;
