@@ -191,14 +191,18 @@ class AtlasTxtMeshConstructor : public TxtMeshConstructor
     float inv_tex_height = 1.0f / owner_->font_ref_->texture()->height;
     float size_scale = static_cast<float>(owner_->font_size_) / owner_->font_ref_->size();
     
+    std::vector<float> row_widths;
+    
     TxtActor::CalculateSize(chars,
                             now_len_,
                             owner_->font_ref_,
                             owner_->font_size_,
                             owner_->width_,
-                            owner_->height_);
+                            owner_->height_,
+                            &row_widths);
     
-    float start_x = owner_->is_pos_center_ ? owner_->width_ * -0.5f : 0;
+    int row = 0;
+    float start_x = owner_->is_pos_center_ ? row_widths[row] * -0.5f : 0;
     float start_y = owner_->is_pos_center_ ? owner_->height_ * 0.5f : 0;
     int start_idx = 0;
     float scroll_u, scroll_v, unit_u, unit_v, offset_x, offset_y, size_x, size_y;
@@ -211,7 +215,8 @@ class AtlasTxtMeshConstructor : public TxtMeshConstructor
     {
       if (chars[i] == '\n')
       {
-        start_x = owner_->is_pos_center_ ? owner_->width_ * -0.5f : 0;
+        ++row;
+        start_x = owner_->is_pos_center_ ? row_widths[row] * -0.5f : 0;
         start_y -= owner_->font_ref_->common_line_height() * size_scale;
         ++invisible_num;
       }
@@ -354,7 +359,8 @@ void TxtActor::CalculateSize(const uint32_t* chars,
                              const Font* font,
                              int font_size,
                              float& width,
-                             float& height)
+                             float& height,
+                             std::vector<float>* row_widths /*= NULL*/)
 {
   ASSERT(font);
   
@@ -372,6 +378,10 @@ void TxtActor::CalculateSize(const uint32_t* chars,
     if (chars[i] == '\n')
     {
       if (now_width > width) width = now_width;
+		
+      if (row_widths)
+        row_widths->push_back(now_width);
+		
       now_width = 0;
       height += font->common_line_height() * size_scale;
     }
@@ -383,6 +393,9 @@ void TxtActor::CalculateSize(const uint32_t* chars,
   }
   
   if (now_width > width) width = now_width;
+  
+  if (row_widths)
+    row_widths->push_back(now_width);
 }
 
 bool TxtActor::IsInArea(const Vector3& local_space_pos)

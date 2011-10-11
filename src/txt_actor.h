@@ -48,7 +48,8 @@ class TxtActor : public SceneActor
                             const Font* font,
                             int font_size,
                             float& width,
-                            float& height);
+                            float& height,
+                            std::vector<float>* row_widths = NULL);
 
  private:
   virtual bool IsInArea(const Vector3& local_space_pos);
