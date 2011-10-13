@@ -49,7 +49,10 @@ namespace ERI {
 		
 		NSDictionary* frames = [dict objectForKey:@"frames"];
 		if (frames == nil)
+		{
+			[dict release];
 			return false;
+		}
 
 		NSDictionary* unit;
 		TextureAtlasUnit data;
@@ -99,7 +102,10 @@ namespace ERI {
 		
 		NSDictionary* frames = [dict objectForKey:@"frames"];
 		if (frames == nil)
+		{
+			[dict release];
 			return false;
+		}
 
 		NSDictionary* unit;
 		TextureAtlasUnit data;

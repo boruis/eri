@@ -394,6 +394,7 @@ namespace ERI {
 					vertex_pos_offset = (void*)offsetof(vertex_3_pos_normal, position);
 					vertex_normal_offset = (void*)offsetof(vertex_3_pos_normal, normal);
 					use_vertex_normal = true;
+					ASSERT(!texture_enable_);
 					break;
 					
 				case POS_NORMAL_TEX_3:
