@@ -201,6 +201,13 @@ class AtlasTxtMeshConstructor : public TxtMeshConstructor
                             owner_->height_,
                             &row_widths);
     
+    float line_height = owner_->font_ref_->common_line_height() * size_scale;
+    if (owner_->force_line_height_ > 0.f)
+    {
+      owner_->height_ = (row_widths.size() - 1) * owner_->force_line_height_ + line_height;
+      line_height = owner_->force_line_height_;
+    }
+    
     int row = 0;
     float start_x = owner_->is_pos_center_ ? row_widths[row] * -0.5f : 0;
     float start_y = owner_->is_pos_center_ ? owner_->height_ * 0.5f : 0;
@@ -217,7 +224,7 @@ class AtlasTxtMeshConstructor : public TxtMeshConstructor
       {
         ++row;
         start_x = owner_->is_pos_center_ ? row_widths[row] * -0.5f : 0;
-        start_y -= owner_->font_ref_->common_line_height() * size_scale;
+        start_y -= line_height;
         ++invisible_num;
       }
       else
@@ -305,7 +312,8 @@ TxtActor::TxtActor(const std::string& font_path, int font_size,
     is_anti_alias_(is_anti_alias),
     width_(0.0f),
     height_(0.0f),
-    area_border_(0.0f)
+    area_border_(0.0f),
+    force_line_height_(0.0f)
 {
   font_ref_ = Root::Ins().font_mgr()->GetFont(font_path);
   
@@ -335,6 +343,19 @@ void TxtActor::SetTxt(const std::string& txt)
   txt_ = txt;
   
   mesh_constructor_->Construct();
+}
+  
+void TxtActor::SetForceLineHeight(float force_line_height, bool construct /*= false*/)
+{
+  ASSERT(force_line_height >= 0.0f);
+  
+  if (force_line_height == force_line_height_)
+    return;
+  
+  force_line_height_ = force_line_height;
+  
+  if (construct)
+    mesh_constructor_->Construct();
 }
 
 void TxtActor::CalculateSize(const std::string& txt,

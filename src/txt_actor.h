@@ -28,6 +28,7 @@ class TxtActor : public SceneActor
   virtual ~TxtActor();
   
   void SetTxt(const std::string& txt);
+  void SetForceLineHeight(float force_line_height, bool construct = false);
   
   inline const std::string& txt() { return txt_; }
 
@@ -67,6 +68,8 @@ class TxtActor : public SceneActor
   
   float width_, height_;
   float area_border_;
+  
+  float force_line_height_;
 
   friend class SpriteTxtMeshConstructor;
   friend class AtlasTxtMeshConstructor;
