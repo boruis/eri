@@ -391,7 +391,12 @@ void TxtActor::CalculateSize(const uint32_t* chars,
   height = font->common_line_height() * size_scale;
   
   if (length == 0)
+  {
+    if (row_widths)
+      row_widths->push_back(0);
+
     return;
+  }
 
   float now_width = 0;
   for (int i = 0; i < length; ++i)
