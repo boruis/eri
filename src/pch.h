@@ -38,7 +38,8 @@
 #elif ERI_PLATFORM == ERI_PLATFORM_IOS
 #  if !defined(ERI_TEXTURE_READER_NO_UIKIT)
 #    define ERI_TEXTURE_READER_UIKIT
-#  else
+#  endif
+#  if !defined(ERI_TEXTURE_READER_NO_LIBPNG)
 #    define ERI_TEXTURE_READER_LIBPNG
 #  endif
 #  if !defined(ERI_TEXTURE_READER_NO_PVR)

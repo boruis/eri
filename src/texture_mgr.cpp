@@ -116,15 +116,22 @@ namespace ERI {
 			PreloadTextureInfo info;
 			info.path = resource_path;
 
-#ifdef ERI_ERI_TEXTURE_READER_PVR
+#ifdef ERI_TEXTURE_READER_PVR
 			if (resource_path.substr(resource_path.length() - 4, 4).compare(".pvr") == 0)
 				info.reader = new TextureReaderPVR(resource_path, false);
 			else
 #endif
-#if defined(ERI_ERI_TEXTURE_READER_UIKIT)
-				info.reader = new TextureReaderLibPNG(resource_path, false);
-#elif defined(ERI_ERI_TEXTURE_READER_LIBPNG)
+#if defined(ERI_TEXTURE_READER_UIKIT)
+#	if defined(ERI_TEXTURE_READER_LIBPNG)
+				if (resource_path.substr(resource_path.length() - 4, 4).compare(".jpg") == 0)
+					info.reader = new TextureReaderUIImage(resource_path, false);
+				else
+					info.reader = new TextureReaderLibPNG(resource_path, false);
+#	else
 				info.reader = new TextureReaderUIImage(resource_path, false);
+#	endif
+#elif defined(ERI_TEXTURE_READER_LIBPNG)
+				info.reader = new TextureReaderLibPNG(resource_path, false);
 #elif defined(ERI_TEXTURE_READER_FREEIMAGE)
 				info.reader = new TextureReaderFreeImage(resource_path, false);
 #else
@@ -171,7 +178,14 @@ namespace ERI {
 			else
 #endif
 #if defined(ERI_TEXTURE_READER_UIKIT)
+#	if defined(ERI_TEXTURE_READER_LIBPNG)
+				if (resource_path.substr(resource_path.length() - 4, 4).compare(".jpg") == 0)
+					reader = new TextureReaderUIImage(resource_path, true);
+				else
+					reader = new TextureReaderLibPNG(resource_path, true);
+#	else
 				reader = new TextureReaderUIImage(resource_path, true);
+#	endif
 #elif defined(ERI_TEXTURE_READER_LIBPNG)
 				reader = new TextureReaderLibPNG(resource_path, true);
 #elif defined(ERI_TEXTURE_READER_FREEIMAGE)
