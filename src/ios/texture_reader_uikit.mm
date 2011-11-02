@@ -8,8 +8,10 @@
  */
 
 #include "texture_reader_uikit.h"
+
 #include "root.h"
 #include "renderer.h"
+#include "platform_helper.h"
 
 namespace ERI {
 	
@@ -21,7 +23,16 @@ namespace ERI {
 		TextureReader(generate_immediately),
 		texture_data_(NULL)
 	{
-		CGImageRef texture_image = [UIImage imageNamed:[NSString stringWithUTF8String:path.c_str()]].CGImage;
+		std::string real_path(path);
+		
+#if ERI_PLATFORM == ERI_PLATFORM_IOS || ERI_PLATFORM == ERI_PLATFORM_MAC
+		if (path[0] != '/')
+		{
+			real_path = GetResourcePath() + std::string("/") + path;
+		}
+#endif
+		
+		CGImageRef texture_image = [UIImage imageWithContentsOfFile:[NSString stringWithUTF8String:real_path.c_str()]].CGImage;
 		
 		if (texture_image == nil) {
 			NSLog(@"Failed to load texture image");
