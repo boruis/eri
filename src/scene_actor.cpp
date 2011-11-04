@@ -74,10 +74,19 @@ namespace ERI {
 		Root::Ins().scene_mgr()->RemoveActor(this, layer_->id());
 	}
 	
-	void SceneActor::MoveToLayer(int layer_id)
+	void SceneActor::MoveToLayer(int layer_id, bool include_childs /*= false*/)
 	{
 		RemoveFromScene();
 		AddToScene(layer_id);
+		
+		if (include_childs)
+		{
+			size_t child_num = childs_.size();
+			for (int i = 0; i < child_num; ++i)
+			{
+				childs_[i]->MoveToLayer(layer_id);
+			}
+		}
 	}
 	
 	void SceneActor::AddChild(SceneActor* actor)
@@ -89,6 +98,7 @@ namespace ERI {
 		
 		childs_.push_back(actor);
 		actor->parent_ = this;
+		actor->SetWorldTransformDirty(true, true);
 	}
 	
 	void SceneActor::RemoveChild(SceneActor* actor)

@@ -51,7 +51,7 @@ namespace ERI {
 		
 		virtual void AddToScene(int layer_id = 0);
 		virtual void RemoveFromScene();
-		void MoveToLayer(int layer_id);
+		void MoveToLayer(int layer_id, bool include_childs = false);
 		
 		void AddChild(SceneActor* actor);
 		void RemoveChild(SceneActor* actor);
