@@ -205,8 +205,8 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
 			out_height = start_y + common_line_height_;
 	}
 
-	int tex_width = nex_power_of_2(out_width);
-	int tex_height = nex_power_of_2(out_height);
+	int tex_width = next_power_of_2(out_width);
+	int tex_height = next_power_of_2(out_height);
 	int pixel_num = tex_width * tex_height;
 	
 	char* buff = static_cast<char*>(malloc(pixel_num * 4));
