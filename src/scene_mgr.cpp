@@ -208,6 +208,8 @@ namespace ERI {
 		ASSERT(!is_rendering_);
 		
 		actors_.push_back(actor);
+
+		is_sort_dirty_ = true;
 	}
 	
 	void SortActorGroup::RemoveActor(SceneActor* actor)
@@ -315,7 +317,6 @@ namespace ERI {
 				break;
 			case OPACITY_ALPHA_BLEND:
 				alpha_blend_actors_->AddActor(actor);
-				SetSortDirty();
 				break;
 			default:
 				ASSERT(0);
