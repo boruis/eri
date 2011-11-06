@@ -33,12 +33,13 @@ namespace ERI {
 	template<typename T>
 	inline const T& Max(const T& a, const T& b) { return (a > b) ? a : b; }
 	template<typename T>
-	inline T Clamp(T a, const T& min_value, const T& max_value)
+	inline T Clamp(const T& a, const T& min_value, const T& max_value)
 	{
 		ASSERT(min_value < max_value);
-		if (a < min_value) a = min_value;
-		else if (a > max_value) a = max_value;
-		return a;
+		T result = a;
+		if (result < min_value) result = min_value;
+		else if (result > max_value) result = max_value;
+		return result;
 	}
 	template<typename T>
 	inline T Abs(const T& a) { return (a > 0) ? a : -a; }
