@@ -167,6 +167,8 @@ namespace ERI {
 		
 		//
 		
+		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &caps_.max_texture_size);
+		
 		const char* extensions = (char*) glGetString(GL_EXTENSIONS);
 		caps_.is_support_non_power_of_2_texture =
 			strstr(extensions, "GL_ARB_texture_non_power_of_two") != 0 ||

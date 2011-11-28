@@ -36,8 +36,13 @@ namespace ERI {
 	
 	struct Caps
 	{
-		Caps() : is_support_non_power_of_2_texture(false) {}
+		Caps()
+			: max_texture_size(0),
+			is_support_non_power_of_2_texture(false)
+		{
+		}
 		
+		int		max_texture_size;
 		bool	is_support_non_power_of_2_texture;
 	};
 	
