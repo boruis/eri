@@ -381,11 +381,11 @@ namespace ERI {
 		
 		renderer->EnableRenderToBuffer(width_, height_, texture_->bind_frame_buffer);
 		
-		CameraActor* current_cam = scene_mgr->current_cam();
+		CameraActor* default_cam = scene_mgr->default_cam();
 		
-		if (render_cam_ && render_cam_ != current_cam)
+		if (render_cam_ && render_cam_ != default_cam)
 		{
-			scene_mgr->SetCurrentCam(render_cam_);
+			scene_mgr->set_default_cam(render_cam_);
 		}
 		else
 		{
@@ -409,9 +409,9 @@ namespace ERI {
 		
 		renderer->RestoreRenderToBuffer();
 		
-		if (render_cam_ && render_cam_ != current_cam)
+		if (render_cam_ && render_cam_ != default_cam)
 		{
-			scene_mgr->SetCurrentCam(current_cam);
+			scene_mgr->set_default_cam(default_cam);
 		}
 		else
 		{
