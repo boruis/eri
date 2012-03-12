@@ -125,6 +125,32 @@ namespace ERI {
 		
 		if (!Root::Ins().renderer()->caps().is_support_non_power_of_2_texture)
 		{
+#ifndef ERI_TEXTURE_NPOT_STRETCH
+			int new_width = is_power_of_2(width_) ? width_ : next_power_of_2(width_);
+			int new_height = is_power_of_2(height_) ? height_ : next_power_of_2(height_);
+			
+			if (new_width != width_ || new_height != height_)
+			{
+				void* new_texture_data = malloc(new_width * new_height * 4);
+				memset(new_texture_data, 0, new_width * new_height * 4);
+
+				unsigned char* src_data = static_cast<unsigned char*>(texture_data_);
+				unsigned char* dst_data = static_cast<unsigned char*>(new_texture_data);
+
+				for (int row = 0; row < height_; ++row)
+				{
+					memcpy(dst_data + (row * new_width) * 4, src_data + (row * width_) * 4, width_ * 4);
+				}
+				
+				free(texture_data_);
+				texture_data_ = new_texture_data;
+				
+				printf("%s non power of 2 texture %d x %d -> %d x %d\n", path.c_str(), width_, height_, new_width, new_height);
+
+				width_ = new_width;
+				height_ = new_height;
+			}
+#else
 			if (!is_power_of_2(width_))
 			{
 				int new_width = prev_power_of_2(width_);
@@ -216,6 +242,7 @@ namespace ERI {
 				printf("non power of 2 texture height %d -> %d\n", height_, new_height);
 				height_ = new_height;
 			}
+#endif // ERI_TEXTURE_NPOT_STRETCH
 		}
 
 		if (generate_immediately)
