@@ -118,7 +118,7 @@ namespace ERI {
 		float Normalize();
 		
 		void Rotate(float degree);
-		float GetRotateToDegree(const Vector2& target);
+		float GetRotateToDegree(const Vector2& target) const;
 		
 		float x, y;
 	};

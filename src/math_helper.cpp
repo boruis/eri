@@ -77,7 +77,7 @@ namespace ERI {
 		(*this) = v;
 	}
 	
-	float Vector2::GetRotateToDegree(const Vector2& target)
+	float Vector2::GetRotateToDegree(const Vector2& target) const
 	{
 		Vector2 start = *this;
 		Vector2 end = target;
