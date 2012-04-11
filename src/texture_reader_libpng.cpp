@@ -89,9 +89,16 @@ namespace ERI {
 		ASSERT(bit_depth == 8);
 		
 		png_set_interlace_handling(png_ptr);
-
-		if (color_type == PNG_COLOR_TYPE_RGB || color_type == PNG_COLOR_TYPE_GRAY)
+		
+		if (color_type == PNG_COLOR_TYPE_PALETTE)
+		{
+			png_set_palette_to_rgb(png_ptr);
 			png_set_add_alpha(png_ptr, 0xFF, PNG_FILLER_AFTER);
+		}
+		if (color_type == PNG_COLOR_TYPE_RGB || color_type == PNG_COLOR_TYPE_GRAY)
+		{
+			png_set_add_alpha(png_ptr, 0xFF, PNG_FILLER_AFTER);
+		}
 		
 		png_read_update_info(png_ptr, info_ptr);
 		png_get_IHDR(png_ptr, info_ptr, &w, &h, &bit_depth, &color_type,
