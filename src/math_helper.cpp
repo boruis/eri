@@ -977,7 +977,117 @@ namespace ERI {
 		
 		return intersection_type;
 	}
-	
+
+	static bool Clip(float denom, float numer, float& t0, float& t1)
+	{
+		// Return value is 'true' if line segment intersects the current test
+		// plane.  Otherwise 'false' is returned in which case the line segment
+		// is entirely clipped.
+
+		if (denom > 0.f)
+		{
+			if (numer > denom * t1)
+			{
+				return false;
+			}
+			if (numer > denom * t0)
+			{
+				t0 = numer / denom;
+			}
+			return true;
+		}
+		else if (denom < 0.f)
+		{
+			if (numer > denom * t0)
+			{
+				return false;
+			}
+			if (numer > denom * t1)
+			{
+				t1 = numer / denom;
+			}
+			return true;
+		}
+		else
+		{
+			return numer <= 0.f;
+		}
+	}
+
+	static IntersectionType DoClipping(float t0, float t1, const Vector2& origin, const Vector2& dir, const Box2& box, bool is_solid,
+									   int* out_quantity, float* out_intersect_percents, Vector2* out_intersect_poses)
+	{
+		IntersectionType intersection_type = IT_EMPTY;
+
+		if (out_quantity)
+			(*out_quantity) = 0;
+
+		// Convert linear component to box coordinates.
+		Vector2 diff = origin - box.center;
+		Vector2 BOrigin(diff.DotProduct(box.axis[0]),
+						diff.DotProduct(box.axis[1]));
+		Vector2 BDirection(dir.DotProduct(box.axis[0]),
+						   dir.DotProduct(box.axis[1]));
+
+		float saveT0 = t0, saveT1 = t1;
+		bool notAllClipped =
+			Clip(+BDirection.x, -BOrigin.x - box.extent[0], t0, t1) &&
+			Clip(-BDirection.x, +BOrigin.x - box.extent[0], t0, t1) &&
+			Clip(+BDirection.y, -BOrigin.y - box.extent[1], t0, t1) &&
+			Clip(-BDirection.y, +BOrigin.y - box.extent[1], t0, t1);
+
+		if (notAllClipped && (is_solid || t0 != saveT0 || t1 != saveT1))
+		{
+			if (t1 > t0)
+			{
+				intersection_type = IT_SEGMENT;
+
+				if (out_quantity)
+					(*out_quantity) = 2;
+
+				if (out_intersect_percents)
+				{
+					out_intersect_percents[0] = t0;
+					out_intersect_percents[1] = t1;
+				}
+
+				if (out_intersect_poses)
+				{
+					out_intersect_poses[0] = origin + dir * t0;
+					out_intersect_poses[1] = origin + dir * t1;
+				}
+			}
+			else
+			{
+				intersection_type = IT_POINT;
+
+				if (out_quantity)
+					(*out_quantity) = 1;
+
+				if (out_intersect_percents)
+				{
+					out_intersect_percents[0] = t0;
+				}
+
+				if (out_intersect_poses)
+				{
+					out_intersect_poses[0] = origin + dir * t0;
+				}
+			}
+		}
+
+		return intersection_type;
+	}
+
+	IntersectionType CheckIntersectSegmentBox2(const Segment2& segment, const Box2& box, bool is_solid,
+											   int* out_quantity, float* out_intersect_percents, Vector2* out_intersect_poses)
+	{
+		return DoClipping(-segment.extent, segment.extent,
+						  segment.center, segment.dir,
+						  box, is_solid,
+						  out_quantity, out_intersect_percents, out_intersect_poses);
+	}
+
 	bool IsIntersectLineCircle2(const Line2& line, const Circle& circle,
 								std::vector<float>* out_intersect_length)
 	{
@@ -1067,7 +1177,36 @@ namespace ERI {
 
 		return intersection_count > 0;
 	}
-	
+
+	bool IsIntersectSegmentBox2(const Segment2& segment, const Box2& box)
+	{
+		Vector2 diff = segment.center - box.center;
+
+		float AWdU[2], ADdU[2], RHS;
+		AWdU[0] = Abs(segment.dir.DotProduct(box.axis[0]));
+		ADdU[0] = Abs(diff.DotProduct(box.axis[0]));
+		RHS = box.extent[0] + segment.extent * AWdU[0];
+		if (ADdU[0] > RHS)
+		{
+			return false;
+		}
+
+		AWdU[1] = Abs(segment.dir.DotProduct(box.axis[1]));
+		ADdU[1] = Abs(diff.DotProduct(box.axis[1]));
+		RHS = box.extent[1] + segment.extent * AWdU[1];
+		if (ADdU[1] > RHS)
+		{
+			return false;
+		}
+
+		Vector2 perp(segment.dir.y, -segment.dir.x);
+		float LHS = Abs(perp.DotProduct(diff));
+		float part0 = Abs(perp.DotProduct(box.axis[0]));
+		float part1 = Abs(perp.DotProduct(box.axis[1]));
+		RHS = box.extent[0] * part0 + box.extent[1] * part1;
+		return LHS <= RHS;
+	}
+
 	bool IsIntersectBoxCircle2(const Box2& box, const Circle& circle)
 	{
 		float distance_squared = GetPointBox2DistanceSquared(circle.center, box);

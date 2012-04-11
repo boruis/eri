@@ -478,19 +478,27 @@ namespace ERI {
 
 	float GetPointSegment2DistanceSquared(const Vector2& point, const Segment2& segment);
 	float GetPointBox2DistanceSquared(const Vector2& point, const Box2& box);
+
 	IntersectionType CheckIntersectRayRay2(const Ray2& ray1, const Ray2& ray2,
 										   Vector2* out_intersect_pos);
 	IntersectionType CheckIntersectSegmentSegment2(const Segment2& segment1, const Segment2& segment2,
 												   float* out_intersect_percents, Vector2* out_intersect_pos);
+	IntersectionType CheckIntersectSegmentBox2(const Segment2& segment, const Box2& box, bool is_solid,
+											   int* out_quantity, float* out_intersect_percents, Vector2* out_intersect_poses);
+
 	bool IsIntersectLineCircle2(const Line2& line, const Circle& circle,
 								std::vector<float>* out_intersect_length);
 	bool IsIntersectRayCircle2(const Ray2& ray, const Circle& circle,
 							   std::vector<Vector2>* out_intersect_pos);
+
+	bool IsIntersectSegmentBox2(const Segment2& segment, const Box2& box);
+
 	bool IsIntersectBoxCircle2(const Box2& box, const Circle& circle);
 	bool IsIntersectBoxBox2(const Box2& box1, const Box2& box2);
 	bool IsIntersectAABoxCircle2(const AABox2& box, const Circle& circle);
 	bool IsIntersectAABoxAABox2(const AABox2& box1, const AABox2& box2);
 	bool IsIntersectRayBox3(const Ray3& ray, const Box3& box);
+
 	float SphereInFrustum(const Sphere& sphere, const Plane* frustum);
 	bool BoxInFrustum(const Box3& box, const Plane* frustum);
 
