@@ -490,9 +490,11 @@ namespace ERI {
 								std::vector<float>* out_intersect_length);
 	bool IsIntersectRayCircle2(const Ray2& ray, const Circle& circle,
 							   std::vector<Vector2>* out_intersect_pos);
+	bool IsIntersectSegmentCircle2(const Segment2& segment, const Circle& circle,
+								   std::vector<Vector2>* out_intersect_pos);
 
 	bool IsIntersectSegmentBox2(const Segment2& segment, const Box2& box);
-
+	bool IsIntersectCircleCircle2(const Circle& circle1, const Circle& circle2);
 	bool IsIntersectBoxCircle2(const Box2& box, const Circle& circle);
 	bool IsIntersectBoxBox2(const Box2& box1, const Box2& box2);
 	bool IsIntersectAABoxCircle2(const AABox2& box, const Circle& circle);

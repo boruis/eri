@@ -1177,6 +1177,62 @@ namespace ERI {
 
 		return intersection_count > 0;
 	}
+	
+	bool IsIntersectSegmentCircle2(const Segment2& segment, const Circle& circle,
+								   std::vector<Vector2>* out_intersect_pos)
+	{
+		std::vector<float> t;
+		Line2 line;
+		line.origin = segment.center;
+		line.dir = segment.dir;
+		bool intersects = IsIntersectLineCircle2(line, circle, &t);
+		
+		size_t intersection_count = t.size();
+		
+		if (intersects)
+		{
+			// Reduce root count if line-circle intersections are not on segment.
+			if (intersection_count == 1)
+			{
+				if (Abs(t[0]) > segment.extent)
+				{
+					intersection_count = 0;
+				}
+			}
+			else
+			{
+				if (t[1] < -segment.extent || t[0] > segment.extent)
+				{
+					intersection_count = 0;
+				}
+				else
+				{
+					if (t[1] <= segment.extent)
+					{
+						if (t[0] < -segment.extent)
+						{
+							intersection_count = 1;
+							t[0] = t[1];
+						}
+					}
+					else
+					{
+						intersection_count = (t[0] >= -segment.extent ? 1 : 0);
+					}
+				}
+			}
+			
+			if (out_intersect_pos)
+			{
+				for (int i = 0; i < intersection_count; ++i)
+				{
+					out_intersect_pos->push_back(segment.center + segment.dir * t[i]);
+				}
+			}
+		}
+		
+		return intersection_count > 0;
+	}
 
 	bool IsIntersectSegmentBox2(const Segment2& segment, const Box2& box)
 	{
@@ -1205,6 +1261,12 @@ namespace ERI {
 		float part1 = Abs(perp.DotProduct(box.axis[1]));
 		RHS = box.extent[0] * part0 + box.extent[1] * part1;
 		return LHS <= RHS;
+	}
+	
+	bool IsIntersectCircleCircle2(const Circle& circle1, const Circle& circle2)
+	{
+		float intersect_distance = circle1.radius + circle2.radius;
+		return (circle1.center - circle2.center).LengthSquared() <= (intersect_distance * intersect_distance);
 	}
 
 	bool IsIntersectBoxCircle2(const Box2& box, const Circle& circle)
