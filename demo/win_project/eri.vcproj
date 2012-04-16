@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\src;..\..\src;..\..\..\..\3rd\glew\include;..\..\..\..\3rd\FreeImage\Dist"
+				AdditionalIncludeDirectories="..\src;..\..\src;..\..\..\3rd\glew\include;..\..\..\3rd\FreeImage;..\..\..\3rd\rapidxml"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;GLEW_STATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -50,6 +50,7 @@
 				PrecompiledHeaderThrough="pch.h"
 				WarningLevel="3"
 				DebugInformationFormat="4"
+				DisableSpecificWarnings="4068"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -64,7 +65,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="glew32s.lib glu32.lib opengl32.lib FreeImage.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\..\..\..\3rd\glew\lib;..\..\..\..\3rd\FreeImage\Dist"
+				AdditionalLibraryDirectories="..\..\..\3rd\glew\lib;..\..\..\3rd\FreeImage"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -97,7 +98,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			CharacterSet="1"
+			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
 			<Tool
@@ -119,12 +120,14 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
+				AdditionalIncludeDirectories="..\src;..\..\src;..\..\..\3rd\glew\include;..\..\..\3rd\FreeImage;..\..\..\3rd\rapidxml"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;GLEW_STATIC"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
+				DisableSpecificWarnings="4068"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -137,7 +140,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="glew32s.lib glu32.lib opengl32.lib FreeImage.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="..\..\..\3rd\glew\lib;..\..\..\3rd\FreeImage"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -258,6 +263,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\sys_helper.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\sys_helper.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\texture_mgr.cpp"
 				>
 			</File>
@@ -277,6 +290,14 @@
 				RelativePath="..\..\src\texture_reader_freeimage.h"
 				>
 			</File>
+			<File
+				RelativePath="..\..\src\txt_actor.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\txt_actor.h"
+				>
+			</File>
 			<Filter
 				Name="win"
 				>
@@ -286,6 +307,10 @@
 				</File>
 				<File
 					RelativePath="..\..\src\win\framework_win.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\win\platform_helper_win.cpp"
 					>
 				</File>
 				<File

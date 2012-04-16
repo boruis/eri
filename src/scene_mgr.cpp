@@ -9,6 +9,8 @@
 
 #include "pch.h"
 
+#include <algorithm>
+
 #include "scene_mgr.h"
 #include "scene_actor.h"
 #include "renderer.h"
