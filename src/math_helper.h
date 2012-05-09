@@ -21,6 +21,7 @@ namespace ERI {
 	struct Math
 	{
 		static const double ZERO_TOLERANCE;
+		static const float FLOAT_MAX;
 		static const float PI;
 		static const float TWO_PI;
 		static const float HALF_PI;
@@ -483,6 +484,8 @@ namespace ERI {
 										   Vector2* out_intersect_pos);
 	IntersectionType CheckIntersectSegmentSegment2(const Segment2& segment1, const Segment2& segment2,
 												   float* out_intersect_percents, Vector2* out_intersect_pos);
+	IntersectionType CheckIntersectRayBox2(const Ray2& ray, const Box2& box, bool is_solid,
+										   int* out_quantity, float* out_intersect_percents, Vector2* out_intersect_poses);
 	IntersectionType CheckIntersectSegmentBox2(const Segment2& segment, const Box2& box, bool is_solid,
 											   int* out_quantity, float* out_intersect_percents, Vector2* out_intersect_poses);
 

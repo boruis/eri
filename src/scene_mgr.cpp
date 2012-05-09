@@ -461,6 +461,13 @@ namespace ERI {
 		layers_[layer_id]->set_cam(cam);
 	}
 	
+	CameraActor* SceneMgr::GetLayerCam(int layer_id)
+	{
+		ASSERT(layer_id < static_cast<int>(layers_.size()));
+		
+		return layers_[layer_id]->cam();
+	}
+
 	void SceneMgr::ClearLayer()
 	{
 		for (int i = 0; i < layers_.size(); ++i)

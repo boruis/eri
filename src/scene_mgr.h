@@ -136,6 +136,7 @@ namespace ERI {
 		void SetLayerClearDepth(int layer_id, bool clear_depth);
 		void SetLayerSortAlpha(int layer_id, bool sort_alpha);
 		void SetLayerCam(int layer_id, CameraActor* cam);
+		CameraActor* GetLayerCam(int layer_id);
 		void ClearLayer();
 
 		void AddActor(SceneActor* actor, int layer_id = 0);

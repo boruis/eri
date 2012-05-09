@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
+#include <cfloat>
 #include <ctime>
 
 namespace ERI {
@@ -21,6 +22,7 @@ namespace ERI {
 #pragma mark Geometry
 	
 	const double Math::ZERO_TOLERANCE = 1e-06;
+	const float Math::FLOAT_MAX = FLT_MAX;
 
 	const float Math::PI = 4 * atan(1.0f);
 	const float Math::TWO_PI = PI * 2;
@@ -1077,6 +1079,15 @@ namespace ERI {
 		}
 
 		return intersection_type;
+	}
+
+	IntersectionType CheckIntersectRayBox2(const Ray2& ray, const Box2& box, bool is_solid,
+										   int* out_quantity, float* out_intersect_percents, Vector2* out_intersect_poses)
+	{
+		return DoClipping(0.f, Math::FLOAT_MAX,
+						  ray.origin, ray.dir,
+						  box, is_solid,
+						  out_quantity, out_intersect_percents, out_intersect_poses);
 	}
 
 	IntersectionType CheckIntersectSegmentBox2(const Segment2& segment, const Box2& box, bool is_solid,
