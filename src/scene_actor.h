@@ -319,6 +319,7 @@ namespace ERI {
 		
 		inline const Vector2& size() const { return size_; }
 		inline const Vector2& offset() const { return offset_; }
+		inline const Vector2& tex_scroll() const { return tex_scroll_; }
 		
 	private:
 		virtual bool IsInArea(const Vector3& local_space_pos);
