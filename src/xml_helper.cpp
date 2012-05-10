@@ -187,6 +187,64 @@ namespace ERI
 		return NULL;	
 	}
 	
+	rapidxml::xml_attribute<>* GetAttrRect(rapidxml::xml_node<>* node, const char* name, Vector2& out_left_top, Vector2& out_right_bottom)
+	{
+		rapidxml::xml_attribute<>* attr = node->first_attribute(name);
+		if (attr)
+		{
+			std::string s = attr->value();
+			size_t pos = s.find(',');
+			if (pos == std::string::npos)
+			{
+				out_left_top.x = static_cast<float>(atof(s.c_str()));
+				return attr;
+			}
+			else
+			{
+				out_left_top.x = static_cast<float>(atof(s.substr(0, pos).c_str()));
+			}
+			
+			s = s.substr(pos + 1);
+			pos = s.find(',');
+			if (pos == std::string::npos)
+			{
+				out_left_top.y = static_cast<float>(atof(s.c_str()));
+				return attr;
+			}
+			else
+			{
+				out_left_top.y = static_cast<float>(atof(s.substr(0, pos).c_str()));
+			}
+			
+			s = s.substr(pos + 1);
+			pos = s.find(',');
+			if (pos == std::string::npos)
+			{
+				out_right_bottom.x = static_cast<float>(atof(s.c_str()));
+				return attr;
+			}
+			else
+			{
+				out_right_bottom.x = static_cast<float>(atof(s.substr(0, pos).c_str()));
+			}		
+			
+			s = s.substr(pos + 1);
+			pos = s.find(',');
+			if (pos == std::string::npos)
+			{
+				out_right_bottom.y = static_cast<float>(atof(s.c_str()));
+			}
+			else
+			{
+				out_right_bottom.y = static_cast<float>(atof(s.substr(0, pos).c_str()));
+			}
+			
+			return attr;
+		}
+
+		return NULL;
+	}
+	
 	bool SaveFile(const std::string& path, const XmlCreateData& data)
 	{
 		std::string s;
@@ -269,4 +327,13 @@ namespace ERI
 		node->append_attribute(attr);
 	}
 
+	void PutAttrRect(rapidxml::xml_document<>& doc, rapidxml::xml_node<>* node, const char* name, const Vector2& left_top, const Vector2& right_bottom)
+	{
+		char* alloc_name = doc.allocate_string(name);
+		char buf[64];
+		sprintf(buf, "%f,%f,%f,%f", left_top.x, left_top.y, right_bottom.x, right_bottom.y);
+		char* alloc_value = doc.allocate_string(buf);
+		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(alloc_name, alloc_value);
+		node->append_attribute(attr);
+	}
 }

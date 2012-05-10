@@ -37,6 +37,7 @@ namespace ERI
 	rapidxml::xml_attribute<>* GetAttrStr(rapidxml::xml_node<>* node, const char* name, std::string& out_value);
 	rapidxml::xml_attribute<>* GetAttrVector2(rapidxml::xml_node<>* node, const char* name, Vector2& out_value);
 	rapidxml::xml_attribute<>* GetAttrColor(rapidxml::xml_node<>* node, const char* name, Color& out_value);
+	rapidxml::xml_attribute<>* GetAttrRect(rapidxml::xml_node<>* node, const char* name, Vector2& out_left_top, Vector2& out_right_bottom);
 
 	struct XmlCreateData
 	{
@@ -55,6 +56,7 @@ namespace ERI
 	void PutAttrStr(rapidxml::xml_document<>& doc, rapidxml::xml_node<>* node, const char* name, const std::string& value);
 	void PutAttrVector2(rapidxml::xml_document<>& doc, rapidxml::xml_node<>* node, const char* name, const Vector2& value);
 	void PutAttrColor(rapidxml::xml_document<>& doc, rapidxml::xml_node<>* node, const char* name, const Color& value);
+	void PutAttrRect(rapidxml::xml_document<>& doc, rapidxml::xml_node<>* node, const char* name, const Vector2& left_top, const Vector2& right_bottom);
 }
 
 #endif // ERI_XML_HELPER_H
