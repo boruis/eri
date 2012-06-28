@@ -77,7 +77,7 @@ namespace ERI {
 		virtual void SaveTransform();
 		virtual void RecoverTransform();
 		
-		virtual void EnableRenderToBuffer(int width, int height, int frame_buffer);
+		virtual void EnableRenderToBuffer(int x, int y, int width, int height, int frame_buffer);
 		virtual void CopyTexture(unsigned int texture);
 		virtual void CopyPixels(void* buffer, int x, int y, int width, int height);
 		virtual void RestoreRenderToBuffer();

@@ -343,7 +343,9 @@ namespace ERI {
 	
 #pragma mark RenderToTexture
 	
-	RenderToTexture::RenderToTexture(int width, int height, CameraActor* render_cam /*= NULL*/) :
+	RenderToTexture::RenderToTexture(int x, int y, int width, int height, CameraActor* render_cam /*= NULL*/) :
+		x_(x),
+		y_(y),
 		width_(width),
 		height_(height),
 		texture_(NULL),
@@ -369,6 +371,7 @@ namespace ERI {
 		if (texture_)
 		{
 			Root::Ins().texture_mgr()->ReleaseTexture(texture_);
+			texture_ = NULL;
 		}
 	}
 	
@@ -379,7 +382,7 @@ namespace ERI {
 		Renderer* renderer = Root::Ins().renderer();
 		SceneMgr* scene_mgr = Root::Ins().scene_mgr();
 		
-		renderer->EnableRenderToBuffer(width_, height_, texture_->bind_frame_buffer);
+		renderer->EnableRenderToBuffer(x_, y_, width_, height_, texture_->bind_frame_buffer);
 		
 		CameraActor* default_cam = scene_mgr->default_cam();
 		

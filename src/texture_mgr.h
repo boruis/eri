@@ -178,9 +178,9 @@ namespace ERI {
 	class RenderToTexture
 	{
 	public:
-		RenderToTexture(int width, int height, CameraActor* render_cam = NULL);
+		RenderToTexture(int x, int y, int width, int height, CameraActor* render_cam = NULL);
 		~RenderToTexture();
-		
+
 		void Init();
 		void Release();
 		void ProcessRender();
@@ -190,7 +190,8 @@ namespace ERI {
 		inline const Texture* texture() { return texture_; }
 		
 	private:
-		int				width_, height_;
+		int				x_, y_, width_, height_;
+
 		const Texture*	texture_;
 		
 		CameraActor*	render_cam_;

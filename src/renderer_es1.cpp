@@ -527,14 +527,14 @@ namespace ERI {
 		glPopMatrix();
 	}
 	
-	void RendererES1::EnableRenderToBuffer(int width, int height, int frame_buffer)
+	void RendererES1::EnableRenderToBuffer(int x, int y, int width, int height, int frame_buffer)
 	{
 		backing_width_backup_ = backing_width_;
 		backing_height_backup_ = backing_height_;
 		backing_width_ = width;
 		backing_height_ = height;
 		
-		glViewport(0, 0, backing_width_, backing_height_);
+		glViewport(x, y, backing_width_, backing_height_);
 
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 		glBindFramebufferOES(GL_FRAMEBUFFER_OES, frame_buffer);
