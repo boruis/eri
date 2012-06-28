@@ -536,6 +536,17 @@ namespace ERI {
 		
 		world_pos.x = (screen_x - Root::Ins().renderer()->width() / 2) / cam_zoom + cam_pos.x;
 		world_pos.y = (screen_y - Root::Ins().renderer()->height() / 2) / cam_zoom + cam_pos.y;
+
+		if (use_cam && use_cam->GetRotate() != 0.f)
+		{
+			float degree;
+			Vector3 axis;
+			use_cam->GetRotate(degree, axis);
+
+			static Matrix4 rotate_matrix;
+			Matrix4::RotateAxis(rotate_matrix, degree, axis);
+			world_pos = rotate_matrix * world_pos;
+		}
 		
 		return world_pos;
 	}

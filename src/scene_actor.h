@@ -98,7 +98,7 @@ namespace ERI {
 		virtual void SetPos(float x, float y);
 		Vector2 GetPos() const;
 				
-		void SetRotate(float degree);
+		virtual void SetRotate(float degree);
 		float GetRotate() const;
 		
 		void SetScale(float x, float y);
@@ -108,7 +108,7 @@ namespace ERI {
 		virtual void SetPos(const Vector3& pos);
 		const Vector3& GetPos3() const;
 		
-		void SetRotate(float degree, const Vector3& axis);
+		virtual void SetRotate(float degree, const Vector3& axis);
 		void GetRotate(float& out_degree, Vector3& out_axis) const;
 		
 		void SetScale(const Vector3& scale);
@@ -205,6 +205,8 @@ namespace ERI {
 		
 		virtual void SetPos(float x, float y);
 		virtual void SetPos(const Vector3& pos);
+		virtual void SetRotate(float degree);
+		virtual void SetRotate(float degree, const Vector3& axis);
 		
 		void SetLookAt(const Vector3& look_at, bool is_offset = false);
 		
@@ -215,7 +217,7 @@ namespace ERI {
 		void UpdateViewMatrix();
 		void UpdateProjectionMatrix();
 		
-		void SetViewModified();
+		void SetViewModified(bool is_up_modified);
 		void SetProjectionModified();
 		void SetViewProjectionNeedUpdate();
 		
@@ -238,7 +240,7 @@ namespace ERI {
 		Matrix4		projection_matrix_;
 		Plane		frustum_[6];
 		
-		Vector3		look_at_;
+		Vector3		look_at_, up_;
 		bool		is_look_at_offset_;
 		
 		float		ortho_zoom_;
@@ -246,6 +248,7 @@ namespace ERI {
 		float		far_z_;
 		
 		bool		is_view_modified_, is_projection_modified_;
+		bool		is_up_modified_;
 		bool		is_view_need_update_, is_projection_need_update_;
 		bool		is_frustum_dirty_;
 	};
