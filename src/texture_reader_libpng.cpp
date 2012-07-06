@@ -160,7 +160,7 @@ namespace ERI {
 #else
 			if (!is_power_of_2(width_))
 			{
-				int new_width = prev_power_of_2(width_);
+				int new_width = next_power_of_2(width_);
 
 				void* new_texture_data = malloc(new_width * height_ * 4);
 				memset(new_texture_data, 255, new_width * height_ * 4);
@@ -206,7 +206,7 @@ namespace ERI {
 
 			if (!is_power_of_2(height_))
 			{
-				int new_height = prev_power_of_2(height_);
+				int new_height = next_power_of_2(height_);
 				
 				void* new_texture_data = malloc(width_ * new_height * 4);
 				memset(new_texture_data, 255, width_ * new_height * 4);

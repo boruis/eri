@@ -179,13 +179,11 @@ namespace ERI {
 #endif
 #if defined(ERI_TEXTURE_READER_UIKIT)
 #	if defined(ERI_TEXTURE_READER_LIBPNG)
-				if (resource_path.substr(resource_path.length() - 4, 4).compare(".jpg") == 0)
-					reader = new TextureReaderUIImage(resource_path, true);
-				else
+				if (resource_path.substr(resource_path.length() - 4, 4).compare(".png") == 0)
 					reader = new TextureReaderLibPNG(resource_path, true);
-#	else
-				reader = new TextureReaderUIImage(resource_path, true);
+				else
 #	endif
+				reader = new TextureReaderUIImage(resource_path, true);
 #elif defined(ERI_TEXTURE_READER_LIBPNG)
 				reader = new TextureReaderLibPNG(resource_path, true);
 #elif defined(ERI_TEXTURE_READER_FREEIMAGE)
