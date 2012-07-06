@@ -15,6 +15,8 @@
 #include <string>
 
 namespace ERI {
+	
+	struct Vector2;
 
 	class TextureReaderUIImage : public TextureReader
 	{
@@ -33,10 +35,13 @@ namespace ERI {
 	class TextureReaderUIFont : public TextureReader
 	{
 	public:
-		TextureReaderUIFont(const std::string& txt, const std::string& font_name, float font_size, float w, float h);
-		virtual ~TextureReaderUIFont();
+		TextureReaderUIFont(const std::string& txt,
+							const std::string& font_name,
+							float font_size,
+							bool align_center,
+							Vector2& out_actual_size);
 		
-		virtual void Generate() {}
+		virtual ~TextureReaderUIFont();
 	};
 
 }

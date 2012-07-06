@@ -16,29 +16,6 @@
 namespace ERI
 {
 
-int CreateUnicodeArray(const std::string& txt, bool is_utf8, uint32_t*& out_chars)
-{
-  int length = 0;
-  
-  if (is_utf8)
-  {
-    int max_buff_size = static_cast<int>(txt.length()) * 2;
-    out_chars = new uint32_t[max_buff_size];
-    length = GetUnicodeFromUTF8(txt, max_buff_size, out_chars);
-  }
-  else
-  {
-    out_chars = new uint32_t[txt.length()];
-    
-    for (int i = 0; i < txt.length(); ++i)
-      out_chars[i] = txt[i];
-    
-    length = static_cast<int>(txt.length());
-  }
-  
-  return length;
-}
-
 #pragma mark TxtMeshConstructor
   
 class TxtMeshConstructor
@@ -84,27 +61,19 @@ class SpriteTxtMeshConstructor : public TxtMeshConstructor
   
   virtual void Construct()
   {
-    bool first_construct = owner_->material_data_.used_unit == 0;
-        
-    uint32_t* chars;
-    int length = CreateUnicodeArray(owner_->txt_, owner_->is_utf8_, chars);
-
     int width, height;
     const Texture* tex = owner_->font_ref_->CreateSpriteTxt(tex_name_,
-                                                            chars,
-                                                            length,
+                                                            owner_->txt_,
+                                                            owner_->font_size_,
+                                                            owner_->is_pos_center_,
+                                                            owner_->is_utf8_,
                                                             owner_->is_anti_alias_,
                                                             width,
                                                             height);
-    
-    delete [] chars;
 
-    if (first_construct)
-    {
-      owner_->SetMaterial(tex);
-      owner_->SetTextureFilter(owner_->font_ref_->filter_min(),
-                               owner_->font_ref_->filter_min());
-    }
+    owner_->SetMaterial(tex,
+                        owner_->font_ref_->filter_min(),
+                        owner_->font_ref_->filter_mag());
     
     owner_->width_ = width;
     owner_->height_ = height;
@@ -114,7 +83,7 @@ class SpriteTxtMeshConstructor : public TxtMeshConstructor
 			glGenBuffers(1, &owner_->render_data_.vertex_buffer);
 		}
 		    
-    float size_scale = static_cast<float>(owner_->font_size_) / owner_->font_ref_->size();
+    float size_scale = owner_->font_ref_->GetSizeScale(owner_->font_size_);
 
     Vector2 size(width * size_scale, height * size_scale);
     Vector2 start;
@@ -193,13 +162,13 @@ class AtlasTxtMeshConstructor : public TxtMeshConstructor
     
     std::vector<float> row_widths;
     
-    TxtActor::CalculateSize(chars,
-                            now_len_,
-                            owner_->font_ref_,
-                            owner_->font_size_,
-                            owner_->width_,
-                            owner_->height_,
-                            &row_widths);
+    CalculateTxtSize(chars,
+                     now_len_,
+                     owner_->font_ref_,
+                     owner_->font_size_,
+                     owner_->width_,
+                     owner_->height_,
+                     &row_widths);
     
     float line_height = owner_->font_ref_->common_line_height() * size_scale;
     if (owner_->force_line_height_ > 0.f)
@@ -356,72 +325,6 @@ void TxtActor::SetForceLineHeight(float force_line_height, bool construct /*= fa
   
   if (construct)
     mesh_constructor_->Construct();
-}
-
-void TxtActor::CalculateSize(const std::string& txt,
-                             const Font* font,
-                             int font_size,
-                             float& width,
-                             float& height,
-                             bool is_utf8 /*= false*/)
-{
-  ASSERT(font);
-  
-  uint32_t* chars;
-  int length = CreateUnicodeArray(txt, is_utf8, chars);
-  
-  CalculateSize(chars, length, font, font_size, width, height);
-  
-  delete [] chars;
-}
-
-void TxtActor::CalculateSize(const uint32_t* chars,
-                             int length,
-                             const Font* font,
-                             int font_size,
-                             float& width,
-                             float& height,
-                             std::vector<float>* row_widths /*= NULL*/)
-{
-  ASSERT(font);
-  
-  width = 0.0f;
-  
-  float size_scale = static_cast<float>(font_size) / font->size();  
-  height = font->common_line_height() * size_scale;
-  
-  if (length == 0)
-  {
-    if (row_widths)
-      row_widths->push_back(0);
-
-    return;
-  }
-
-  float now_width = 0;
-  for (int i = 0; i < length; ++i)
-  {
-    if (chars[i] == '\n')
-    {
-      if (now_width > width) width = now_width;
-		
-      if (row_widths)
-        row_widths->push_back(now_width);
-		
-      now_width = 0;
-      height += font->common_line_height() * size_scale;
-    }
-    else
-    {
-      const CharSetting& setting = font->GetCharSetting(chars[i]);
-      now_width += setting.x_advance * size_scale;
-    }
-  }
-  
-  if (now_width > width) width = now_width;
-  
-  if (row_widths)
-    row_widths->push_back(now_width);
 }
 
 bool TxtActor::IsInArea(const Vector3& local_space_pos)

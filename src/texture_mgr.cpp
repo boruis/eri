@@ -257,32 +257,48 @@ namespace ERI {
 		Root::Ins().renderer()->UpdateTexture(tex->id, data, tex->width, tex->height, RGBA);
 	}
 	
-	const Texture* TextureMgr::GetTxtTexture(const std::string& txt, const std::string& font_name, float font_size, float w, float h)
+	const Texture* TextureMgr::GenerateTxtTexture(const std::string& txt,
+												  const std::string& font_name,
+												  float font_size,
+												  bool align_center,
+												  Vector2& out_actual_size,
+												  std::string* out_name /*= NULL*/)
 	{
-		std::map<std::string, Texture*>::iterator it = texture_map_.find(txt + "_txt");
-		if (it == texture_map_.end())
+		if (out_name && !out_name->empty())
 		{
+			ASSERT(texture_map_.find(*out_name) == texture_map_.end());
+		}
+		
 #ifdef ERI_TEXTURE_READER_UIKIT
-			TextureReaderUIFont reader(txt, font_name, font_size, w, h);
+		TextureReaderUIFont reader(txt, font_name, font_size, align_center, out_actual_size);
 #else
-			TextureReader reader(true);
+		TextureReader reader(true);
 #endif
-			
-			// TODO: check texture invalid number, maybe use int -1 is better
-			
-			if (reader.texture_id() == 0)
-				return NULL;
-			
-			Texture* tex = new Texture(reader.texture_id(), reader.width(), reader.height());
-			
-			texture_map_.insert(std::make_pair(txt + "_txt", tex));
+		
+		// TODO: check texture invalid number, maybe use int -1 is better
+		
+		if (reader.texture_id() == 0)
+			return NULL;
+		
+		Texture* tex = new Texture(reader.texture_id(), reader.width(), reader.height());
 
-			return tex;
+		if (out_name && !out_name->empty())
+		{
+			texture_map_.insert(std::make_pair(*out_name, tex));
 		}
 		else
 		{
-			return it->second;
+			static int serial_number = 0;
+			char key[16];
+			sprintf(key, "%d_txttex", serial_number++);
+			
+			texture_map_.insert(std::make_pair(key, tex));
+			
+			if (out_name)
+				*out_name = key;
 		}
+		
+		return tex;
 	}
 	
 	const Texture* TextureMgr::GenerateRenderToTexture(int width, int height)
@@ -294,17 +310,17 @@ namespace ERI {
 		
 		if (texture_id != 0)
 		{
-			Texture* texture = new Texture(texture_id, width, height);
+			Texture* tex = new Texture(texture_id, width, height);
 
-			texture->bind_frame_buffer = bind_frame_buffer;
+			tex->bind_frame_buffer = bind_frame_buffer;
 			
 			static int serial_number = 0;
 			char key[16];
 			sprintf(key, "%d_render2tex", serial_number++);
 						
-			texture_map_.insert(std::make_pair(key, texture));
+			texture_map_.insert(std::make_pair(key, tex));
 			
-			return texture;
+			return tex;
 		}
 		
 		return NULL;

@@ -1075,6 +1075,8 @@ namespace ERI {
 	
 	SpriteActor::~SpriteActor()
 	{
+		if (!txt_tex_name_.empty())
+			Root::Ins().texture_mgr()->ReleaseTexture(txt_tex_name_);
 	}
 	
 	void SpriteActor::UpdateVertexBuffer()
@@ -1263,13 +1265,30 @@ namespace ERI {
 		UpdateVertexBuffer();
 	}
 
-	void SpriteActor::SetTxt(const std::string& txt, const std::string& font_name, float font_size)
+	void SpriteActor::SetTxt(const std::string& txt,
+							 const std::string& font_name,
+							 float font_size,
+							 bool align_center)
 	{
-		const Texture* tex = Root::Ins().texture_mgr()->GetTxtTexture(txt, font_name, font_size, size_.x, size_.y);
+		if (!txt_tex_name_.empty())
+		{
+			Root::Ins().texture_mgr()->ReleaseTexture(txt_tex_name_);
+			txt_tex_name_.clear();
+		}
+		
+		Vector2 actual_size;
+		const Texture* tex = Root::Ins().texture_mgr()->GenerateTxtTexture(txt,
+																		   font_name,
+																		   font_size,
+																		   align_center,
+																		   actual_size,
+																		   &txt_tex_name_);
 		
 		ASSERT(tex);
 		
 		SetMaterial(tex);
+		SetSizeOffset(actual_size.x, actual_size.y);
+		SetTexArea(0, 0, actual_size.x, actual_size.y);
 	}
 
 	void SpriteActor::SetUseLine(bool use_line)

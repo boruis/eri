@@ -312,9 +312,13 @@ namespace ERI {
 		void SetTexArea(int start_x, int start_y, int width, int height, bool is_tex2 = false);
 		void SetTexAreaUV(float start_u, float start_v, float width, float height, bool is_tex2 = false);
 		
-		void SetTxt(const std::string& txt, const std::string& font_name, float font_size);
 		void SetUseLine(bool use_line);
-		
+
+		void SetTxt(const std::string& txt,
+					const std::string& font_name,
+					float font_size,
+					bool align_center);
+
 		void CreateBounding();
 
 		inline void set_is_dynamic_draw(bool is_dynamic_draw) { is_dynamic_draw_ = is_dynamic_draw; }
@@ -343,6 +347,8 @@ namespace ERI {
 		bool		is_use_line_;
 		
 		float		area_border_;
+		
+		std::string	txt_tex_name_;
 	};
 	
 #pragma mark BoxActor

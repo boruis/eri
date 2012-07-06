@@ -20,6 +20,95 @@
 
 namespace ERI {
 	
+int CreateUnicodeArray(const std::string& txt, bool is_utf8, uint32_t*& out_chars)
+{
+	int length = 0;
+	
+	if (is_utf8)
+	{
+		int max_buff_size = static_cast<int>(txt.length()) * 2; // TODO: may not enough
+		out_chars = new uint32_t[max_buff_size];
+		length = GetUnicodeFromUTF8(txt, max_buff_size, out_chars);
+	}
+	else
+	{
+		out_chars = new uint32_t[txt.length()];
+		
+		for (int i = 0; i < txt.length(); ++i)
+			out_chars[i] = txt[i];
+		
+		length = static_cast<int>(txt.length());
+	}
+	
+	return length;
+}
+
+void CalculateTxtSize(const std::string& txt,
+					  const Font* font,
+					  int font_size,
+					  bool is_utf8,
+					  float& width,
+					  float& height)
+{
+	ASSERT(font);
+	
+	uint32_t* chars;
+	int length = CreateUnicodeArray(txt, is_utf8, chars);
+	
+	CalculateTxtSize(chars, length, font, font_size, width, height);
+	
+	delete [] chars;
+}
+
+void CalculateTxtSize(const uint32_t* chars,
+					  int length,
+					  const Font* font,
+					  int font_size,
+					  float& width,
+					  float& height,
+					  std::vector<float>* row_widths /*= NULL*/)
+{
+	ASSERT(font);
+	
+	width = 0.0f;
+	
+	float size_scale = font->GetSizeScale(font_size);
+	height = font->common_line_height() * size_scale;
+	
+	if (length == 0)
+	{
+		if (row_widths)
+			row_widths->push_back(0);
+		
+		return;
+	}
+	
+	float now_width = 0;
+	for (int i = 0; i < length; ++i)
+	{
+		if (chars[i] == '\n')
+		{
+			if (now_width > width) width = now_width;
+			
+			if (row_widths)
+				row_widths->push_back(now_width);
+			
+			now_width = 0;
+			height += font->common_line_height() * size_scale;
+		}
+		else
+		{
+			const CharSetting& setting = font->GetCharSetting(chars[i]);
+			now_width += setting.x_advance * size_scale;
+		}
+	}
+	
+	if (now_width > width) width = now_width;
+	
+	if (row_widths)
+		row_widths->push_back(now_width);
+}
+	
 #pragma mark Font
 
 Font::Font()
@@ -39,6 +128,13 @@ const CharSetting& Font::GetCharSetting(uint32_t unicode) const
 	ASSERT(it != char_map_.end());
 	
 	return it->second;
+}
+	
+float Font::GetSizeScale(int want_size) const
+{
+	ASSERT(size_ > 0);
+	
+	return static_cast<float>(want_size) / size_;
 }
 
 #pragma mark FontFntScript
@@ -157,12 +253,17 @@ bool FontFreeType::Load(const std::string& path)
 }
 	
 const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
-											 uint32_t* unicodes,
-											 int length,
+											 const std::string& txt,
+											 int size,
+											 bool is_pos_center,
+											 bool is_utf8,
 											 bool is_anti_alias,
 											 int& out_width,
 											 int& out_height) const
 {
+	uint32_t* unicodes;
+    int length = CreateUnicodeArray(txt, is_utf8, unicodes);
+	
 	out_width = out_height = 0;
 	
 	FT_GlyphSlot slot = face_->glyph;
@@ -254,10 +355,42 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
 			}
 		}
 	}
+	
+	delete [] unicodes;
 
 	return Root::Ins().texture_mgr()->CreateTexture(name, tex_width, tex_height, buff);
 }
 #endif // ERI_FONT_FREETYPE
+
+#ifdef ERI_TEXTURE_READER_UIKIT
+bool FontUIKit::Load(const std::string& path)
+{
+	name_ = path;
+	return true;
+}
+
+const Texture* FontUIKit::CreateSpriteTxt(const std::string& name,
+										  const std::string& txt,
+										  int size,
+										  bool is_pos_center,
+										  bool is_utf8,
+										  bool is_anti_alias,
+										  int& out_width,
+										  int& out_height) const
+{
+	Vector2 acture_size;
+	std::string tex_name(name);
+	Root::Ins().texture_mgr()->ReleaseTexture(tex_name);
+	const Texture* tex = Root::Ins().texture_mgr()->GenerateTxtTexture(txt, name_, size, is_pos_center, acture_size, &tex_name);
+	
+	ASSERT(tex);
+	
+	out_width = acture_size.x;
+	out_height = acture_size.y;
+	
+	return tex;
+}
+#endif
 
 #pragma FontMgr
 	
@@ -319,8 +452,12 @@ const Font* FontMgr::GetFont(const std::string& path, int want_pixel_height /*= 
 #endif
 		else
 		{
+#ifdef ERI_TEXTURE_READER_UIKIT
+			font = new FontUIKit;
+#else
 			ASSERT3(0, "Invalid font path %s", path.c_str());
 			return NULL;
+#endif
 		}
 		
 		if (!font)

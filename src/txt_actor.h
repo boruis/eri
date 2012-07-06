@@ -36,21 +36,6 @@ class TxtActor : public SceneActor
   inline float height() { return height_; }
     
   inline void set_area_border(float size) { area_border_ = size; }
-  
-  static void CalculateSize(const std::string& txt,
-                            const Font* font,
-                            int font_size,
-                            float& width,
-                            float& height,
-                            bool is_utf8 = false);
-  
-  static void CalculateSize(const uint32_t* chars,
-                            int length,
-                            const Font* font,
-                            int font_size,
-                            float& width,
-                            float& height,
-                            std::vector<float>* row_widths = NULL);
 
  private:
   virtual bool IsInArea(const Vector3& local_space_pos);

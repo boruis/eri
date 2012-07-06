@@ -21,7 +21,26 @@
 #endif
 
 namespace ERI {
+
+class Font;
+
+int CreateUnicodeArray(const std::string& txt, bool is_utf8, uint32_t*& out_chars);
 	
+void CalculateTxtSize(const std::string& txt,
+					  const Font* font,
+					  int font_size,
+					  bool is_utf8,
+					  float& width,
+					  float& height);
+	
+void CalculateTxtSize(const uint32_t* chars,
+					  int length,
+					  const Font* font,
+					  int font_size,
+					  float& width,
+					  float& height,
+					  std::vector<float>* row_widths = NULL);
+
 #pragma mark Font
 	
 struct CharSetting
@@ -43,11 +62,15 @@ public:
 	const CharSetting& GetCharSetting(uint32_t unicode) const;
 	
 	virtual const Texture* CreateSpriteTxt(const std::string& name,
-										   uint32_t* unicodes,
-										   int length,
+										   const std::string& txt,
+										   int size,
+										   bool is_pos_center,
+										   bool is_utf8,
 										   bool is_anti_alias,
 										   int& out_width,
 										   int& out_height) const { return NULL; }
+	
+	virtual float GetSizeScale(int want_size) const;
 	
 	inline const Texture* texture() const { return texture_; }
 	inline TextureFilter filter_min() const { return filter_min_; }
@@ -56,7 +79,7 @@ public:
 	inline int common_line_height() const { return common_line_height_; }
 	inline int common_base() const { return common_base_; }
 	
-	virtual bool is_atlas() const { return true; }
+	virtual bool is_atlas() const { return false; }
 
 protected:
 	const Texture*	texture_;
@@ -77,6 +100,8 @@ class FontFntScript : public Font
 {
 public:
 	virtual bool Load(const std::string& path);
+
+	virtual bool is_atlas() const { return true; }
 };
 
 #ifdef ERI_FONT_FREETYPE
@@ -89,20 +114,45 @@ public:
 	virtual ~FontFreeType();
 	
 	virtual bool Load(const std::string& path);
+	
 	virtual const Texture* CreateSpriteTxt(const std::string& name,
-										   uint32_t* unicodes,
-										   int length,
+										   const std::string& txt,
+										   int size,
+										   bool is_pos_center,
+										   bool is_utf8,
 										   bool is_anti_alias,
 										   int& out_width,
 										   int& out_height) const;
-	
-	virtual bool is_atlas() const { return false; }
-	
+
 private:
 	FT_Library	lib_ref_;
 	FT_Face		face_;
 };
 #endif // ERI_FONT_FREETYPE
+
+#ifdef ERI_TEXTURE_READER_UIKIT
+
+class FontUIKit : public Font
+{
+public:
+	virtual bool Load(const std::string& path);
+	
+	virtual const Texture* CreateSpriteTxt(const std::string& name,
+										   const std::string& txt,
+										   int size,
+										   bool is_pos_center,
+										   bool is_utf8,
+										   bool is_anti_alias,
+										   int& out_width,
+										   int& out_height) const;
+	
+	virtual float GetSizeScale(int want_size) const { return 1.f; }
+
+private:
+	std::string name_;
+};
+
+#endif
 
 #pragma mark FontMgr
 	
