@@ -99,6 +99,7 @@ namespace ERI {
 		childs_.push_back(actor);
 		actor->parent_ = this;
 		actor->SetWorldTransformDirty(true, true);
+		actor->SetVisible(visible(), true);
 	}
 	
 	void SceneActor::RemoveChild(SceneActor* actor)
@@ -122,6 +123,7 @@ namespace ERI {
 		ASSERT(i < num);
 		
 		actor->parent_ = NULL;
+		actor->SetVisible(true, true);
 	}
 	
 	void SceneActor::RemoveFromParent()
