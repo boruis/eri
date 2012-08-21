@@ -799,9 +799,10 @@ namespace ERI {
 	
 	void CalculateSmallestAABox2(const std::vector<Vector2> points, AABox2& out_box)
 	{
-		int num = points.size();
-		if (num <= 0)
+		if (points.empty())
 			return;
+		
+		size_t num = points.size();
 		
 		out_box.min = out_box.max = points[0];
 		
@@ -869,15 +870,69 @@ namespace ERI {
 		return sqr_distance;
 	}
 	
+	IntersectionType CheckIntersectLineLine2(const Line2& line1, const Line2& line2,
+											 Vector2* out_intersect_pos)
+	{
+		// The intersection of two lines is a solution to P0+s0*D0 = P1+s1*D1.
+		// Rewrite this as s0*D0 - s1*D1 = P1 - P0 = Q.  If D0.Dot(Perp(D1)) = 0,
+		// the lines are parallel.  Additionally, if Q.Dot(Perp(D1)) = 0, the
+		// lines are the same.  If D0.Dot(Perp(D1)) is not zero, then
+		//   s0 = Q.Dot(Perp(D1))/D0.Dot(Perp(D1))
+		// produces the point of intersection.  Also,
+		//   s1 = Q.Dot(Perp(D0))/D0.Dot(Perp(D1))
+		
+		Vector2 origin_diff = line2.origin - line1.origin;
+		
+		float dir1_cross_dir2 = line1.dir.CrossProduct(line2.dir);
+		if (Abs(dir1_cross_dir2) > Math::ZERO_TOLERANCE)
+		{
+			// Lines intersect in a single point.
+			
+			if (out_intersect_pos)
+			{
+				float inv_cross = 1.0f / dir1_cross_dir2;
+				float diff_cross_dir2 = origin_diff.CrossProduct(line2.dir);
+				
+				float parameter = diff_cross_dir2 * inv_cross;
+				
+				(*out_intersect_pos) = line1.origin + line1.dir * parameter;
+			}
+			
+			return IT_POINT;
+		}
+		
+		// Lines are parallel.
+		origin_diff.Normalize();
+		
+		float diff_cross_dir2 = origin_diff.CrossProduct(line2.dir);
+		if (Abs(diff_cross_dir2) <= Math::ZERO_TOLERANCE)
+		{
+			// Lines are colinear.
+			return IT_COLINEAR;
+		}
+		
+		// Lines are parallel, but distinct.
+		return IT_EMPTY;
+	}
+	
 	IntersectionType CheckIntersectRayRay2(const Ray2& ray1, const Ray2& ray2,
 										   Vector2* out_intersect_pos)
 	{
+		// The intersection of two lines is a solution to P0+s0*D0 = P1+s1*D1.
+		// Rewrite this as s0*D0 - s1*D1 = P1 - P0 = Q.  If D0.Dot(Perp(D1)) = 0,
+		// the lines are parallel.  Additionally, if Q.Dot(Perp(D1)) = 0, the
+		// lines are the same.  If D0.Dot(Perp(D1)) is not zero, then
+		//   s0 = Q.Dot(Perp(D1))/D0.Dot(Perp(D1))
+		// produces the point of intersection.  Also,
+		//   s1 = Q.Dot(Perp(D0))/D0.Dot(Perp(D1))
+
 		Vector2 origin_diff = ray2.origin - ray1.origin;
 		
 		float dir1_cross_dir2 = ray1.dir.CrossProduct(ray2.dir);
 		if (Abs(dir1_cross_dir2) > Math::ZERO_TOLERANCE)
 		{
 			// Lines intersect in a single point.
+			
 			float inv_cross = 1.0f / dir1_cross_dir2;
 			float diff_cross_dir1 = origin_diff.CrossProduct(ray1.dir);
 			float diff_cross_dir2 = origin_diff.CrossProduct(ray2.dir);
@@ -902,10 +957,12 @@ namespace ERI {
 			}
 		}
 		
+		// Lines are colinear.
+		origin_diff.Normalize();
+		
 		float diff_cross_dir2 = origin_diff.CrossProduct(ray2.dir);
 		if (Abs(diff_cross_dir2) <= Math::ZERO_TOLERANCE)
 		{
-			// Lines are colinear.
 			return IT_COLINEAR;
 		}
 		
@@ -924,38 +981,20 @@ namespace ERI {
 		// produces the point of intersection.  Also,
 		//   s1 = Q.Dot(Perp(D0))/D0.Dot(Perp(D1))
 
-		IntersectionType intersection_type = IT_EMPTY;
-		float parameter[2];
-
 		Vector2 origin_diff = segment2.center - segment1.center;
 		
-		float D0DotPerpD1 = segment1.dir.CrossProduct(segment2.dir);
-		if (Abs(D0DotPerpD1) > Math::ZERO_TOLERANCE)
+		float dir1_cross_dir2 = segment1.dir.CrossProduct(segment2.dir);
+		if (Abs(dir1_cross_dir2) > Math::ZERO_TOLERANCE)
 		{
 			// Lines intersect in a single point.
-			float invD0DotPerpD1 = 1.0f / D0DotPerpD1;
-			float diffDotPerpD0 = origin_diff.CrossProduct(segment1.dir);
-			float diffDotPerpD1 = origin_diff.CrossProduct(segment2.dir);
-			parameter[0] = diffDotPerpD1*invD0DotPerpD1;
-			parameter[1] = diffDotPerpD0*invD0DotPerpD1;
+			float inv_cross = 1.0f / dir1_cross_dir2;
+			float diff_cross_dir1 = origin_diff.CrossProduct(segment1.dir);
+			float diff_cross_dir2 = origin_diff.CrossProduct(segment2.dir);
 			
-			intersection_type = IT_POINT;
-		}
-		else
-		{
-			// Lines are parallel.
-			origin_diff.Normalize();
-			
-			float diffNDotPerpD1 = origin_diff.CrossProduct(segment2.dir);
-			if (Abs(diffNDotPerpD1) <= Math::ZERO_TOLERANCE)
-			{
-				// Lines are colinear.
-				intersection_type = IT_SEGMENT;
-			}
-		}
-		
-		if (intersection_type == IT_POINT)
-		{
+			float parameter[2];
+			parameter[0] = diff_cross_dir2 * inv_cross;
+			parameter[1] = diff_cross_dir1 * inv_cross;
+
 			// Test whether the line-line intersection is on the segments.
 			if (Abs(parameter[0]) <= segment1.extent &&
 				Abs(parameter[1]) <= segment2.extent)
@@ -970,14 +1009,27 @@ namespace ERI {
 				{
 					(*out_intersect_pos) = segment1.center + segment1.dir * parameter[0];
 				}
+				
+				return IT_POINT;
 			}
 			else
 			{
-				intersection_type = IT_EMPTY;
+				return IT_EMPTY;
 			}
 		}
 		
-		return intersection_type;
+		// Lines are parallel.
+		origin_diff.Normalize();
+
+		float diff_cross_dir2 = origin_diff.CrossProduct(segment2.dir);
+		if (Abs(diff_cross_dir2) <= Math::ZERO_TOLERANCE)
+		{
+			// Lines are colinear.
+			return IT_SEGMENT;
+		}
+		
+		// Lines are parallel, but distinct.
+		return IT_EMPTY;
 	}
 
 	static bool Clip(float denom, float numer, float& t0, float& t1)

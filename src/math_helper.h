@@ -480,6 +480,9 @@ namespace ERI {
 	float GetPointSegment2DistanceSquared(const Vector2& point, const Segment2& segment);
 	float GetPointBox2DistanceSquared(const Vector2& point, const Box2& box);
 
+	IntersectionType CheckIntersectLineLine2(const Line2& line1, const Line2& line2,
+											 Vector2* out_intersect_pos);
+  
 	IntersectionType CheckIntersectRayRay2(const Ray2& ray1, const Ray2& ray2,
 										   Vector2* out_intersect_pos);
 	IntersectionType CheckIntersectSegmentSegment2(const Segment2& segment1, const Segment2& segment2,
