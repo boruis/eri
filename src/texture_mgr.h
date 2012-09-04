@@ -168,8 +168,8 @@ namespace ERI {
 		
 		const Texture* GenerateRenderToTexture(int width, int height);
 		
-		void ReleaseTexture(const std::string& name);
-		void ReleaseTexture(const Texture* texture);
+		bool ReleaseTexture(const std::string& name);
+		bool ReleaseTexture(const Texture* texture);
 		
 	private:
 		std::map<std::string, Texture*>	texture_map_;

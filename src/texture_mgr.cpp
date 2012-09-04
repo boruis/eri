@@ -324,7 +324,7 @@ namespace ERI {
 		return NULL;
 	}
 
-	void TextureMgr::ReleaseTexture(const std::string& name)
+	bool TextureMgr::ReleaseTexture(const std::string& name)
 	{
 		std::map<std::string, Texture*>::iterator it = texture_map_.find(name);
 		if (it != texture_map_.end())
@@ -334,10 +334,13 @@ namespace ERI {
 			texture->ReleaseFromRenderer();
 			texture_map_.erase(it);
 			delete texture;
+			return true;
 		}
+
+		return false;
 	}
 	
-	void TextureMgr::ReleaseTexture(const Texture* texture)
+	bool TextureMgr::ReleaseTexture(const Texture* texture)
 	{
 		ASSERT(texture);
 		
@@ -350,9 +353,11 @@ namespace ERI {
 				texture_map_.erase(it);
 				delete texture;
 				
-				return;
+				return true;
 			}
 		}
+
+		return false;
 	}
 	
 #pragma mark RenderToTexture
