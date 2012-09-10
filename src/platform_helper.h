@@ -36,6 +36,8 @@ namespace ERI {
 	bool GetTextureAtlasMap(const std::string& name, TextureAtlasMap& out_map);
 	
 	int GetUnicodeFromUTF8(const std::string& str, int max_buff_length, uint32_t* buff);
+	
+	const char* GetLocale();
 }
 
 #endif // ERI_PLATFORM_HELPER_H

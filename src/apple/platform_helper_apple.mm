@@ -148,5 +148,13 @@ namespace ERI {
 		
 		return static_cast<int>(used_length) / 4;
 	}
+
+	const char* GetLocale()
+	{
+		static char cstr[8];
+		CFStringGetCString(CFLocaleGetIdentifier(CFLocaleCopyCurrent()), cstr, 8, kCFStringEncodingASCII);
+
+		return cstr;
+	}
 	
 }
