@@ -718,7 +718,7 @@ namespace ERI {
 		far_z_(1000.f),
 		is_view_modified_(true),
 		is_projection_modified_(true),
-		is_up_modified_(false),
+		is_up_modified_by_rotate_(false),
 		is_view_need_update_(true),
 		is_projection_need_update_(true),
 		is_frustum_dirty_(true)
@@ -733,28 +733,32 @@ namespace ERI {
 	{
 		SceneActor::SetPos(x, y);
 		
-		SetViewModified(false);
+		SetViewModified();
 	}
 	
 	void CameraActor::SetPos(const Vector3& pos)
 	{
 		SceneActor::SetPos(pos);
 		
-		SetViewModified(false);
+		SetViewModified();
 	}
 
 	void CameraActor::SetRotate(float degree)
 	{
 		SceneActor::SetRotate(degree);
 
-		SetViewModified(true);
+		SetViewModified();
+		
+		is_up_modified_by_rotate_ = true;
 	}
 
 	void CameraActor::SetRotate(float degree, const Vector3& axis)
 	{
 		SceneActor::SetRotate(degree, axis);
 
-		SetViewModified(true);
+		SetViewModified();
+		
+		is_up_modified_by_rotate_ = true;
 	}
 	
 	void CameraActor::SetLookAt(const Vector3& look_at, bool is_offset)
@@ -762,9 +766,16 @@ namespace ERI {
 		look_at_ = look_at;
 		is_look_at_offset_ = is_offset;
 
-		SetViewModified(false);
+		SetViewModified();
 		
 		// TODO: modify self rotation to make childs' transform correct
+	}
+	
+	void CameraActor::SetUp(const Vector3& up)
+	{
+		up_ = up;
+		
+		SetViewModified();
 	}
 	
 	void CameraActor::SetOrthoZoom(float zoom)
@@ -822,13 +833,11 @@ namespace ERI {
 		is_projection_need_update_ = false;
 	}
 	
-	void CameraActor::SetViewModified(bool is_up_modified)
+	void CameraActor::SetViewModified()
 	{
 		is_view_modified_ = true;
 		is_view_need_update_ = true;
 		is_frustum_dirty_ = true;
-
-		is_up_modified_ = is_up_modified;
 	}
 	
 	void CameraActor::SetProjectionModified()
@@ -868,14 +877,14 @@ namespace ERI {
 		
 		const Vector3& pos = GetPos3();
 
-		if (is_up_modified_)
+		if (is_up_modified_by_rotate_)
 		{
 			static Matrix4 up_rotate_matrix;
 
 			Matrix4::RotateAxis(up_rotate_matrix, render_data_.rotate_degree, render_data_.rotate_axis);
 			up_ = up_rotate_matrix * Vector3(0.f, 1.f, 0.f);
 
-			is_up_modified_ = false;
+			is_up_modified_by_rotate_ = false;
 		}
 
 		MatrixLookAtRH(view_matrix_, pos, is_look_at_offset_ ? (pos + look_at_) : look_at_, up_);

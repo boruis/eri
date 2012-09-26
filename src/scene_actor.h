@@ -209,6 +209,7 @@ namespace ERI {
 		virtual void SetRotate(float degree, const Vector3& axis);
 		
 		void SetLookAt(const Vector3& look_at, bool is_offset = false);
+		void SetUp(const Vector3& up);
 		
 		void SetOrthoZoom(float zoom);
 		void SetPerspectiveFov(float fov_y);
@@ -217,7 +218,7 @@ namespace ERI {
 		void UpdateViewMatrix();
 		void UpdateProjectionMatrix();
 		
-		void SetViewModified(bool is_up_modified);
+		void SetViewModified();
 		void SetProjectionModified();
 		void SetViewProjectionNeedUpdate();
 		
@@ -248,7 +249,7 @@ namespace ERI {
 		float		far_z_;
 		
 		bool		is_view_modified_, is_projection_modified_;
-		bool		is_up_modified_;
+		bool		is_up_modified_by_rotate_;
 		bool		is_view_need_update_, is_projection_need_update_;
 		bool		is_frustum_dirty_;
 	};
