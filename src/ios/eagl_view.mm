@@ -94,14 +94,20 @@ static bool	in_multi_move;
 		
 		ERI::Root::Ins().input_mgr()->Release(event);
 		
+#ifdef ERI_USE_DOUBLE_CLICK
 		if ([touch tapCount] == 1)
+#else
+		if ([touch tapCount] > 0)
+#endif
 		{
 			ERI::Root::Ins().input_mgr()->Click(event);
 		}
+#ifdef ERI_USE_DOUBLE_CLICK
 		else if ([touch tapCount] == 2)
 		{
 			ERI::Root::Ins().input_mgr()->DoubleClick(event);
 		}
+#endif
 	}
 	
 	if (([[event allTouches] count] - [touches count]) <= 1)
