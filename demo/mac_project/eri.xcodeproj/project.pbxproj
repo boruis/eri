@@ -20,6 +20,8 @@
 		F6327603126B520D005C23B6 /* platform_helper_apple.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6327602126B520D005C23B6 /* platform_helper_apple.mm */; };
 		F657B90E16143BC200690D98 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F657B90D16143BC200690D98 /* OpenGL.framework */; };
 		F657B91016143BE100690D98 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F657B90F16143BE100690D98 /* libz.dylib */; };
+		F689F85A1619275800DC7B7C /* renderer_es2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F689F8591619275800DC7B7C /* renderer_es2.cpp */; };
+		F689F85C1619285B00DC7B7C /* shaders in Resources */ = {isa = PBXBuildFile; fileRef = F689F85B1619285B00DC7B7C /* shaders */; };
 		F6AC86A81360EFB60067F913 /* sys_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6AC86A61360EFB60067F913 /* sys_helper.cpp */; };
 		F6B3AB4E1269CC2E009303FA /* font_mgr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6B3AB311269CC2E009303FA /* font_mgr.cpp */; };
 		F6B3AB4F1269CC2E009303FA /* input_mgr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6B3AB331269CC2E009303FA /* input_mgr.cpp */; };
@@ -68,6 +70,9 @@
 		F6327602126B520D005C23B6 /* platform_helper_apple.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = platform_helper_apple.mm; sourceTree = "<group>"; };
 		F657B90D16143BC200690D98 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/System/Library/Frameworks/OpenGL.framework; sourceTree = DEVELOPER_DIR; };
 		F657B90F16143BE100690D98 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/usr/lib/libz.dylib; sourceTree = DEVELOPER_DIR; };
+		F689F8581619275800DC7B7C /* renderer_es2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = renderer_es2.h; path = ../../src/renderer_es2.h; sourceTree = "<group>"; };
+		F689F8591619275800DC7B7C /* renderer_es2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = renderer_es2.cpp; path = ../../src/renderer_es2.cpp; sourceTree = "<group>"; };
+		F689F85B1619285B00DC7B7C /* shaders */ = {isa = PBXFileReference; lastKnownFileType = folder; name = shaders; path = ../shaders; sourceTree = "<group>"; };
 		F6AC86A61360EFB60067F913 /* sys_helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sys_helper.cpp; path = ../../src/sys_helper.cpp; sourceTree = "<group>"; };
 		F6AC86A71360EFB60067F913 /* sys_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sys_helper.h; path = ../../src/sys_helper.h; sourceTree = "<group>"; };
 		F6B3AB311269CC2E009303FA /* font_mgr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = font_mgr.cpp; path = ../../src/font_mgr.cpp; sourceTree = SOURCE_ROOT; };
@@ -175,6 +180,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				F689F85B1619285B00DC7B7C /* shaders */,
 				F6B3ACB11269DB52009303FA /* media */,
 				8D1107310486CEB800E47090 /* eri-Info.plist */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
@@ -244,6 +250,8 @@
 				F6B3AB441269CC2E009303FA /* renderer.h */,
 				F6B3AB401269CC2E009303FA /* renderer_es1.cpp */,
 				F6B3AB411269CC2E009303FA /* renderer_es1.h */,
+				F689F8581619275800DC7B7C /* renderer_es2.h */,
+				F689F8591619275800DC7B7C /* renderer_es2.cpp */,
 				F6B3AB491269CC2E009303FA /* scene_mgr.cpp */,
 				F6B3AB4A1269CC2E009303FA /* scene_mgr.h */,
 				F6B3AB471269CC2E009303FA /* scene_actor.cpp */,
@@ -328,6 +336,7 @@
 				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
 				1DDD58160DA1D0A300B32029 /* MainMenu.xib in Resources */,
 				F6B3ACB21269DB52009303FA /* media in Resources */,
+				F689F85C1619285B00DC7B7C /* shaders in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -362,6 +371,7 @@
 				F6E5DB131363BDCD00D71F1A /* txt_actor.cpp in Sources */,
 				F6F1B5A013643297008F5876 /* shared_skeleton.cpp in Sources */,
 				F6CCF5EB15358F0B00EFD95F /* texture_reader_libpng.cpp in Sources */,
+				F689F85A1619275800DC7B7C /* renderer_es2.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

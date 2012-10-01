@@ -21,7 +21,7 @@
 #include <GLES/gl.h>
 #elif ERI_PLATFORM == ERI_PLATFORM_IOS
 #import <OpenGLES/ES1/gl.h>
-//#import <OpenGLES/ES2/gl.h>
+#import <OpenGLES/ES2/gl.h>
 #endif
 
 #include "math_helper.h"

@@ -10,8 +10,6 @@
 #ifndef ERI_RENDERER_ES1_H
 #define ERI_RENDERER_ES1_H
 
-#include "renderer.h"
-
 #if ERI_PLATFORM == ERI_PLATFORM_WIN
 #include "GL/glew.h"
 //#include "GL/wglew.h"
@@ -25,9 +23,9 @@
 #import <OpenGLES/ES1/glext.h>
 #endif
 
+#include "renderer.h"
 #include "material_data.h"
 
-#define MAX_FRAMEBUFFER	8
 #define MAX_LIGHT		8
 
 namespace ERI {
@@ -139,6 +137,9 @@ namespace ERI {
 		void UpdateLightTransform();
 		void AdjustProjectionForViewOrientation();
 		
+		static const int kMaxFrameBuffer = 8;
+		static const int kDefaultFrameBufferIdx = 0;
+		
 		RenderContext*	context_;
 		
 		// The pixel dimensions of the CAEAGLLayer
@@ -149,7 +150,7 @@ namespace ERI {
 		
 		GLuint color_render_buffer_;
 		
-		GLuint frame_buffers_[MAX_FRAMEBUFFER];
+		GLuint frame_buffers_[kMaxFrameBuffer];
 		
 		GLuint depth_buffer_;
 		bool use_depth_buffer_;

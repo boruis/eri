@@ -130,7 +130,6 @@ namespace ERI {
 	private:
 		float			content_scale_;
 	};
-
 }
 
 #endif // ERI_RENDERER_H

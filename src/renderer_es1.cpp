@@ -27,9 +27,7 @@
 #include "material_data.h"
 
 namespace ERI {
-	
-	const int kDefaultFrameBufferIdx = 0;
-	
+
 	const GLint kParamFilters[] =
 	{
 		GL_NEAREST,
@@ -136,7 +134,7 @@ namespace ERI {
 			glDeleteRenderbuffersOES(1, &color_render_buffer_);
 		}
 		
-		for (int i = 0; i < MAX_FRAMEBUFFER; ++i)
+		for (int i = 0; i < kMaxFrameBuffer; ++i)
 		{
 			if (frame_buffers_[i])
 			{
@@ -288,23 +286,14 @@ namespace ERI {
 		// TODO: check support GL_EXT_discard_framebuffer
 		if (use_depth_buffer_)
 		{
-			GLenum attachments[] = { GL_DEPTH_ATTACHMENT_OES};
+			GLenum attachments[] = { GL_DEPTH_ATTACHMENT_OES };
 			glDiscardFramebufferEXT(GL_FRAMEBUFFER_OES, 1, attachments);
 		}
 #endif
 		
 		if (context_) context_->Present();
 	}
-	
-	void RendererES1::ClearDepth()
-	{
-		if (use_depth_buffer_)
-		{
-			EnableDepthWrite(true);
-			glClear(GL_DEPTH_BUFFER_BIT);
-		}
-	}
-	
+
 	void RendererES1::Render(const RenderData* data)
 	{
 		if (!data->apply_identity_model_matrix)
@@ -517,6 +506,15 @@ namespace ERI {
 		}
 	}
 	
+	void RendererES1::ClearDepth()
+	{
+		if (use_depth_buffer_)
+		{
+			EnableDepthWrite(true);
+			glClear(GL_DEPTH_BUFFER_BIT);
+		}
+	}
+	
 	void RendererES1::SaveTransform()
 	{
 		glPushMatrix();
@@ -543,11 +541,10 @@ namespace ERI {
 
 	void RendererES1::CopyTexture(unsigned int texture)
 	{
-#if ERI_PLATFORM == ERI_PLATFORM_WIN || ERI_PLATFORM == ERI_PLATFORM_MAC
+#if ERI_PLATFORM != ERI_PLATFORM_IOS
 		glBindTexture(GL_TEXTURE_2D, texture);
 		now_texture_ = texture;
 
-		// Copy Our ViewPort To The Blur Texture (From 0,0 To 128,128... No Border)
 		glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, backing_width_, backing_height_, 0);
 #endif
 	}
@@ -951,15 +948,13 @@ namespace ERI {
 	
 	unsigned int RendererES1::GenerateRenderToTexture(int width, int height, int& out_frame_buffer)
 	{
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		// create the framebuffer object
 		int frame_buffer = GenerateFrameBuffer();
 
-#if ERI_PLATFORM != ERI_PLATFORM_WIN && ERI_PLATFORM != ERI_PLATFORM_MAC
 		if (!frame_buffer)
 			return 0;
-#endif
-
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
+		
 		glBindFramebufferOES(GL_FRAMEBUFFER_OES, frame_buffer);
 #endif
 		
@@ -976,8 +971,8 @@ namespace ERI {
 		
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,  width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		
-		// attach the texture to the framebuffer
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
+		// attach the texture to the framebuffer
 		glFramebufferTexture2DOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_TEXTURE_2D, texture, 0);
 		
 		// TODO: use depth buffer?
@@ -995,9 +990,9 @@ namespace ERI {
 			printf("Failed to make complete framebuffer object %x", status);
 			ASSERT(0);
 		}
-#endif
 		
 		out_frame_buffer = frame_buffer;
+#endif
 		
 		return texture;
 	}
@@ -1180,7 +1175,7 @@ namespace ERI {
 	int RendererES1::GenerateFrameBuffer()
 	{
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
-		for (int i = kDefaultFrameBufferIdx + 1; i < MAX_FRAMEBUFFER; ++i)
+		for (int i = kDefaultFrameBufferIdx + 1; i < kMaxFrameBuffer; ++i)
 		{
 			if (!frame_buffers_[i])
 			{
@@ -1198,7 +1193,7 @@ namespace ERI {
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 		ASSERT(frame_buffer > 0);
 
-		for (int i = 0; i < MAX_FRAMEBUFFER; ++i)
+		for (int i = 0; i < kMaxFrameBuffer; ++i)
 		{
 			if (frame_buffers_[i] == frame_buffer)
 			{
