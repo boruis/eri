@@ -147,6 +147,8 @@ namespace ERI {
 		inline const MaterialData& material() { return material_data_; }
 		
 		//
+		
+		void SetShaderProgram(ShaderProgram* program);
 
 		void SetVisible(bool visible, bool inherit = false);
 		inline bool visible() { return visible_ && inherit_visible_; }

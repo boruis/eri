@@ -629,6 +629,11 @@ namespace ERI {
 		bounding_sphere_world_->radius = bounding_sphere_->radius;
 	}
 	
+	void SceneActor::SetShaderProgram(ShaderProgram* program)
+	{
+		render_data_.program = program;
+	}
+	
 	void SceneActor::SetVisible(bool visible, bool inherit /*= false*/)
 	{
 		bool original_visible = visible_ && inherit_visible_;

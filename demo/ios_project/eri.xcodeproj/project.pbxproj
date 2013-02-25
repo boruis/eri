@@ -43,6 +43,7 @@
 		F6579B89136415B60049EBDB /* txt_actor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6579B85136415B60049EBDB /* txt_actor.cpp */; };
 		F66D438C126DF88200199D22 /* libpng.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F66D438B126DF88200199D22 /* libpng.a */; };
 		F6738130126E15A30033BBC7 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = F673812F126E15A30033BBC7 /* MainWindow.xib */; };
+		F69135EB16227512004B8EF6 /* shader_mgr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F69135EA16227512004B8EF6 /* shader_mgr.cpp */; };
 		F6B60A2E13642C1A00F36718 /* libfreetype_ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F6B60A2D13642C1A00F36718 /* libfreetype_ios.a */; };
 		F6D04216126DFE2C00FCA4ED /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F6D04215126DFE2C00FCA4ED /* libz.dylib */; };
 		F6E559E5126DF2FA00F8BE21 /* texture_reader_libpng.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6E559E3126DF2FA00F8BE21 /* texture_reader_libpng.cpp */; };
@@ -120,6 +121,8 @@
 		F6579B86136415B60049EBDB /* txt_actor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = txt_actor.h; path = ../../../src/txt_actor.h; sourceTree = "<group>"; };
 		F66D438B126DF88200199D22 /* libpng.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpng.a; path = ../../../3rd/libpng/libpng.a; sourceTree = SOURCE_ROOT; };
 		F673812F126E15A30033BBC7 /* MainWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainWindow.xib; sourceTree = "<group>"; };
+		F69135E9162274DA004B8EF6 /* shader_mgr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = shader_mgr.h; path = ../../../src/shader_mgr.h; sourceTree = "<group>"; };
+		F69135EA16227512004B8EF6 /* shader_mgr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = shader_mgr.cpp; path = ../../../src/shader_mgr.cpp; sourceTree = "<group>"; };
 		F6B60A2D13642C1A00F36718 /* libfreetype_ios.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libfreetype_ios.a; path = ../../../../3rd/freetype/libfreetype_ios.a; sourceTree = "<group>"; };
 		F6D04215126DFE2C00FCA4ED /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		F6E559E3126DF2FA00F8BE21 /* texture_reader_libpng.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = texture_reader_libpng.cpp; path = ../../src/texture_reader_libpng.cpp; sourceTree = SOURCE_ROOT; };
@@ -283,6 +286,8 @@
 				423386E51233C75D0077CD42 /* texture_reader.h */,
 				F6E559E3126DF2FA00F8BE21 /* texture_reader_libpng.cpp */,
 				F6E559E4126DF2FA00F8BE21 /* texture_reader_libpng.h */,
+				F69135EA16227512004B8EF6 /* shader_mgr.cpp */,
+				F69135E9162274DA004B8EF6 /* shader_mgr.h */,
 			);
 			name = ERI;
 			path = Classes;
@@ -390,6 +395,7 @@
 				F6579B87136415B60049EBDB /* shared_skeleton.cpp in Sources */,
 				F6579B88136415B60049EBDB /* sys_helper.cpp in Sources */,
 				F6579B89136415B60049EBDB /* txt_actor.cpp in Sources */,
+				F69135EB16227512004B8EF6 /* shader_mgr.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -27,6 +27,8 @@
 
 namespace ERI {
 	
+	class ShaderProgram;
+	
 	struct vertex_2_pos_tex {
 		GLfloat position[2];
 		GLfloat tex_coord[2];
@@ -129,6 +131,8 @@ namespace ERI {
 		GLclampf	alpha_test_ref;
 
 		GLenum	depth_test_func;
+		
+		ShaderProgram* program;
 	};
 
 }

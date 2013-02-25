@@ -6,6 +6,7 @@
     #import <Cocoa/Cocoa.h>
 #endif
 
+#define ERI_RENDERER_ES2
 //#define ERI_FONT_FREETYPE
 
 #include "pch.h"

@@ -24,9 +24,11 @@
 
 namespace ERI {
 	
-	class RenderContext;
 	struct TextureUnit;
-	
+	class RenderContext;
+	class ShaderProgram;
+	class ShaderMgr;
+
 	class RendererES2 : public Renderer
 	{
 	public:
@@ -101,9 +103,6 @@ namespace ERI {
 		
 		virtual void SetViewOrientation(ViewOrientation orientaion);
 
-		void FinishLoadVertexShader(const char* source);
-		void FinishLoadFragmentShader(const char* source);
-	
 	private:
 		int GenerateFrameBuffer();
 		void ReleaseFrameBuffer(int frame_buffer);
@@ -111,12 +110,7 @@ namespace ERI {
 		void ActiveTextureUnit(GLenum idx);
 		
 		void AdjustProjectionForViewOrientation();
-		
-		bool LoadShaders();
-		bool CompileShader(GLuint* shader, GLenum type, const char* source);
-		bool LinkProgram(GLuint program);
-		bool ValidateProgram(GLuint program);
-		
+
 		static const int kMaxFrameBuffer = 8;
 		static const int kDefaultFrameBufferIdx = 0;
 		
@@ -161,7 +155,7 @@ namespace ERI {
 		
 		bool is_view_proj_dirty_;
 		
-		GLuint program_;
+		ShaderProgram* current_program_;
 	};
 	
 }

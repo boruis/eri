@@ -23,30 +23,7 @@
 #include "scene_mgr.h"
 #include "render_data.h"
 #include "platform_helper.h"
-
-// uniform index
-enum {
-	UNIFORM_MODEL_VIEW_PROJ_MATRIX,
-	UNIFORM_TEX_ENABLE,
-	UNIFORM_TEX0,
-	UNIFORM_TEX1,
-	UNIFORM_TEX_COORD1,
-	UNIFORM_TEX_MATRIX_ENABLE,
-	UNIFORM_TEX_MATRIX0,
-	UNIFORM_TEX_MATRIX1,
-	NUM_UNIFORMS
-};
-GLint uniforms[NUM_UNIFORMS];
-
-// attribute index
-enum {
-	ATTRIB_VERTEX,
-	ATTRIB_NORMAL,
-	ATTRIB_COLOR,
-	ATTRIB_TEXCOORD0,
-	ATTRIB_TEXCOORD1,
-	NUM_ATTRIBUTES
-};
+#include "shader_mgr.h"
 
 namespace ERI {
 
@@ -89,7 +66,7 @@ namespace ERI {
 		now_active_texture_unit_(0),
 		now_texture_(0),
 		is_view_proj_dirty_(true),
-		program_(0)
+		current_program_(NULL)
 	{
 		memset(frame_buffers_, 0, sizeof(frame_buffers_));
 		memset(texture_unit_enable_, 0, sizeof(texture_unit_enable_));
@@ -116,11 +93,6 @@ namespace ERI {
 			}
 		}
 #endif
-
-		if (program_)
-		{
-			glDeleteProgram(program_);
-		}
 		
 		if (context_) delete context_;
 	}
@@ -141,9 +113,6 @@ namespace ERI {
 			context_ = NULL;
 			return false;
 		}
-
-		if (!LoadShaders()) return false;
-		
 
 		//
 
@@ -302,6 +271,16 @@ namespace ERI {
 		
 		//
 		
+		ShaderProgram* use_program = data->program ? data->program : Root::Ins().shader_mgr()->default_program();
+				
+		if (current_program_ != use_program)
+		{
+			glUseProgram(use_program->program());
+			current_program_ = use_program;
+		}
+		
+		ASSERT(current_program_);
+		
 		if (is_view_proj_dirty_)
 		{
 			Matrix4::Multiply(current_view_proj_matrix_, current_proj_matrix_, current_view_matrix_);
@@ -310,7 +289,7 @@ namespace ERI {
 		
 		Matrix4::Multiply(tmp_matrix_[0], current_view_proj_matrix_, data->world_model_matrix);
 		
-		glUniformMatrix4fv(uniforms[UNIFORM_MODEL_VIEW_PROJ_MATRIX], 1, GL_FALSE, tmp_matrix_[0].m);
+		glUniformMatrix4fv(current_program_->uniforms()[UNIFORM_MODEL_VIEW_PROJ_MATRIX], 1, GL_FALSE, tmp_matrix_[0].m);
 		
 		//
 		
@@ -439,14 +418,14 @@ namespace ERI {
 		if (texture_enable_)
 		{
 			GLint tex_enable[2] = { texture_unit_enable_[0], texture_unit_enable_[1] };
-			glUniform1iv(uniforms[UNIFORM_TEX_ENABLE], 2, tex_enable);
+			glUniform1iv(current_program_->uniforms()[UNIFORM_TEX_ENABLE], 2, tex_enable);
 						
 			if (texture_unit_enable_[0] || texture_unit_enable_[1])
 			{
 				if (data->is_tex_transform)
 				{
 					GLint tex_mat_enable[2] = { 1, 1 };
-					glUniform1iv(uniforms[UNIFORM_TEX_MATRIX_ENABLE], 2, tex_mat_enable);
+					glUniform1iv(current_program_->uniforms()[UNIFORM_TEX_MATRIX_ENABLE], 2, tex_mat_enable);
 					
 					Matrix4::Translate(tmp_matrix_[0], Vector3(data->tex_translate.x, data->tex_translate.y, 0.0f));
 					Matrix4::Scale(tmp_matrix_[1], Vector3(data->tex_scale.x, data->tex_scale.y, 1.0f));
@@ -455,13 +434,13 @@ namespace ERI {
 					for (int i = 0; i < 2; ++i)
 					{
 						if (texture_unit_enable_[i])
-							glUniformMatrix4fv(uniforms[UNIFORM_TEX_MATRIX0 + i], 1, GL_FALSE, tmp_matrix_[2].m);
+							glUniformMatrix4fv(current_program_->uniforms()[UNIFORM_TEX_MATRIX0 + i], 1, GL_FALSE, tmp_matrix_[2].m);
 					}
 				}
 				else
 				{
 					GLint tex_mat_enable[2] = { 0, 0 };
-					glUniform1iv(uniforms[UNIFORM_TEX_MATRIX_ENABLE], 2, tex_mat_enable);
+					glUniform1iv(current_program_->uniforms()[UNIFORM_TEX_MATRIX_ENABLE], 2, tex_mat_enable);
 				}
 			}
 						
@@ -481,7 +460,7 @@ namespace ERI {
 		else
 		{
 			GLint tex_enable[2] = { 0, 0 };
-			glUniform1iv(uniforms[UNIFORM_TEX_ENABLE], 2, tex_enable);
+			glUniform1iv(current_program_->uniforms()[UNIFORM_TEX_ENABLE], 2, tex_enable);
 
 			glDisableVertexAttribArray(ATTRIB_TEXCOORD0);
 			glDisableVertexAttribArray(ATTRIB_TEXCOORD1);
@@ -998,152 +977,5 @@ namespace ERI {
 				break;
 		}
 	}
-	
-	bool RendererES2::LoadShaders()
-	{
-		GLuint vertex_shader, fragment_shader;
 
-		// create shader program
-		program_ = glCreateProgram();
-		
-		if (!CompileShader(&vertex_shader,
-						   GL_VERTEX_SHADER,
-						   GetStringFileContent(std::string(GetResourcePath()) + "/shaders/template.vsh")))
-		{
-			printf("Failed to compile vertex shader\n");
-			glDeleteProgram(program_);
-			program_ = 0;
-			return false;
-		}
-		
-		if (!CompileShader(&fragment_shader,
-						   GL_FRAGMENT_SHADER,
-						   GetStringFileContent(std::string(GetResourcePath()) + "/shaders/template.fsh")))
-		{
-			printf("Failed to compile fragment shader\n");
-			glDeleteShader(vertex_shader);
-			glDeleteProgram(program_);
-			program_ = 0;
-			return false;
-		}
-		
-		// attach vertex shader to program
-		glAttachShader(program_, vertex_shader);
-		
-		// attach fragment shader to program
-		glAttachShader(program_, fragment_shader);
-		
-		// bind attribute locations
-		// this needs to be done prior to linking
-		glBindAttribLocation(program_, ATTRIB_VERTEX, "a_position");
-		glBindAttribLocation(program_, ATTRIB_NORMAL, "a_normal");
-		glBindAttribLocation(program_, ATTRIB_COLOR, "a_color");
-		glBindAttribLocation(program_, ATTRIB_TEXCOORD0, "a_texcoord0");
-		glBindAttribLocation(program_, ATTRIB_TEXCOORD1, "a_texcoord1");
-		
-		// link program
-		if (!LinkProgram(program_))
-		{
-			printf("Failed to link program: %d\n", program_);
-			glDeleteShader(vertex_shader);
-			glDeleteShader(fragment_shader);
-			glDeleteProgram(program_);
-			program_ = 0;
-			return false;
-		}
-		
-		// get uniform locations
-		uniforms[UNIFORM_MODEL_VIEW_PROJ_MATRIX] = glGetUniformLocation(program_, "model_view_proj_matrix");
-		uniforms[UNIFORM_TEX_ENABLE] = glGetUniformLocation(program_, "tex_enable");
-		uniforms[UNIFORM_TEX0] = glGetUniformLocation(program_, "tex[0]");
-		uniforms[UNIFORM_TEX1] = glGetUniformLocation(program_, "tex[1]");
-		uniforms[UNIFORM_TEX_MATRIX_ENABLE] = glGetUniformLocation(program_, "tex_matrix_enable");
-		uniforms[UNIFORM_TEX_MATRIX0] = glGetUniformLocation(program_, "tex_matrix[0]");
-		uniforms[UNIFORM_TEX_MATRIX1] = glGetUniformLocation(program_, "tex_matrix[1]");
-		
-		// release vertex and fragment shaders
-		if (vertex_shader)
-			glDeleteShader(vertex_shader);
-		if (fragment_shader)
-			glDeleteShader(fragment_shader);
-		
-		glUseProgram(program_);
-		
-		return true;
-	}
-	
-	bool RendererES2::CompileShader(GLuint* shader, GLenum type, const char* source)
-	{
-		*shader = glCreateShader(type);
-		glShaderSource(*shader, 1, &source, NULL);
-		glCompileShader(*shader);
-		
-#if defined(DEBUG)
-		GLint logLength;
-		glGetShaderiv(*shader, GL_INFO_LOG_LENGTH, &logLength);
-		if (logLength > 0)
-		{
-			GLchar* log = (GLchar*)malloc(logLength);
-			glGetShaderInfoLog(*shader, logLength, &logLength, log);
-			printf("Shader compile log:\n%s\n", log);
-			free(log);
-		}
-#endif
-
-		GLint status;
-		glGetShaderiv(*shader, GL_COMPILE_STATUS, &status);
-		if (status == 0)
-		{
-			glDeleteShader(*shader);
-			return false;
-		}
-		
-		return true;
-	}
-			
-	bool RendererES2::LinkProgram(GLuint program)
-	{
-		glLinkProgram(program);
-		
-#if defined(DEBUG)
-		GLint logLength;
-		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
-		if (logLength > 0)
-		{
-			GLchar* log = (GLchar*)malloc(logLength);
-			glGetProgramInfoLog(program, logLength, &logLength, log);
-			printf("Program link log:\n%s\n", log);
-			free(log);
-		}
-#endif
-
-		GLint status;
-		glGetProgramiv(program, GL_LINK_STATUS, &status);
-		if (status == 0)
-			return false;
-		
-		return true;
-	}
-	
-	bool RendererES2::ValidateProgram(GLuint program)
-	{
-		GLint logLength;
-		glValidateProgram(program);
-		glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
-		if (logLength > 0)
-		{
-			GLchar* log = (GLchar*)malloc(logLength);
-			glGetProgramInfoLog(program, logLength, &logLength, log);
-			printf("Program validate log:\n%s\n", log);
-			free(log);
-		}
-		
-		GLint status;
-		glGetProgramiv(program, GL_VALIDATE_STATUS, &status);
-		if (status == 0)
-			return false;
-		
-		return true;
-	}
-	
 }

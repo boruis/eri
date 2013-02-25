@@ -16,6 +16,7 @@
 #endif
 #ifdef ERI_RENDERER_ES2
 #include "renderer_es2.h"
+#include "shader_mgr.h"
 #endif
 
 #include "scene_mgr.h"
@@ -33,12 +34,17 @@ namespace ERI {
 		input_mgr_(NULL),
 		texture_mgr_(NULL),
 		font_mgr_(NULL),
+		shader_mgr_(NULL),
 		window_handle_(NULL)
 	{
 	}
 	
 	Root::~Root()
 	{
+#ifdef ERI_RENDERER_ES2
+		if (shader_mgr_) delete shader_mgr_;
+#endif
+
 		if (font_mgr_) delete font_mgr_;
 		if (texture_mgr_) delete texture_mgr_;
 		if (input_mgr_) delete input_mgr_;
@@ -50,7 +56,11 @@ namespace ERI {
 	{
 #ifdef ERI_RENDERER_ES2
 		renderer_ = new RendererES2;
-		if (!renderer_->Init(use_depth_buffer))
+		if (renderer_->Init(use_depth_buffer))
+		{
+			shader_mgr_ = new ShaderMgr;
+		}
+		else
 		{
 			delete renderer_;
 			renderer_ = NULL;

@@ -32,7 +32,8 @@ namespace ERI {
 		blend_dst_factor(GL_ONE_MINUS_SRC_ALPHA),
 		alpha_test_func(GL_GREATER),
 		alpha_test_ref(0.0f),
-		depth_test_func(GL_LESS)
+		depth_test_func(GL_LESS),
+		program(NULL)
 	{
 	}
 	
