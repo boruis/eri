@@ -61,6 +61,8 @@ class SpriteTxtMeshConstructor : public TxtMeshConstructor
   
   virtual void Construct()
   {
+    owner_->SetMaterial(NULL);
+    
     int width, height;
     const Texture* tex = owner_->font_ref_->CreateSpriteTxt(tex_name_,
                                                             owner_->txt_,
