@@ -126,7 +126,12 @@ namespace ERI {
 	class SceneMgr
 	{
 	public:
-		typedef std::pair<int, int> ResizeInfo;
+		struct ResizeInfo
+		{
+			ResizeInfo(int w, int h) : width(w), height(h) {}
+
+			int width, height;
+		};
 		
 		SceneMgr();
 		~SceneMgr();
@@ -149,7 +154,7 @@ namespace ERI {
 		Vector3 CamToCamPos(const Vector3& pos_in_cam1, CameraActor* cam1, CameraActor* cam2);
 		SceneActor* GetHitActor(const Vector3& pos);
 		
-		void OnViewportResize();
+		void OnViewportResize(bool need_notify = true);
 		
 		void SetCurrentCam(CameraActor* cam);
 	

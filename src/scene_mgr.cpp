@@ -599,7 +599,7 @@ namespace ERI {
 		return NULL;
 	}
 	
-	void SceneMgr::OnViewportResize()
+	void SceneMgr::OnViewportResize(bool need_notify /*= true*/)
 	{
 		if (default_cam_)
 		{
@@ -619,7 +619,7 @@ namespace ERI {
 		else
 			UpdateDefaultProjection();
 		
-		if (viewport_resize_subject_.HaveObserver())
+		if (need_notify && viewport_resize_subject_.HaveObserver())
 		{
 			ResizeInfo info(Root::Ins().renderer()->width(),
 											Root::Ins().renderer()->height());
