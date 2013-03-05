@@ -11,8 +11,6 @@
 #include "renderer_es2.h"
 #include "platform_helper.h"
 
-#define DEBUG
-
 namespace ERI
 {
 
@@ -177,6 +175,17 @@ bool ShaderProgram::Construct(const std::string& vertex_shader_path,
 	if (fragment_shader)
 		glDeleteShader(fragment_shader);
 	
+	return true;
+}
+
+bool ShaderProgram::Validate()
+{
+	if (!ValidateProgram(program_))
+	{
+		printf("Failed to validate program: %d\n", program_);
+		return false;
+	}
+
 	return true;
 }
 

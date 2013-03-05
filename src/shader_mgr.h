@@ -47,6 +47,8 @@ public:
 	bool Construct(const std::string& vertex_shader_path,
 				   const std::string& fragment_shader_path);
 	
+	bool Validate();
+	
 	inline unsigned int program() { return program_; }
 	inline const std::vector<int>& uniforms() { return uniforms_; }
 	

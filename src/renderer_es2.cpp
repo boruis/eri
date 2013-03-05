@@ -467,11 +467,8 @@ namespace ERI {
 		}
 		
 #if defined(DEBUG)
-		if (!ValidateProgram(program_))
-		{
-			printf("Failed to validate program: %d\n", program_);
+		if (!current_program_->Validate())
 			return;
-		}
 #endif
 		
 		if (data->index_count > 0)
