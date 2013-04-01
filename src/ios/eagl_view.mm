@@ -230,7 +230,27 @@ static bool	in_multi_move;
 - (void)accelerometer:(UIAccelerometer*)accelerometer
 	didAccelerate:(UIAcceleration*)acceleration
 {
-	ERI::Root::Ins().input_mgr()->Accelerate(ERI::Vector3(acceleration.x, acceleration.y, acceleration.z));
+	ERI::Vector3 g(acceleration.x, acceleration.y, acceleration.z);
+	
+	UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+
+	if(orientation == UIInterfaceOrientationPortraitUpsideDown)
+	{
+		g.x *= -1;
+		g.y *= -1;
+	}
+	else if(orientation == UIInterfaceOrientationLandscapeLeft)
+	{
+		g.x = acceleration.y;
+		g.y = -acceleration.x;
+	}
+	else if(orientation == UIInterfaceOrientationLandscapeRight)
+	{
+		g.x = -acceleration.y;
+		g.y = acceleration.x;
+	}
+  
+	ERI::Root::Ins().input_mgr()->Accelerate(g);
 	
 	static CFTimeInterval shake_start_time = 0;
 
