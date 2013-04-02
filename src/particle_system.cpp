@@ -683,7 +683,7 @@ namespace ERI
 		ParticleSystem* ps = new ParticleSystem(setup);
 		if (material_setup.tex_path.length() > 0)
 		{
-			ps->SetMaterial(material_setup.tex_path, FILTER_LINEAR, FILTER_LINEAR);
+			ps->SetMaterial(material_setup.tex_path, material_setup.tex_filter, material_setup.tex_filter);
 			ps->SetTexAreaUV(material_setup.u_start,
 							 material_setup.v_start,
 							 material_setup.u_width,
@@ -893,6 +893,12 @@ namespace ERI
 						real_path += "/" + s;
 						
 						creator->material_setup.tex_path = real_path;
+						
+						if (GetAttrStr(node, "tex_filter", s))
+						{
+							if (s.compare("nearest") == 0)
+								creator->material_setup.tex_filter = FILTER_NEAREST;
+						}
 						
 						GetAttrFloat(node, "tex_u", creator->material_setup.u_start);
 						GetAttrFloat(node, "tex_v", creator->material_setup.v_start);

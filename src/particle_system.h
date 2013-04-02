@@ -300,6 +300,7 @@ namespace ERI
 	struct ParticleMaterialSetup
 	{
 		ParticleMaterialSetup() :
+			tex_filter(FILTER_LINEAR),
 			u_start(0.0f),
 			v_start(0.0f),
 			u_width(1.0f),
@@ -310,6 +311,7 @@ namespace ERI
 		}
 		
 		std::string					tex_path;
+		TextureFilter				tex_filter;
 		float						u_start, v_start, u_width, v_height;
 		bool						depth_write;
 		bool						blend_add;
