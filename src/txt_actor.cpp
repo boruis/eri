@@ -63,10 +63,13 @@ class SpriteTxtMeshConstructor : public TxtMeshConstructor
   {
     owner_->SetMaterial(NULL);
     
+    int font_size = Round(owner_->font_size_ * owner_->resolution_scale_);
+    float resolution_scale = static_cast<float>(font_size) / owner_->font_size_;
+    
     int width, height;
     const Texture* tex = owner_->font_ref_->CreateSpriteTxt(tex_name_,
                                                             owner_->txt_,
-                                                            owner_->font_size_,
+                                                            font_size,
                                                             owner_->is_pos_center_,
                                                             owner_->is_utf8_,
                                                             owner_->is_anti_alias_,
@@ -77,8 +80,8 @@ class SpriteTxtMeshConstructor : public TxtMeshConstructor
                         owner_->font_ref_->filter_min(),
                         owner_->font_ref_->filter_mag());
     
-    owner_->width_ = width;
-    owner_->height_ = height;
+    owner_->width_ = width / resolution_scale;
+    owner_->height_ = height / resolution_scale;
     
     if (owner_->render_data_.vertex_buffer == 0)
 		{
@@ -87,7 +90,7 @@ class SpriteTxtMeshConstructor : public TxtMeshConstructor
 		    
     float size_scale = owner_->font_ref_->GetSizeScale(owner_->font_size_);
 
-    Vector2 size(width * size_scale, height * size_scale);
+    Vector2 size(owner_->width_ * size_scale, owner_->height_ * size_scale);
     Vector2 start;
     if (owner_->is_pos_center_)
     {
@@ -95,7 +98,8 @@ class SpriteTxtMeshConstructor : public TxtMeshConstructor
       start.y = size.y * 0.5f;
     }
     
-    Vector2 uv_size(owner_->width_ / tex->width, owner_->height_ / tex->height);
+    Vector2 uv_size(static_cast<float>(width) / tex->width,
+                    static_cast<float>(height) / tex->height);
     
     //  2 - 3
     //  | \ |
@@ -273,14 +277,13 @@ class AtlasTxtMeshConstructor : public TxtMeshConstructor
 #pragma mark TxtActor
   
 TxtActor::TxtActor(const std::string& font_path, int font_size,
-                   bool is_pos_center /*= false*/,
-                   bool is_utf8 /*= false*/,
-                   bool is_anti_alias /*= true*/)
+                   bool is_pos_center /*= false*/)
   : font_ref_(NULL),
     font_size_(font_size),
     is_pos_center_(is_pos_center),
-    is_utf8_(is_utf8),
-    is_anti_alias_(is_anti_alias),
+    is_utf8_(false),
+    is_anti_alias_(true),
+    resolution_scale_(1.f),
     width_(0.0f),
     height_(0.0f),
     area_border_(0.0f),
@@ -307,6 +310,39 @@ TxtActor::TxtActor(const std::string& font_path, int font_size,
 TxtActor::~TxtActor()
 {
   delete mesh_constructor_;
+}
+  
+void TxtActor::SetIsUtf8(bool is_utf8)
+{
+  if (is_utf8_ == is_utf8)
+    return;
+  
+  is_utf8_ = is_utf8;
+  
+  if (!txt_.empty())
+    mesh_constructor_->Construct();
+}
+
+void TxtActor::SetIsAntiAlias(bool is_anti_alias)
+{
+  if (is_anti_alias_ == is_anti_alias)
+    return;
+  
+  is_anti_alias_ = is_anti_alias;
+  
+  if (!txt_.empty())
+    mesh_constructor_->Construct();
+}
+
+void TxtActor::SetResolutionScale(float resolution_scale)
+{
+  if (resolution_scale_ == resolution_scale)
+    return;
+  
+  resolution_scale_ = resolution_scale;
+  
+  if (!txt_.empty())
+    mesh_constructor_->Construct();
 }
 
 void TxtActor::SetTxt(const std::string& txt)

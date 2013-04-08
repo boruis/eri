@@ -21,11 +21,13 @@ class TxtActor : public SceneActor
 {
  public:
   TxtActor(const std::string& font_path, int font_size,
-           bool is_pos_center = false,
-           bool is_utf8 = false,
-           bool is_anti_alias = true);
+           bool is_pos_center = false);
   
   virtual ~TxtActor();
+  
+  void SetIsUtf8(bool is_utf8);
+  void SetIsAntiAlias(bool is_anti_alias);
+  void SetTexSizeScale(float tex_size_scale);
   
   void SetTxt(const std::string& txt);
   void SetForceLineHeight(float force_line_height, bool construct = false);
@@ -43,9 +45,11 @@ class TxtActor : public SceneActor
   const Font* font_ref_;
   
   int   font_size_;
-  bool  is_pos_center_;  
+  bool  is_pos_center_;
+  
   bool	is_utf8_;
   bool  is_anti_alias_;
+  float tex_size_scale_;
 
   std::string txt_;
   
