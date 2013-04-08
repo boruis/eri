@@ -157,7 +157,7 @@ bool FontFntScript::Load(const std::string& path)
 	
 	char tmp[32];
 	content_stream.getline(content_line, kLineLength);
-	sscanf(content_line, "info face=\"%s size=%d", tmp, &size_);
+	sscanf(content_line, "info face=\"%[^\"]\" size=%d", tmp, &size_);
 	
 	content_stream.getline(content_line, kLineLength);
 	sscanf(content_line, "common lineHeight=%d base=%d", &common_line_height_, &common_base_);
