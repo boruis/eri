@@ -27,7 +27,7 @@ class TxtActor : public SceneActor
   
   void SetIsUtf8(bool is_utf8);
   void SetIsAntiAlias(bool is_anti_alias);
-  void SetTexSizeScale(float tex_size_scale);
+  void SetResolutionScale(float tex_size_scale);
   
   void SetTxt(const std::string& txt);
   void SetForceLineHeight(float force_line_height, bool construct = false);
@@ -49,7 +49,7 @@ class TxtActor : public SceneActor
   
   bool	is_utf8_;
   bool  is_anti_alias_;
-  float tex_size_scale_;
+  float resolution_scale_;
 
   std::string txt_;
   
