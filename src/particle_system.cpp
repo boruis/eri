@@ -876,22 +876,16 @@ namespace ERI
 					attr = GetAttrStr(node, "tex", s);
 					if (attr && s.length() > 0)
 					{
-						size_t pos = s.rfind('/');
-						if (pos == std::string::npos)
-							pos = s.rfind('\\');
-						if (pos != std::string::npos)
-							s = s.substr(pos + 1);
+						std::string real_path;
 						
-						std::string real_path("media/Effect/");
-						
-						pos = path.rfind('/');
+						size_t pos = path.rfind('/');
 						if (pos == std::string::npos)
 							pos = path.rfind('\\');
 						if (pos != std::string::npos)
 							real_path = path.substr(0, pos);
 						
 						real_path += "/" + s;
-						
+
 						creator->material_setup.tex_path = real_path;
 						
 						if (GetAttrStr(node, "tex_filter", s))
