@@ -126,6 +126,18 @@ namespace ERI {
 		actor->SetVisible(true, true);
 	}
 	
+	void SceneActor::RemoveAllChilds()
+	{
+		size_t num = childs_.size();
+		for (size_t i = 0; i < num; ++i)
+		{
+			childs_[i]->parent_ = NULL;
+			childs_[i]->SetVisible(true, true);
+		}
+    
+		childs_.clear();
+	}
+
 	void SceneActor::RemoveFromParent()
 	{
 		ASSERT(parent_);

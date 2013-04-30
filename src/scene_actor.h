@@ -55,6 +55,7 @@ namespace ERI {
 		
 		void AddChild(SceneActor* actor);
 		void RemoveChild(SceneActor* actor);
+		void RemoveAllChilds();
 		void RemoveFromParent();
 		
 		// intersection
