@@ -129,7 +129,7 @@ namespace ERI
 		return NULL;	
 	}
 
-	rapidxml::xml_attribute<>* GetAttrColor(rapidxml::xml_node<>* node, const char* name, Color& out_value)
+	rapidxml::xml_attribute<>* GetAttrColor(rapidxml::xml_node<>* node, const char* name, Color& out_value, bool base_255 /*= false*/)
 	{
 		rapidxml::xml_attribute<>* attr = node->first_attribute(name);
 		if (attr)
@@ -139,11 +139,13 @@ namespace ERI
 			if (pos == std::string::npos)
 			{
 				out_value.r = static_cast<float>(atof(s.c_str()));
+				if (base_255) out_value.r /= 255;
 				return attr;
 			}
 			else
 			{
 				out_value.r = static_cast<float>(atof(s.substr(0, pos).c_str()));
+				if (base_255) out_value.r /= 255;
 			}
 
 			s = s.substr(pos + 1);
@@ -151,11 +153,13 @@ namespace ERI
 			if (pos == std::string::npos)
 			{
 				out_value.g = static_cast<float>(atof(s.c_str()));
+				if (base_255) out_value.g /= 255;
 				return attr;
 			}
 			else
 			{
 				out_value.g = static_cast<float>(atof(s.substr(0, pos).c_str()));
+				if (base_255) out_value.g /= 255;
 			}
 			
 			s = s.substr(pos + 1);
@@ -163,22 +167,26 @@ namespace ERI
 			if (pos == std::string::npos)
 			{
 				out_value.b = static_cast<float>(atof(s.c_str()));
+				if (base_255) out_value.b /= 255;
 				return attr;
 			}
 			else
 			{
 				out_value.b = static_cast<float>(atof(s.substr(0, pos).c_str()));
-			}		
+				if (base_255) out_value.b /= 255;
+			}
 
 			s = s.substr(pos + 1);
 			pos = s.find(',');
 			if (pos == std::string::npos)
 			{
 				out_value.a = static_cast<float>(atof(s.c_str()));
+				if (base_255) out_value.a /= 255;
 			}
 			else
 			{
 				out_value.a = static_cast<float>(atof(s.substr(0, pos).c_str()));
+				if (base_255) out_value.a /= 255;
 			}
 			
 			return attr;
@@ -317,11 +325,24 @@ namespace ERI
 		node->append_attribute(attr);
 	}
 	
-	void PutAttrColor(rapidxml::xml_document<>& doc, rapidxml::xml_node<>* node, const char* name, const Color& value)
+	void PutAttrColor(rapidxml::xml_document<>& doc, rapidxml::xml_node<>* node, const char* name, const Color& value, bool base_255 /*= false*/)
 	{
 		char* alloc_name = doc.allocate_string(name);
 		char buf[64];
-		sprintf(buf, "%f,%f,%f,%f", value.r, value.g, value.b, value.a);
+		
+		if (base_255)
+		{
+			sprintf(buf, "%d,%d,%d,%d",
+					static_cast<int>(value.r * 255 + 0.5f),
+					static_cast<int>(value.g * 255 + 0.5f),
+					static_cast<int>(value.b * 255 + 0.5f),
+					static_cast<int>(value.a * 255 + 0.5f));
+		}
+		else
+		{
+			sprintf(buf, "%f,%f,%f,%f", value.r, value.g, value.b, value.a);
+		}
+		
 		char* alloc_value = doc.allocate_string(buf);
 		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(alloc_name, alloc_value);
 		node->append_attribute(attr);
