@@ -40,10 +40,11 @@ DemoApp::DemoApp()
 	
 #ifdef ERI_FONT_FREETYPE
 	ERI::Root::Ins().font_mgr()->GetFont("media/DroidSansFallback.ttf", 32);
-	hello_txt = new ERI::TxtActor("media/DroidSansFallback.ttf", static_cast<int>(32 * content_scale), true, true);
+	hello_txt = new ERI::TxtActor("media/DroidSansFallback.ttf", static_cast<int>(32 * content_scale), true);
+	hello_txt->SetIsUtf8(true);
 	hello_txt->SetTxt("哈囉！阿深。");
 #else
-	hello_txt = new ERI::TxtActor("media/georgia.fnt", static_cast<int>(32 * content_scale), true, true);
+	hello_txt = new ERI::TxtActor("media/georgia.fnt", static_cast<int>(32 * content_scale), true);
 	hello_txt->SetTxt("Hello! eri.");
 #endif
   
