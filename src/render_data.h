@@ -72,7 +72,7 @@ namespace ERI {
 	
 	enum VertexFormat
 	{
-		POS_TEX_2,
+		POS_TEX_2 = 0,
 		POS_TEX2_2,
 		POS_TEX_COLOR_2,
 		POS_NORMAL_3,

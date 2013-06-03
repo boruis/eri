@@ -1094,6 +1094,7 @@ namespace ERI {
 	SpriteActor::SpriteActor(float width, float height, float offset_width, float offset_height) :
 		tex_scale_(Vector2(1.0f, 1.0f)),
 		tex_scale2_(Vector2(1.0f, 1.0f)),
+		is_use_tex2_(false),
 		is_dynamic_draw_(false),
 		is_use_line_(false),
 		area_border_(0.0f)
