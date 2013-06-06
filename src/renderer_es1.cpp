@@ -1054,7 +1054,7 @@ namespace ERI {
 	
 	void RendererES1::SetClearDepth(float clamped_depth)
 	{
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
+#ifdef ERI_GLES
 		glClearDepthf(clamped_depth);
 #else
 		glClearDepth(clamped_depth);
