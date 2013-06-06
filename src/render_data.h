@@ -10,6 +10,8 @@
 #ifndef ERI_RENDER_DATA_H
 #define ERI_RENDER_DATA_H
 
+#include "pch.h"
+
 #include "math_helper.h"
 
 #if ERI_PLATFORM == ERI_PLATFORM_WIN

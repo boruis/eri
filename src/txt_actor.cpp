@@ -6,6 +6,8 @@
 //  Copyright 2011 cobbler. All rights reserved.
 //
 
+#include "pch.h"
+
 #include "txt_actor.h"
 
 #include "root.h"

@@ -10,6 +10,8 @@
 #ifndef ERI_SCENE_ACTOR_H
 #define ERI_SCENE_ACTOR_H
 
+#include "pch.h"
+
 #include <string>
 #include <vector>
 

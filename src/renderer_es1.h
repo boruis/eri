@@ -10,6 +10,8 @@
 #ifndef ERI_RENDERER_ES1_H
 #define ERI_RENDERER_ES1_H
 
+#include "pch.h"
+
 #if ERI_PLATFORM == ERI_PLATFORM_WIN
 #include "GL/glew.h"
 //#include "GL/wglew.h"
