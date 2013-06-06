@@ -537,7 +537,7 @@ namespace ERI
 		vertices_ = new vertex_2_pos_tex_color[vertex_num];
 		
 		glBindBuffer(GL_ARRAY_BUFFER, render_data_.vertex_buffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_2_pos_tex_color) * vertex_num, NULL, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_2_pos_tex_color) * vertex_num, vertices_, GL_DYNAMIC_DRAW);
 		
 		if (render_data_.index_buffer == 0)
 		{
