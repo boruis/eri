@@ -21,6 +21,12 @@ namespace ERI
 		return path;
 	}
 
+	const char* GetHomePath()
+	{
+		static char* path = ".";
+		return path;
+	}
+
 	bool GetTextureAtlasArray(const std::string& name, TextureAtlasArray& out_array)
 	{
 		TextureAtlasMap tmp_map;
