@@ -68,7 +68,7 @@ static bool	in_multi_move;
 	
 	for (UITouch *touch in touches)
 	{
-		//printf("touch[%x] begin tap %d, timestamp %f\n", (unsigned int)touch, touch.tapCount, touch.timestamp);
+		//LOGI("touch[%x] begin tap %d, timestamp %f", (unsigned int)touch, touch.tapCount, touch.timestamp);
 
 		touch_pos = [touch locationInView:touch.view];
 		[self convertPointByViewOrientation:&touch_pos];
@@ -76,7 +76,7 @@ static bool	in_multi_move;
 		ERI::Root::Ins().input_mgr()->Press(ERI::InputEvent((unsigned int)touch, touch_pos.x, touch_pos.y));
 	}
 	
-	//printf("now begin num %d, total num %d\n", [touches count], [[event allTouches] count]);
+	//LOGI("now begin num %d, total num %d", [touches count], [[event allTouches] count]);
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
@@ -85,7 +85,7 @@ static bool	in_multi_move;
 	
 	for (UITouch *touch in touches)
 	{
-		//printf("touch[%x] end tap %d, timestamp %f\n", (unsigned int)touch, touch.tapCount, touch.timestamp);
+		//LOGI("touch[%x] end tap %d, timestamp %f", (unsigned int)touch, touch.tapCount, touch.timestamp);
 		
 		touch_pos = [touch locationInView:touch.view];
 		[self convertPointByViewOrientation:&touch_pos];
@@ -115,7 +115,7 @@ static bool	in_multi_move;
 		in_multi_move = false;
 	}
 	
-	//printf("now end num %d, total num %d\n", [touches count], [[event allTouches] count]);
+	//LOGI("now end num %d, total num %d", [touches count], [[event allTouches] count]);
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
@@ -137,7 +137,7 @@ static bool	in_multi_move;
 		
 		ERI::Root::Ins().input_mgr()->Move(e);
 		
-		//printf("touch[%x] move, timestamp %f\n", (unsigned int)touch, touch.timestamp);
+		//LOGI("touch[%x] move, timestamp %f", (unsigned int)touch, touch.timestamp);
 	}
 	else if (now_touch_num > 1)
 	{
@@ -161,7 +161,7 @@ static bool	in_multi_move;
 			events[i].dx = touch_pos.x - prev_touch_pos.x;
 			events[i].dy = touch_pos.y - prev_touch_pos.y;
 						
-			//printf("touch[%x] move, timestamp %f\n", (unsigned int)touch, touch.timestamp);
+			//LOGI("touch[%x] move, timestamp %f", (unsigned int)touch, touch.timestamp);
 		}
 		
 		ERI::Root::Ins().input_mgr()->MultiMove(events, now_touch_num, !in_multi_move);
@@ -212,7 +212,7 @@ static bool	in_multi_move;
 			}
 			break;
 		default:
-			printf("Error! Invalid Orientation Type %d\n", ERI::Root::Ins().renderer()->view_orientation());
+			LOGW("Error! Invalid Orientation Type %d", ERI::Root::Ins().renderer()->view_orientation());
 			break;
 	}
 

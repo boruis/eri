@@ -146,7 +146,7 @@ bool FontFntScript::Load(const std::string& path)
 	std::string content;
 	if (!GetFileContentString(absolute_path, content))
 	{
-		ASSERT3(0, "Can't load FontFntScript %s", absolute_path.c_str());
+		ASSERT2(0, "Can't load FontFntScript %s", absolute_path.c_str());
 		return false;
 	}
 
@@ -193,7 +193,7 @@ bool FontFntScript::Load(const std::string& path)
 	
 	if (!texture_)
 	{
-		ASSERT3(0, "Can't load FontFntScript texture %s", texture_path.c_str());
+		ASSERT2(0, "Can't load FontFntScript texture %s", texture_path.c_str());
 		return false;
 	}
 	
@@ -455,14 +455,14 @@ const Font* FontMgr::GetFont(const std::string& path, int want_pixel_height /*= 
 #ifdef ERI_TEXTURE_READER_UIKIT
 			font = new FontUIKit;
 #else
-			ASSERT3(0, "Invalid font path %s", path.c_str());
+			ASSERT2(0, "Invalid font path %s", path.c_str());
 			return NULL;
 #endif
 		}
 		
 		if (!font)
 		{
-			ASSERT3(0, "Can't create font %s", path.c_str());
+			ASSERT2(0, "Can't create font %s", path.c_str());
 		}
 		
 		if (!font->Load(path))

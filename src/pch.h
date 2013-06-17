@@ -52,8 +52,11 @@
 #    define ERI_TEXTURE_READER_PVR
 #  endif
 #elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
-#  define ERI_TEXTURE_READER_BITMAP_FACTORY
+#  define ERI_TEXTURE_READER_LIBPNG
+//#  define ERI_TEXTURE_READER_BITMAP_FACTORY
 #endif
+
+//
 
 #define ERI_RENDERER_ES1
 //#define ERI_RENDERER_ES2
@@ -68,11 +71,31 @@ typedef unsigned int uint32_t;
 
 #include <stddef.h>
 
+// log
+
+#ifdef DISABLE_LOG
+#  define LOGI(...)
+#  define LOGW(...)
+#else
+#  if ERI_PLATFORM == ERI_PLATFORM_ANDROID
+#    include <android/log.h>
+#    define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "eri", __VA_ARGS__))
+#    define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "eri", __VA_ARGS__))
+#  else
+#    define LOGI(...) { fprintf(stdout, __VA_ARGS__); fputc('\n', stdout); }
+#    define LOGW(...) { fprintf(stderr, __VA_ARGS__); fputc('\n', stderr); }
+#  endif
+#endif
+
 // assert
 
-#include <assert.h>
-#define ASSERT(exp)								assert(exp)
-#define ASSERT2(exp, description)				assert(exp)
-#define ASSERT3(exp, description_format, ...)	assert(exp)
+#ifdef DISABLE_ASSERT
+#  define ASSERT(exp)
+#  define ASSERT2(exp, ...)
+#else
+#  include <assert.h>
+#  define ASSERT(exp) { if (!(exp)) { LOGW("ASSERT failed: (%s) at %s:%d", #exp, __FILE__, __LINE__); assert(0);} }
+#  define ASSERT2(exp, ...)	{ if (!(exp)) { LOGW("ASSERT failed: (%s) at %s:%d", #exp, __FILE__, __LINE__); LOGW(__VA_ARGS__); assert(0); } }
+#endif
 
 #endif // ERI_PCH_H

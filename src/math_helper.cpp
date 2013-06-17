@@ -11,7 +11,6 @@
 
 #include "math_helper.h"
 
-#include <cstdio>
 #include <cstdlib>
 #include <cmath>
 #include <cfloat>
@@ -343,7 +342,7 @@ namespace ERI {
 		if ((det_1 == 0.0) || (Abs(det_1 / (pos - neg)) < 1.0e-15))
 		{
 			/* Matrix M has no inverse */
-			printf("Matrix has no inverse : singular matrix\n");
+			LOGW("Matrix has no inverse : singular matrix");
 			return;
 		}
 		else

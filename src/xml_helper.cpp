@@ -38,7 +38,7 @@ namespace ERI
 		
 		if (ifs.fail())
 		{
-			printf("xml parse file %s error!\n", real_path.c_str());
+			LOGW("xml parse file %s error!", real_path.c_str());
 			return false;
 		}
 		
@@ -263,7 +263,7 @@ namespace ERI
 		
 		if (ofs.fail())
 		{
-			printf("xml save file %s error!\n", path.c_str());
+			LOGW("xml save file %s error!", path.c_str());
 			return false;
 		}
 		

@@ -230,8 +230,7 @@ namespace ERI {
 		GLenum status = glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES);
 		if (status != GL_FRAMEBUFFER_COMPLETE_OES)
 		{
-			printf("Failed to make complete framebuffer object %x", status);
-			ASSERT(0);
+			ASSERT2(0, "Failed to make complete framebuffer object %x", status);
 		}
 		
 		if (use_depth_buffer_)
@@ -244,8 +243,7 @@ namespace ERI {
 			status = glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES);
 			if (status != GL_FRAMEBUFFER_COMPLETE_OES)
 			{
-				printf("Failed to make complete framebuffer object %x", status);
-				ASSERT(0);
+				ASSERT2(0, "Failed to make complete framebuffer object %x", status);
 			}
 		}
 		
@@ -987,8 +985,7 @@ namespace ERI {
 		GLenum status = glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) ;
 		if(status != GL_FRAMEBUFFER_COMPLETE_OES)
 		{
-			printf("Failed to make complete framebuffer object %x", status);
-			ASSERT(0);
+			ASSERT2(0, "Failed to make complete framebuffer object %x", status);
 		}
 		
 		out_frame_buffer = frame_buffer;
