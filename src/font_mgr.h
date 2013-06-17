@@ -72,6 +72,8 @@ public:
 	
 	virtual float GetSizeScale(int want_size) const;
 	
+	void SetTextureFilter(TextureFilter filter_min, TextureFilter filter_mag) const;
+	
 	inline const Texture* texture() const { return texture_; }
 	inline TextureFilter filter_min() const { return filter_min_; }
 	inline TextureFilter filter_mag() const { return filter_mag_; }

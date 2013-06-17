@@ -137,6 +137,12 @@ float Font::GetSizeScale(int want_size) const
 	return static_cast<float>(want_size) / size_;
 }
 
+void Font::SetTextureFilter(TextureFilter filter_min, TextureFilter filter_mag) const
+{
+	filter_min_ = filter_min;
+	filter_mag_ = filter_mag;
+}
+
 #pragma mark FontFntScript
 
 bool FontFntScript::Load(const std::string& path)
