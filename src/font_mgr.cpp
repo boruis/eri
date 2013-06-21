@@ -366,23 +366,46 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
 
 	return Root::Ins().texture_mgr()->CreateTexture(name, tex_width, tex_height, buff);
 }
+
 #endif // ERI_FONT_FREETYPE
 
-#ifdef ERI_TEXTURE_READER_UIKIT
-bool FontUIKit::Load(const std::string& path)
+#if defined(ERI_TEXTURE_READER_UIKIT) || defined(ERI_TEXTURE_READER_ANDROID)
+#pragma mark FontSys
+
+class FontSys : public Font
+{
+public:
+	virtual bool Load(const std::string& path);
+
+	virtual const Texture* CreateSpriteTxt(const std::string& name,
+		const std::string& txt,
+		int size,
+		bool is_pos_center,
+		bool is_utf8,
+		bool is_anti_alias,
+		int& out_width,
+		int& out_height) const;
+
+	virtual float GetSizeScale(int want_size) const { return 1.f; }
+
+private:
+	std::string name_;
+};
+
+bool FontSys::Load(const std::string& path)
 {
 	name_ = path;
 	return true;
 }
 
-const Texture* FontUIKit::CreateSpriteTxt(const std::string& name,
-										  const std::string& txt,
-										  int size,
-										  bool is_pos_center,
-										  bool is_utf8,
-										  bool is_anti_alias,
-										  int& out_width,
-										  int& out_height) const
+const Texture* FontSys::CreateSpriteTxt(const std::string& name,
+		const std::string& txt,
+		int size,
+		bool is_pos_center,
+		bool is_utf8,
+		bool is_anti_alias,
+		int& out_width,
+		int& out_height) const
 {
 	Vector2 acture_size;
 	std::string tex_name(name);
@@ -396,7 +419,8 @@ const Texture* FontUIKit::CreateSpriteTxt(const std::string& name,
 	
 	return tex;
 }
-#endif
+
+#endif // defined(ERI_TEXTURE_READER_UIKIT) || defined(ERI_TEXTURE_READER_ANDROID)
 
 #pragma FontMgr
 	
@@ -458,8 +482,8 @@ const Font* FontMgr::GetFont(const std::string& path, int want_pixel_height /*= 
 #endif
 		else
 		{
-#ifdef ERI_TEXTURE_READER_UIKIT
-			font = new FontUIKit;
+#if defined(ERI_TEXTURE_READER_UIKIT) || defined(ERI_TEXTURE_READER_ANDROID)
+			font = new FontSys;
 #else
 			ASSERT2(0, "Invalid font path %s", path.c_str());
 			return NULL;

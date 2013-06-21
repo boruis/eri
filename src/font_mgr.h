@@ -132,30 +132,6 @@ private:
 };
 #endif // ERI_FONT_FREETYPE
 
-#ifdef ERI_TEXTURE_READER_UIKIT
-
-class FontUIKit : public Font
-{
-public:
-	virtual bool Load(const std::string& path);
-	
-	virtual const Texture* CreateSpriteTxt(const std::string& name,
-										   const std::string& txt,
-										   int size,
-										   bool is_pos_center,
-										   bool is_utf8,
-										   bool is_anti_alias,
-										   int& out_width,
-										   int& out_height) const;
-	
-	virtual float GetSizeScale(int want_size) const { return 1.f; }
-
-private:
-	std::string name_;
-};
-
-#endif
-
 #pragma mark FontMgr
 	
 class FontMgr

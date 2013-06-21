@@ -27,8 +27,8 @@
 #include "ios/texture_reader_pvr.h"
 #endif
 
-#ifdef ERI_TEXTURE_READER_BITMAP_FACTORY
-#include "android/texture_reader_bitmap_factory.h"
+#ifdef ERI_TEXTURE_READER_ANDROID
+#include "android/texture_reader_android.h"
 #endif
 
 #include "texture_reader.h"
@@ -188,8 +188,6 @@ namespace ERI {
 				reader = new TextureReaderLibPNG(resource_path, true);
 #elif defined(ERI_TEXTURE_READER_FREEIMAGE)
 				reader = new TextureReaderFreeImage(resource_path, true);
-#elif defined(ERI_TEXTURE_READER_BITMAP_FACTORY)
-				reader = new TextureReaderBitmapFactory(resource_path);
 #else
       ASSERT(0);
 #endif
@@ -269,6 +267,8 @@ namespace ERI {
 		
 #ifdef ERI_TEXTURE_READER_UIKIT
 		TextureReaderUIFont reader(txt, font_name, font_size, align_center, out_actual_size);
+#elif defined(ERI_TEXTURE_READER_ANDROID)
+    TextureReaderSysTxtAndroid reader(txt, font_name, font_size, align_center, out_actual_size);
 #else
 		TextureReader reader(true);
 #endif
