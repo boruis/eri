@@ -10,6 +10,8 @@
 #ifndef ERI_TEXTURE_READER_H
 #define ERI_TEXTURE_READER_H
 
+#include <stddef.h>
+
 namespace ERI {
 
 	class TextureReader

@@ -11,14 +11,10 @@
 #include "sys_helper.h"
 
 #if ERI_PLATFORM == ERI_PLATFORM_ANDROID
-#include <jni.h>
-#include <android/log.h>
-extern JNIEnv*	global_env;
-extern jobject	global_renderer;
-extern jclass	global_renderer_cls;
-#else
-#include <fstream>
+#include "android_helper.h"
 #endif
+
+#include <fstream>
 
 #include "platform_helper.h"
 
@@ -125,16 +121,6 @@ void ReplaceBackslashToSlash(std::string& str)
 
 bool GetFileContentString(const std::string& path, std::string& out_content)
 {
-#if ERI_PLATFORM == ERI_PLATFORM_ANDROID
-	jmethodID mid = global_env->GetMethodID(global_renderer_cls, "GetTxtFileContent", "(Ljava/lang/String;)Ljava/lang/String;");
-	jstring s = static_cast<jstring>(global_env->CallObjectMethod(global_renderer, mid, global_env->NewStringUTF(path.c_str())));
-	
-	const char* cstr = global_env->GetStringUTFChars(s, 0);
-	
-	content = cstr;
-	
-	global_env->ReleaseStringUTFChars(s, cstr);
-#else
 	std::ifstream is;
 	is.open(path.c_str(), std::ios::in);
 	
@@ -155,9 +141,109 @@ bool GetFileContentString(const std::string& path, std::string& out_content)
 	out_content = buffer;
 	
 	delete [] buffer;
-#endif
 
 	return true;
 }
+
+FileReader::FileReader() : info_(NULL)
+{
+}
+
+FileReader::~FileReader()
+{
+	Close();
+}
+
+#if ERI_PLATFORM == ERI_PLATFORM_ANDROID
+
+struct FileReaderInfo
+{
+	AAsset* asset;
+};
+	
+bool FileReader::Open(const char* path, bool is_binary)
+{
+	ASSERT(path);
+	
+	if (info_) AAsset_close(info_->asset);
+	else info_ = new FileReaderInfo;
+
+    info_->asset = AAssetManager_open(g_android_app->activity->assetManager, path, AASSET_MODE_STREAMING);
+	
+	if (info_->asset) return true;
+	
+	delete info_;
+	info_ = NULL;
+	
+	return false;
+}
+	
+bool FileReader::Close()
+{
+	if (info_)
+	{
+        AAsset_close(info_->asset);
+		delete info_;
+		info_ = NULL;
+		
+		return true;
+	}
+	
+	return false;
+}
+	
+int FileReader::Read(void* buf, int byte_count)
+{
+	ASSERT(buf && byte_count > 0 && info_);
+
+	return AAsset_read(info_->asset, buf, byte_count);
+}
+
+#else
+
+struct FileReaderInfo
+{
+	FILE* f;
+};
+	
+bool FileReader::Open(const char* path, bool is_binary)
+{
+	ASSERT(path);
+	
+	if (info_) fclose(info_->f);
+	else info_ = new FileReaderInfo;
+	
+	info_->f = fopen(path, is_binary ? "rb" : "r");
+	
+	if (info_->f) return true;
+	
+	delete info_;
+	info_ = NULL;
+	
+	return false;
+}
+	
+bool FileReader::Close()
+{
+	if (info_)
+	{
+		fclose(info_->f);
+		delete info_;
+		info_ = NULL;
+		
+		return true;
+	}
+	
+	return false;
+}
+	
+int FileReader::Read(void* buf, int byte_count)
+{
+	ASSERT(buf && byte_count > 0 && info_);
+	
+	return fread(buf, 1, byte_count, info_->f);
+}
+
+#endif
 
 }

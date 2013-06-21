@@ -15,9 +15,21 @@
 
 #include "root.h"
 #include "renderer.h"
-#include "platform_helper.h"
+#include "sys_helper.h"
 
 namespace ERI {
+	
+	static void ReadFromReader(png_structp png_ptr, png_bytep data, png_size_t length)
+	{
+		png_voidp io_ptr = png_get_io_ptr(png_ptr);
+		
+		ASSERT(io_ptr);
+		
+		FileReader* reader = (FileReader*)io_ptr;
+		int readed = reader->Read(data, length);
+		
+		ASSERT(readed == length);
+	}
 		
 	TextureReaderLibPNG::TextureReaderLibPNG(const std::string& path,
 											 bool generate_immediately)
@@ -28,21 +40,17 @@ namespace ERI {
 		std::string real_path(path);
 
 #if ERI_PLATFORM == ERI_PLATFORM_IOS || ERI_PLATFORM == ERI_PLATFORM_MAC
-		if (path[0] != '/')
-		{
-			real_path = GetResourcePath() + std::string("/") + path;
-		}
+    real_path = GetAbsolutePath(path);
 #endif
 		
-		FILE* f = fopen(real_path.c_str(), "rb");
-		if (!f)
+		FileReader reader;
+		if (!reader.Open(real_path.c_str(), true))
 			return;
 		
 		png_byte header[8];
-		fread(header, sizeof(png_byte), 8, f);
+		reader.Read(header, sizeof(png_byte) * 8);
 		if (png_sig_cmp(header, 0, 8) != 0)
 		{
-			fclose(f);
 			return;
 		}
 		
@@ -54,7 +62,6 @@ namespace ERI {
 		png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 		if (!png_ptr)
 		{
-			fclose(f);
 			return;
 		}
 				
@@ -62,18 +69,18 @@ namespace ERI {
 		if (!info_ptr)
 		{
 			png_destroy_read_struct(&png_ptr, NULL, NULL);
-			fclose(f);
 			return;
 		}
 		
 		if (setjmp(png_jmpbuf(png_ptr)))
 		{
 			png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-			fclose(f);
 			return;
 		}
 	
-		png_init_io(png_ptr, f);
+//		png_init_io(png_ptr, f);
+		png_set_read_fn(png_ptr, &reader, ReadFromReader);
+		
 		png_set_sig_bytes(png_ptr, 8);
 		
 		png_read_info(png_ptr, info_ptr);
@@ -111,7 +118,6 @@ namespace ERI {
 		if (setjmp(png_jmpbuf(png_ptr)))
 		{
 			png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-			fclose(f);
 			return;
 		}
 				
@@ -128,7 +134,7 @@ namespace ERI {
 		
 		png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 		
-        fclose(f);
+		reader.Close();
 		
 		if (!Root::Ins().renderer()->caps().is_support_non_power_of_2_texture)
 		{
@@ -152,7 +158,7 @@ namespace ERI {
 				free(texture_data_);
 				texture_data_ = new_texture_data;
 				
-				printf("%s non power of 2 texture %d x %d -> %d x %d\n", path.c_str(), width_, height_, new_width, new_height);
+				LOGI("%s non power of 2 texture %d x %d -> %d x %d", path.c_str(), width_, height_, new_width, new_height);
 
 				width_ = new_width;
 				height_ = new_height;
@@ -200,7 +206,7 @@ namespace ERI {
 				free(texture_data_);
 				texture_data_ = new_texture_data;
 				
-				printf("non power of 2 texture width %d -> %d\n", width_, new_width);
+				LOGI("non power of 2 texture width %d -> %d", width_, new_width);
 				width_ = new_width;
 			}
 
@@ -246,7 +252,7 @@ namespace ERI {
 				free(texture_data_);
 				texture_data_ = new_texture_data;
 				
-				printf("non power of 2 texture height %d -> %d\n", height_, new_height);
+				LOGI("non power of 2 texture height %d -> %d", height_, new_height);
 				height_ = new_height;
 			}
 #endif // ERI_TEXTURE_NPOT_STRETCH
