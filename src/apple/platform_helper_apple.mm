@@ -152,7 +152,9 @@ namespace ERI {
 	const char* GetLocale()
 	{
 		static char cstr[8];
-		CFStringGetCString(CFLocaleGetIdentifier(CFLocaleCopyCurrent()), cstr, 8, kCFStringEncodingASCII);
+		CFLocaleRef locale_ref = CFLocaleCopyCurrent();
+		CFStringGetCString(CFLocaleGetIdentifier(locale_ref), cstr, 8, kCFStringEncodingASCII);
+		CFRelease(locale_ref);
 
 		return cstr;
 	}
