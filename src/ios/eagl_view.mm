@@ -118,6 +118,11 @@ static bool	in_multi_move;
 	//LOGI("now end num %d, total num %d", [touches count], [[event allTouches] count]);
 }
 
+- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
+{
+	[self touchesEnded:touches withEvent:event];
+}
+
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
 {
 	int now_touch_num = [[event allTouches] count];
