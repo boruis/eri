@@ -18,8 +18,8 @@ namespace ERI
 
 		if (path.empty())
 		{
-			JavaCaller caller;
-			caller.Set(g_class_name, "GetInternalPath", "(Landroid/app/Activity;)Ljava/lang/String;");
+			mana::JavaCaller caller;
+			caller.Set("com/exe/eri", "GetInternalPath", "(Landroid/app/Activity;)Ljava/lang/String;");
 			jstring jpath = (jstring)caller.env->CallStaticObjectMethod(caller.user_class, caller.user_func, g_android_app->activity->clazz);
 			const char* cpath = caller.env->GetStringUTFChars(jpath, NULL);
 			if (cpath)
@@ -238,8 +238,8 @@ namespace ERI
 	{
 		static std::string locale;
 
-		JavaCaller caller;
-		caller.Set(g_class_name, "GetLocale", "()Ljava/lang/String;");
+		mana::JavaCaller caller;
+		caller.Set("com/exe/eri", "GetLocale", "()Ljava/lang/String;");
 		jstring jstr_locale = (jstring)caller.env->CallStaticObjectMethod(caller.user_class, caller.user_func);
 		const char* str_locale = caller.env->GetStringUTFChars(jstr_locale, NULL);
 		if (str_locale)
