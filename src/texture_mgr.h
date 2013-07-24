@@ -15,6 +15,7 @@
 #include <map>
 
 #include "math_helper.h"
+#include "renderer.h"
 
 namespace ERI {
 	
@@ -166,7 +167,7 @@ namespace ERI {
 										  Vector2& out_actual_size,
 										  std::string* out_name = NULL);
 		
-		const Texture* GenerateRenderToTexture(int width, int height);
+		const Texture* GenerateRenderToTexture(int width, int height, PixelFormat format);
 		
 		bool ReleaseTexture(const std::string& name);
 		bool ReleaseTexture(const Texture* texture);
@@ -193,11 +194,13 @@ namespace ERI {
 		void CopyPixels(void* out_copy_pixels);
 		
 		inline const Texture* texture() { return texture_; }
+		inline void set_pixel_format(PixelFormat format) { pixel_format_ = format; }
 		
 	private:
 		int				x_, y_, width_, height_;
 
 		const Texture*	texture_;
+		PixelFormat	pixel_format_;
 		
 		CameraActor*	render_cam_;
 		

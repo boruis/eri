@@ -299,10 +299,10 @@ namespace ERI {
 		return tex;
 	}
 	
-	const Texture* TextureMgr::GenerateRenderToTexture(int width, int height)
+	const Texture* TextureMgr::GenerateRenderToTexture(int width, int height, PixelFormat format)
 	{
 		int bind_frame_buffer = 0;
-		int texture_id = Root::Ins().renderer()->GenerateRenderToTexture(width, height, bind_frame_buffer);
+		int texture_id = Root::Ins().renderer()->GenerateRenderToTexture(width, height, bind_frame_buffer, format);
 		
 		// TODO: check texture invalid number, maybe use int -1 is better
 		
@@ -368,6 +368,7 @@ namespace ERI {
 		width_(width),
 		height_(height),
 		texture_(NULL),
+		pixel_format_(RGBA),
 		render_cam_(render_cam),
 		out_copy_pixels_(NULL)
 	{
@@ -382,7 +383,7 @@ namespace ERI {
 	{
 		ASSERT(!texture_);
 
-		texture_ = Root::Ins().texture_mgr()->GenerateRenderToTexture(width_, height_);
+		texture_ = Root::Ins().texture_mgr()->GenerateRenderToTexture(width_, height_, pixel_format_);
 	}
 	
 	void RenderToTexture::Release()
@@ -418,13 +419,13 @@ namespace ERI {
 
 		renderer->RenderStart();
 		scene_mgr->Render(renderer);
-		renderer->CopyTexture(texture_->id);
+		renderer->CopyTexture(texture_->id, pixel_format_);
 		
 		//
 		
 		if (out_copy_pixels_)
 		{
-			renderer->CopyPixels(out_copy_pixels_, 0, 0, width_, height_);
+			renderer->CopyPixels(out_copy_pixels_, 0, 0, width_, height_, pixel_format_);
 		}
 
 		//
