@@ -567,6 +567,9 @@ namespace ERI {
 		
 		float r, g, b, a;
 	};
+	
+	void HSLtoRGB(float h, float s, float l, Color& out_rgb);
+
 }
 
 #endif // ERI_MATH_HELPER_H

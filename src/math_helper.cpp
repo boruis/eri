@@ -1647,4 +1647,41 @@ namespace ERI {
 		return f1 * ct * ct * ct + f2 * ct * ct * t + f3 * ct * t * t + f4 * t * t * t;
 	}
 
+#pragma mark Color
+	
+	void HSLtoRGB(float h, float s, float l, Color& out_rgb)
+	{
+		if (s == 0.f)
+		{
+			out_rgb.r = out_rgb.g = out_rgb.b = l;
+			return;
+		}
+		
+		float q = (l < 0.5f) ? (l * (1 + s)) : (l + s - (l * s));
+		float p = 2 * l - q;
+		float t[3];
+		
+		float inv_3 = 1.f / 3;
+		float inv_6 = 1.f / 6;
+		float div_2_3 = 2.f / 3;
+		
+		t[0] = h + inv_3;
+		t[1] = h;
+		t[2] = h - inv_3;
+		for (int i = 0; i < 3; ++i)
+		{
+			if (t[i] < 0) t[i] += 1.f;
+			if (t[i] > 1.f) t[i] -= 1.f;
+			
+			if (t[i] < inv_6) t[i] = p + ((q - p) * 6 * t[i]);
+			else if (t[i] < 0.5f) t[i] = q;
+			else if (t[i] < div_2_3) t[i] = p + ((q - p) * 6 * (div_2_3 - t[i]));
+			else t[i] = p;
+		}
+		
+		out_rgb.r = t[0];
+		out_rgb.g = t[1];
+		out_rgb.b = t[2];
+	}
+
 }
