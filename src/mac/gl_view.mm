@@ -31,11 +31,29 @@ static unsigned int GetFunctionKeyStatus(unsigned long flags)
 
 - (id)initWithFrame:(NSRect)frame
 {
-    if ((self = [super initWithFrame:frame]))
+	if ((self = [super initWithFrame:frame]))
 	{
-        // Initialization code
-    }
-    return self;
+		[self applyDefaultPixelFormat];
+	}
+	return self;
+}
+
+- (void)awakeFromNib
+{
+	[self applyDefaultPixelFormat];
+}
+
+- (void)applyDefaultPixelFormat
+{
+	NSOpenGLPixelFormatAttribute attrs[] =
+	{
+		NSOpenGLPFADoubleBuffer,
+		NSOpenGLPFADepthSize, 16,
+		0
+	};
+	
+	NSOpenGLPixelFormat *pf = [[[NSOpenGLPixelFormat alloc] initWithAttributes:attrs] autorelease];
+	[self setPixelFormat:pf];
 }
 
 - (BOOL)acceptsFirstResponder
