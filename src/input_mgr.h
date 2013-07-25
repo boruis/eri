@@ -36,6 +36,27 @@ namespace ERI {
 		FUNC_CMD	= 0x08
 	};
 	
+	enum JoystickCode
+	{
+		JOYSTICK_NONE,
+		JOYSTICK_DPAD_UP,
+		JOYSTICK_DPAD_DOWN,
+		JOYSTICK_DPAD_LEFT,
+		JOYSTICK_DPAD_RIGHT,
+		JOYSTICK_A,
+		JOYSTICK_B,
+		JOYSTICK_X,
+		JOYSTICK_Y,
+		JOYSTICK_L1,
+		JOYSTICK_R1,
+		JOYSTICK_L2,
+		JOYSTICK_R2,
+		JOYSTICK_THUMBL,
+		JOYSTICK_THUMBR,
+		JOYSTICK_AXISL,
+		JOYSTICK_AXISR
+	};
+	
 	struct InputEvent
 	{
 		InputEvent()
@@ -76,6 +97,10 @@ namespace ERI {
 		
 		virtual void Accelerate(const Vector3& g) {}
 		virtual void Shake() {}
+		
+		virtual void JoystickDown(JoystickCode code) {}
+		virtual void JoystickUp(JoystickCode code) {}
+		virtual void JoystickAxis(JoystickCode code, float x, float y) {}
 	};
 
 	class InputMgr
@@ -99,6 +124,10 @@ namespace ERI {
 
 		void Accelerate(const Vector3& g);
 		void Shake();
+    
+		void JoystickDown(JoystickCode code);
+		void JoystickUp(JoystickCode code);
+		void JoystickAxis(JoystickCode code, float x, float y);
 		
 		inline void set_handler(InputHandler* handler) { handler_ = handler; }
 		

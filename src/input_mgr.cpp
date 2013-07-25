@@ -86,4 +86,19 @@ namespace ERI {
 		if (handler_) handler_->Shake();
 	}
 	
+	void InputMgr::JoystickDown(JoystickCode code)
+	{
+		if (handler_) handler_->JoystickDown(code);
+	}
+	
+	void InputMgr::JoystickUp(JoystickCode code)
+	{
+		if (handler_) handler_->JoystickUp(code);
+	}
+	
+	void InputMgr::JoystickAxis(JoystickCode code, float x, float y)
+	{
+		if (handler_) handler_->JoystickAxis(code, x, y);
+	}
+
 }
