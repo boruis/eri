@@ -63,8 +63,9 @@
 
 //
 
+#ifndef ERI_RENDERER_ES2
 #define ERI_RENDERER_ES1
-//#define ERI_RENDERER_ES2
+#endif
 
 //
 

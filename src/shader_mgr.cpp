@@ -29,7 +29,7 @@ static bool CompileShader(GLuint* shader, GLenum type, const char* source)
 	{
 		GLchar* log = (GLchar*)malloc(logLength);
 		glGetShaderInfoLog(*shader, logLength, &logLength, log);
-		printf("Shader compile log:\n%s\n", log);
+		LOGI("Shader compile log:\n%s", log);
 		free(log);
 	}
 #endif
@@ -56,7 +56,7 @@ static bool LinkProgram(GLuint program)
 	{
 		GLchar* log = (GLchar*)malloc(logLength);
 		glGetProgramInfoLog(program, logLength, &logLength, log);
-		printf("Program link log:\n%s\n", log);
+		LOGI("Program link log:\n%s", log);
 		free(log);
 	}
 #endif
@@ -80,7 +80,7 @@ static bool ValidateProgram(GLuint program)
 	{
 		GLchar* log = (GLchar*)malloc(logLength);
 		glGetProgramInfoLog(program, logLength, &logLength, log);
-		printf("Program validate log:\n%s\n", log);
+		LOGI("Program validate log:\n%s", log);
 		free(log);
 	}
 #endif
@@ -115,7 +115,7 @@ bool ShaderProgram::Construct(const std::string& vertex_shader_path,
 					   GL_VERTEX_SHADER,
 					   GetStringFileContent(std::string(GetResourcePath()) + "/" + vertex_shader_path)))
 	{
-		printf("Failed to compile vertex shader\n");
+		LOGW("Failed to compile vertex shader");
 		return false;
 	}
 	
@@ -125,7 +125,7 @@ bool ShaderProgram::Construct(const std::string& vertex_shader_path,
 					   GL_FRAGMENT_SHADER,
 					   GetStringFileContent(std::string(GetResourcePath()) + "/" + fragment_shader_path)))
 	{
-		printf("Failed to compile fragment shader\n");
+		LOGW("Failed to compile fragment shader");
 		glDeleteShader(vertex_shader);
 		return false;
 	}
@@ -152,7 +152,7 @@ bool ShaderProgram::Construct(const std::string& vertex_shader_path,
 	// link program
 	if (!LinkProgram(program_))
 	{
-		printf("Failed to link program: %d\n", program_);
+		LOGW("Failed to link program: %d", program_);
 		glDeleteShader(vertex_shader);
 		glDeleteShader(fragment_shader);
 		glDeleteProgram(program_);
@@ -182,7 +182,7 @@ bool ShaderProgram::Validate()
 {
 	if (!ValidateProgram(program_))
 	{
-		printf("Failed to validate program: %d\n", program_);
+		LOGW("Failed to validate program: %d", program_);
 		return false;
 	}
 

@@ -168,11 +168,7 @@ namespace ERI {
 		glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &backing_height);
 		
 		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		if (status != GL_FRAMEBUFFER_COMPLETE)
-		{
-			printf("Failed to make complete framebuffer object %x\n", status);
-			ASSERT(0);
-		}
+		ASSERT2(status == GL_FRAMEBUFFER_COMPLETE, "Failed to make complete framebuffer object %x", status);
 		
 		if (use_depth_buffer_)
 		{
@@ -182,11 +178,7 @@ namespace ERI {
 			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer_);
 			
 			status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-			if (status != GL_FRAMEBUFFER_COMPLETE)
-			{
-				printf("Failed to make complete framebuffer object %x", status);
-				ASSERT(0);
-			}
+			ASSERT2(status == GL_FRAMEBUFFER_COMPLETE, "Failed to make complete framebuffer object %x", status);
 		}
 		
 		Resize(backing_width, backing_height);
@@ -505,19 +497,47 @@ namespace ERI {
 #endif
 	}
 	
-	void RendererES2::CopyTexture(unsigned int texture)
+	void RendererES2::CopyTexture(unsigned int texture, PixelFormat format)
 	{
 #if ERI_PLATFORM != ERI_PLATFORM_IOS
 		glBindTexture(GL_TEXTURE_2D, texture);
 		now_texture_ = texture;
 		
-		glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, backing_width_, backing_height_, 0);
+		switch (format)
+		{
+			case RGBA:
+				glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, backing_width_, backing_height_, 0);
+				break;
+			case RGB:
+				glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, backing_width_, backing_height_, 0);
+				break;
+			case ALPHA:
+				glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, 0, 0, backing_width_, backing_height_, 0);
+				break;
+			default:
+				ASSERT2(0, "invalid pixel format!");
+				break;
+		}
 #endif
 	}
 	
-	void RendererES2::CopyPixels(void* buffer, int x, int y, int width, int height)
+	void RendererES2::CopyPixels(void* buffer, int x, int y, int width, int height, PixelFormat format)
 	{
-		glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+		switch (format)
+		{
+			case RGBA:
+				glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+				break;
+			case RGB:
+				glReadPixels(x, y, width, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, buffer);
+				break;
+			case ALPHA:
+				glReadPixels(x, y, width, height, GL_ALPHA, GL_UNSIGNED_BYTE, buffer);
+				break;
+			default:
+				ASSERT2(0, "invalid pixel format!");
+				break;
+		}
 	}
 	
 	void RendererES2::RestoreRenderToBuffer()
@@ -712,8 +732,25 @@ namespace ERI {
 		
 		return texture;
 	}
+  
+	unsigned int RendererES2::GenerateTexture()
+	{
+		GLuint texture;
+		glGenTextures(1, &texture);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		now_texture_ = texture;
+		
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		
+		return texture;
+	}
 	
-	unsigned int RendererES2::GenerateRenderToTexture(int width, int height, int& out_frame_buffer)
+	unsigned int RendererES2::GenerateRenderToTexture(int width, int height, int& out_frame_buffer, PixelFormat format)
 	{
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 		// create the framebuffer object
@@ -736,7 +773,21 @@ namespace ERI {
 		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,  width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    switch (format)
+		{
+			case RGBA:
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+				break;
+			case RGB:
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, NULL);
+				break;
+			case ALPHA:
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, NULL);
+				break;
+			default:
+				ASSERT2(0, "invalid pixel format!");
+				break;
+		}
 		
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 		// attach the texture to the framebuffer
@@ -752,11 +803,7 @@ namespace ERI {
 		//glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_DEPTH_ATTACHMENT_OES, GL_RENDERBUFFER_OES, depth_render_buffer);
 		
 		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		if(status != GL_FRAMEBUFFER_COMPLETE)
-		{
-			printf("Failed to make complete framebuffer object %x", status);
-			ASSERT(0);
-		}
+		ASSERT2(status == GL_FRAMEBUFFER_COMPLETE, "Failed to make complete framebuffer object %x", status);
 
 		out_frame_buffer = frame_buffer;
 #endif
