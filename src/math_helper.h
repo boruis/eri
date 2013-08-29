@@ -54,6 +54,20 @@ namespace ERI {
 		else return 0;
 	}
 	
+	inline int Ceil(float a)
+	{
+		int ia = static_cast<int>(a);
+		if (a <= 0.0f || a == ia) return ia;
+		return ia + 1;
+	}
+	
+	inline int Floor(float a)
+	{
+		int ia = static_cast<int>(a);
+		if (a >= 0.0f || a == ia) return ia;
+		return ia - 1;
+	}
+	
 	inline bool is_power_of_2(uint32_t val)
 	{
 		return (val & (val - 1)) == 0;
