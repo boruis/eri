@@ -1088,7 +1088,74 @@ namespace ERI {
 		
 		Root::Ins().renderer()->SetLightSpotCutoff(idx_, spot_cutoff_);
 	}
-					
+
+#pragma mark LineActor
+
+	LineActor::LineActor() : is_dynamic_draw_(false)
+	{
+	}
+	
+	LineActor::~LineActor()
+	{
+	}
+	
+	void LineActor::Set(const ERI::Vector2& begin, const ERI::Vector2& end)
+	{
+		Clear(false);
+		AddPoint(begin, false);
+		AddPoint(end);
+	}
+  
+	void LineActor::Clear(bool construct /*= true*/)
+	{
+		points_.clear();
+		
+		if (construct) UpdateVertexBuffer();
+	}
+	
+	void LineActor::AddPoint(const ERI::Vector2& point, bool construct /*= true*/)
+	{
+		points_.push_back(point);
+		
+		if (construct) UpdateVertexBuffer();
+	}
+	
+	void LineActor::Construct()
+	{
+		UpdateVertexBuffer();
+	}
+	
+	void LineActor::UpdateVertexBuffer()
+	{
+		if (render_data_.vertex_buffer == 0)
+		{
+			glGenBuffers(1, &render_data_.vertex_buffer);
+		}
+		
+		int vertex_num = static_cast<int>(points_.size());
+		int vertex_buffer_size = sizeof(vertex_2_pos_tex) * vertex_num;
+		vertex_2_pos_tex* vertices = static_cast<vertex_2_pos_tex*>(malloc(vertex_buffer_size));
+    
+		float tex_coord_delta_u = vertex_num > 1 ? (1.f / (vertex_num - 1)) : 0.f;
+		
+		for (int i = 0; i < vertex_num; ++i)
+		{
+			vertices[i].position[0] = points_[i].x;
+			vertices[i].position[1] = points_[i].y;
+			vertices[i].tex_coord[0] = tex_coord_delta_u * i;
+			vertices[i].tex_coord[1] = 0.0f;
+		}
+		
+		glBindBuffer(GL_ARRAY_BUFFER, render_data_.vertex_buffer);
+		glBufferData(GL_ARRAY_BUFFER, vertex_buffer_size, vertices, is_dynamic_draw_ ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+		
+		free(vertices);
+		
+		render_data_.vertex_type = GL_LINE_STRIP;
+		render_data_.vertex_format = POS_TEX_2;
+		render_data_.vertex_count = vertex_num;
+	}
+
 #pragma mark SpriteActor
 
 	SpriteActor::SpriteActor(float width, float height, float offset_width, float offset_height) :

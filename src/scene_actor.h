@@ -289,6 +289,32 @@ namespace ERI {
 		Vector3	dir_;
 		float	spot_exponent_, spot_cutoff_;
 	};
+
+#pragma mark LineActor
+  
+	class LineActor : public SceneActor
+	{
+	public:
+		LineActor();
+		virtual ~LineActor();
+		
+		void Set(const ERI::Vector2& begin, const ERI::Vector2& end);
+		
+		void Clear(bool construct = true);
+		void AddPoint(const ERI::Vector2& point, bool construct = true);
+		void Construct();
+		
+		inline const std::vector<ERI::Vector2>& points() { return points_; }
+    
+		inline void set_is_dynamic_draw(bool is_dynamic_draw) { is_dynamic_draw_ = is_dynamic_draw; }
+		
+	private:
+		void UpdateVertexBuffer();
+		
+		std::vector<ERI::Vector2>	points_;
+		
+		bool	is_dynamic_draw_;
+	};
 	
 #pragma mark SpriteActor
 	
