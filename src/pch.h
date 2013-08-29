@@ -67,6 +67,26 @@
 #define ERI_RENDERER_ES1
 #endif
 
+#ifndef ERI_NOT_INCLUDE_GL
+#  if ERI_PLATFORM == ERI_PLATFORM_WIN
+#    include "GL/glew.h"
+//#    include "GL/wglew.h"
+//#    include "GLee.h"
+#  elif ERI_PLATFORM == ERI_PLATFORM_MAC
+#    include <OpenGL/gl.h>
+#  elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
+#    include <GLES/gl.h>
+#  elif ERI_PLATFORM == ERI_PLATFORM_IOS
+#    ifdef ERI_RENDERER_ES2
+#      import <OpenGLES/ES2/gl.h>
+#      import <OpenGLES/ES2/glext.h>
+#    else
+#      import <OpenGLES/ES1/gl.h>
+#      import <OpenGLES/ES1/glext.h>
+#    endif
+#  endif
+#endif
+
 //
 
 #if ERI_PLATFORM == ERI_PLATFORM_WIN
@@ -88,6 +108,7 @@ typedef unsigned int uint32_t;
 #    define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "eri", __VA_ARGS__))
 #    define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "eri", __VA_ARGS__))
 #  else
+#    include <stdio.h>
 #    define LOGI(...) { fprintf(stdout, __VA_ARGS__); fputc('\n', stdout); }
 #    define LOGW(...) { fprintf(stderr, __VA_ARGS__); fputc('\n', stderr); }
 #  endif

@@ -7,15 +7,13 @@
  *
  */
 
+#include "pch.h"
+
 #include "render_context_ios.h"
 
 #import <QuartzCore/QuartzCore.h>
 #import <OpenGLES/EAGL.h>
 #import <OpenGLES/EAGLDrawable.h>
-#import <OpenGLES/ES1/gl.h>
-#import <OpenGLES/ES1/glext.h>
-//#import <OpenGLES/ES2/gl.h>
-//#import <OpenGLES/ES2/glext.h>
 
 namespace ERI {
 	

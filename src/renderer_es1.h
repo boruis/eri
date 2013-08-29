@@ -12,19 +12,6 @@
 
 #include "pch.h"
 
-#if ERI_PLATFORM == ERI_PLATFORM_WIN
-#include "GL/glew.h"
-//#include "GL/wglew.h"
-//#include "GLee.h"
-#elif ERI_PLATFORM == ERI_PLATFORM_MAC
-#include <OpenGL/gl.h>
-#elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
-#include <GLES/gl.h>
-#elif ERI_PLATFORM == ERI_PLATFORM_IOS
-#import <OpenGLES/ES1/gl.h>
-#import <OpenGLES/ES1/glext.h>
-#endif
-
 #include "renderer.h"
 #include "material_data.h"
 
