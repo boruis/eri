@@ -89,48 +89,12 @@ protected:
 	mutable	TextureFilter	filter_min_;
 	mutable	TextureFilter	filter_mag_;
 	
-	int	size_;
-	int	common_line_height_;
-	int	common_base_;
+	mutable	int	size_;
+	mutable	int	common_line_height_;
+	mutable	int	common_base_;
 	
 	std::map<uint32_t, CharSetting>	char_map_;
 };
-
-#pragma mark FontFntScript
-
-class FontFntScript : public Font
-{
-public:
-	virtual bool Load(const std::string& path);
-
-	virtual bool is_atlas() const { return true; }
-};
-
-#ifdef ERI_FONT_FREETYPE
-#pragma mark FontFreeType
-
-class FontFreeType : public Font
-{
-public:
-	FontFreeType(FT_Library lib_ref, int pixel_height);
-	virtual ~FontFreeType();
-	
-	virtual bool Load(const std::string& path);
-	
-	virtual const Texture* CreateSpriteTxt(const std::string& name,
-										   const std::string& txt,
-										   int size,
-										   bool is_pos_center,
-										   bool is_utf8,
-										   bool is_anti_alias,
-										   int& out_width,
-										   int& out_height) const;
-
-private:
-	FT_Library	lib_ref_;
-	FT_Face		face_;
-};
-#endif // ERI_FONT_FREETYPE
 
 #pragma mark FontMgr
 	

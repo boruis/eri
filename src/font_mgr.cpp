@@ -144,6 +144,14 @@ void Font::SetTextureFilter(TextureFilter filter_min, TextureFilter filter_mag) 
 }
 
 #pragma mark FontFntScript
+  
+class FontFntScript : public Font
+{
+public:
+	virtual bool Load(const std::string& path);
+	
+	virtual bool is_atlas() const { return true; }
+};
 
 bool FontFntScript::Load(const std::string& path)
 {
@@ -209,6 +217,32 @@ bool FontFntScript::Load(const std::string& path)
 #ifdef ERI_FONT_FREETYPE
 #pragma mark FontFreeType
 
+class FontFreeType : public Font
+{
+public:
+	FontFreeType(FT_Library lib_ref, int pixel_height);
+	virtual ~FontFreeType();
+	
+	virtual bool Load(const std::string& path);
+	
+	virtual const Texture* CreateSpriteTxt(const std::string& name,
+		const std::string& txt,
+		int size,
+		bool is_pos_center,
+		bool is_utf8,
+		bool is_anti_alias,
+		int& out_width,
+		int& out_height) const;
+	
+	virtual float GetSizeScale(int want_size) const { return 1.f; }
+	
+private:
+	void ChangeFaceSize(int want_size) const;
+  
+	FT_Library	lib_ref_;
+	FT_Face		face_;
+};
+  
 static const double kFixDiv16 = 1.0 / (1 << 16);
 static float convert_fix16(long fix)
 {
@@ -228,7 +262,7 @@ FontFreeType::FontFreeType(FT_Library lib_ref, int pixel_height)
 	
 	size_ = pixel_height;
 	
-	ASSERT(size_);
+	ASSERT(size_ > 0);
 }
 	
 FontFreeType::~FontFreeType()
@@ -242,18 +276,10 @@ bool FontFreeType::Load(const std::string& path)
 	FT_Error error = FT_New_Face(lib_ref_, absolute_path.c_str(), 0, &face_);
 	if (error)
 	{
-		ASSERT3(0, "error load face %d", error);
-	}
-	error = FT_Set_Pixel_Sizes(face_,  /* handle to face object */
-							   0,      /* pixel_width           */
-							   size_); /* pixel_height          */
-	if (error)
-	{
-		ASSERT3(0, "error set pixel size %d", error);
+		ASSERT2(0, "error load face %d", error);
 	}
 	
-	common_line_height_ = static_cast<int>(convert_fix26(face_->size->metrics.height));
-	common_base_ = static_cast<int>(convert_fix26(face_->size->metrics.ascender));
+	ChangeFaceSize(size_);
 
 	return true;
 }
@@ -268,9 +294,12 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
 											 int& out_height) const
 {
 	uint32_t* unicodes;
-    int length = CreateUnicodeArray(txt, is_utf8, unicodes);
+	int length = CreateUnicodeArray(txt, true, unicodes); // TODO: default use utf8?
 	
 	out_width = out_height = 0;
+  
+	if (size != size_)
+		ChangeFaceSize(size);
 	
 	FT_GlyphSlot slot = face_->glyph;
 	FT_Error error;
@@ -279,11 +308,18 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
 	start_x = start_y = 0;
 	
 	std::vector<CharSetting> settings(length);
+	std::vector<int> line_width, line_end;
 	
 	for (int i = 0; i < length; ++i)
 	{
 		if (unicodes[i] == '\n')
 		{
+			if (is_pos_center)
+			{
+				line_width.push_back(start_x);
+				line_end.push_back(i);
+			}
+			
 			start_x = 0;
 			start_y += common_line_height_;
 			continue;
@@ -292,7 +328,7 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
 		error = FT_Load_Char(face_, unicodes[i], FT_LOAD_DEFAULT);
 		if (error)
 		{
-			ASSERT3(0, "error load char %d", error);
+			ASSERT2(0, "error load char %d", error);
 		}
 		
 		CharSetting& setting = settings[i];
@@ -310,6 +346,23 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
 		if (start_x > out_width) out_width = start_x;
 		if ((start_y + common_line_height_) > out_height)
 			out_height = start_y + common_line_height_;
+	}
+	
+	if (is_pos_center && length > 0)
+	{
+		line_width.push_back(start_x);
+		line_end.push_back(length - 1);
+		
+		int start_c  = 0;
+		for (int i = 0; i < line_width.size(); ++i)
+		{
+			int offset_x = (out_width - line_width[i]) / 2;
+			
+			for (int c = start_c; c <= line_end[i]; ++c)
+				settings[c].x += offset_x;
+			
+			start_c = line_end[i] + 1;
+		}
 	}
 
 	int tex_width = next_power_of_2(out_width);
@@ -337,7 +390,7 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
 							 is_anti_alias ? FT_LOAD_RENDER : FT_LOAD_RENDER | FT_LOAD_MONOCHROME);
 		if (error)
 		{
-			ASSERT3(0, "error load char %d", error);
+			ASSERT2(0, "error load char %d", error);
 		}
 		
 		is_byte_bitmap = (slot->bitmap.width == slot->bitmap.pitch);
@@ -365,6 +418,19 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
 	delete [] unicodes;
 
 	return Root::Ins().texture_mgr()->CreateTexture(name, tex_width, tex_height, buff);
+}
+
+void FontFreeType::ChangeFaceSize(int want_size) const
+{
+	FT_Error error = FT_Set_Pixel_Sizes(face_, 0, want_size);
+	if (error)
+	{
+		ASSERT2(0, "error set pixel size %d", error);
+	}
+	
+	size_ = want_size;
+	common_line_height_ = static_cast<int>(convert_fix26(face_->size->metrics.height));
+	common_base_ = static_cast<int>(convert_fix26(face_->size->metrics.ascender));
 }
 
 #endif // ERI_FONT_FREETYPE
@@ -444,7 +510,7 @@ FontMgr::~FontMgr()
 		FT_Error error = FT_Done_FreeType(ft_lib_);
 		if (error)
 		{
-			ASSERT3(0, "error done freetype %d", error);
+			ASSERT2(0, "error done freetype %d", error);
 		}
 	}
 #endif
@@ -472,7 +538,7 @@ const Font* FontMgr::GetFont(const std::string& path, int want_pixel_height /*= 
 				FT_Error error = FT_Init_FreeType(&ft_lib_);
 				if (error)
 				{
-					ASSERT3(0, "error init freetype %d", error);
+					ASSERT2(0, "error init freetype %d", error);
 					return NULL;
 				}
 			}

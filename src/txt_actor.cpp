@@ -82,8 +82,8 @@ class SpriteTxtMeshConstructor : public TxtMeshConstructor
                         owner_->font_ref_->filter_min(),
                         owner_->font_ref_->filter_mag());
     
-    owner_->width_ = width / resolution_scale;
-    owner_->height_ = height / resolution_scale;
+    owner_->width_ = Round(width / resolution_scale);
+    owner_->height_ = Round(height / resolution_scale);
     
     if (owner_->render_data_.vertex_buffer == 0)
 		{
@@ -92,12 +92,12 @@ class SpriteTxtMeshConstructor : public TxtMeshConstructor
 		    
     float size_scale = owner_->font_ref_->GetSizeScale(owner_->font_size_);
 
-    Vector2 size(owner_->width_ * size_scale, owner_->height_ * size_scale);
+    Vector2 size(Round(owner_->width_ * size_scale),  Round(owner_->height_ * size_scale));
     Vector2 start;
     if (owner_->is_pos_center_)
     {
-      start.x = -size.x * 0.5f;
-      start.y = size.y * 0.5f;
+      start.x =  Round(-size.x * 0.5f);
+      start.y =  Round(size.y * 0.5f);
     }
     
     Vector2 uv_size(static_cast<float>(width) / tex->width,
