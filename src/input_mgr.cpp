@@ -35,7 +35,22 @@ namespace ERI {
 	{
 		if (handler_) handler_->Click(event);
 	}
+
+	void InputMgr::RightPress(const InputEvent& event)
+	{
+		if (handler_) handler_->RightPress(event);
+	}
 	
+	void InputMgr::RightRelease(const InputEvent& event)
+	{
+		if (handler_) handler_->RightRelease(event);
+	}
+	
+	void InputMgr::RightClick(const InputEvent& event)
+	{
+		if (handler_) handler_->RightClick(event);
+	}
+
 	void InputMgr::DoubleClick(const InputEvent& event)
 	{
 		if (handler_) handler_->DoubleClick(event);
@@ -50,20 +65,15 @@ namespace ERI {
 	{
 		if (handler_) handler_->MultiMove(events, num, is_start);
 	}
-	
-	void InputMgr::Scroll(const InputEvent& event)
-	{
-		if (handler_) handler_->Scroll(event);
-	}
-	
+
 	void InputMgr::OverMove(const InputEvent& event)
 	{
 		if (handler_) handler_->OverMove(event);
 	}
-	
-	void InputMgr::RightClick(const InputEvent& event)
+
+	void InputMgr::Scroll(const InputEvent& event)
 	{
-		if (handler_) handler_->RightClick(event);
+		if (handler_) handler_->Scroll(event);
 	}
 
 	void InputMgr::KeyDown(const InputKeyEvent& event)

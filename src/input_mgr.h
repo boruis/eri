@@ -25,7 +25,12 @@ namespace ERI {
 		KEY_LEFT,
 		KEY_RIGHT,
 		KEY_DOWN,
-		KEY_UP
+		KEY_UP,
+		KEY_W,
+		KEY_S,
+		KEY_A,
+		KEY_D,
+		KEY_SPACE
 	};
 	
 	enum FunctionKeyFlag
@@ -87,13 +92,18 @@ namespace ERI {
 		virtual void Press(const InputEvent& event) {}
 		virtual void Release(const InputEvent& event) {}
 		virtual void Click(const InputEvent& event) {}
+		
+		virtual void RightPress(const InputEvent& event) {}
+		virtual void RightRelease(const InputEvent& event) {}
+		virtual void RightClick(const InputEvent& event) {}
+
 		virtual void DoubleClick(const InputEvent& event) {}
+
 		virtual void Move(const InputEvent& event) {}
 		virtual void MultiMove(const InputEvent* events, int num, bool is_start) {}
-		
-		virtual void Scroll(const InputEvent& event) {}
 		virtual void OverMove(const InputEvent& event) {}
-		virtual void RightClick(const InputEvent& event) {}
+		virtual void Scroll(const InputEvent& event) {}
+    
 		virtual void KeyDown(const InputKeyEvent& event) {}
 		virtual void KeyUp(const InputKeyEvent& event) {}
 		
@@ -114,13 +124,18 @@ namespace ERI {
 		void Press(const InputEvent& event);
 		void Release(const InputEvent& event);
 		void Click(const InputEvent& event);
+
+		void RightPress(const InputEvent& event);
+		void RightRelease(const InputEvent& event);
+		void RightClick(const InputEvent& event);
+    
 		void DoubleClick(const InputEvent& event);
+
 		void Move(const InputEvent& event);
 		void MultiMove(const InputEvent* events, int num, bool is_start);
-
-		void Scroll(const InputEvent& event);
 		void OverMove(const InputEvent& event);
-		void RightClick(const InputEvent& event);
+		void Scroll(const InputEvent& event);
+    
 		void KeyDown(const InputKeyEvent& event);
 		void KeyUp(const InputKeyEvent& event);
 
