@@ -10,6 +10,8 @@
 #ifndef ERI_OBSERVER_H
 #define ERI_OBSERVER_H
 
+#include <cstddef>
+
 namespace ERI
 {
 

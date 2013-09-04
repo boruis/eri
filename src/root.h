@@ -10,6 +10,8 @@
 #ifndef ERI_ROOT_H
 #define ERI_ROOT_H
 
+#include <cstddef>
+
 namespace ERI {
 	
 	class Renderer;

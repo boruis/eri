@@ -1155,7 +1155,7 @@ namespace ERI {
 		
 		glLoadIdentity();
 
-#if ERI_PLATFORM == ERI_PLATFORM_WIN || ERI_PLATFORM == ERI_PLATFORM_MAC
+#ifdef ERI_GL
 		glOrtho(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, near_z, far_z);
 #else
 		glOrthof(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, near_z, far_z);
@@ -1189,7 +1189,7 @@ namespace ERI {
 		float half_height = near_z * tan(angle);
 		float half_width = aspect * half_height;
 		
-#if ERI_PLATFORM == ERI_PLATFORM_WIN || ERI_PLATFORM == ERI_PLATFORM_MAC
+#ifdef ERI_GL
 		glFrustum(-half_width, half_width, -half_height, half_height, near_z, far_z);
 #else
 		glFrustumf(-half_width, half_width, -half_height, half_height, near_z, far_z);
