@@ -1110,10 +1110,10 @@ namespace ERI {
 	
 	void RendererES1::SetClearDepth(float clamped_depth)
 	{
-#ifdef ERI_GLES
-		glClearDepthf(clamped_depth);
-#else
+#ifdef ERI_GL
 		glClearDepth(clamped_depth);
+#else
+		glClearDepthf(clamped_depth);
 #endif
 	}
 	

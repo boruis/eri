@@ -32,13 +32,13 @@
 
 // config
 
-#if ERI_PLATFORM == ERI_PLATFORM_WIN || ERI_PLATFORM == ERI_PLATFORM_MAC || ERI_PLATFORM_LINUX
+#if ERI_PLATFORM == ERI_PLATFORM_WIN || ERI_PLATFORM == ERI_PLATFORM_MAC || ERI_PLATFORM == ERI_PLATFORM_LINUX
 #  define ERI_GL
 #elif  ERI_PLATFORM == ERI_PLATFORM_IOS || ERI_PLATFORM == ERI_PLATFORM_ANDROID
 #  define ERI_GLES
 #endif
 
-#if ERI_PLATFORM == ERI_PLATFORM_WIN || ERI_PLATFORM == ERI_PLATFORM_MAC || ERI_PLATFORM_LINUX
+#if ERI_PLATFORM == ERI_PLATFORM_WIN || ERI_PLATFORM == ERI_PLATFORM_MAC || ERI_PLATFORM == ERI_PLATFORM_LINUX
 #  if !defined(ERI_TEXTURE_READER_NO_FREEIMAGE)
 #    define ERI_TEXTURE_READER_FREEIMAGE
 #  endif
@@ -100,9 +100,9 @@ typedef unsigned int uint32_t;
 
 //
 
-#include <cstddef>
-#include <cstdlib>
-#include <cstring>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 
 // log
 
@@ -115,7 +115,7 @@ typedef unsigned int uint32_t;
 #    define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "eri", __VA_ARGS__))
 #    define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "eri", __VA_ARGS__))
 #  else
-#    include <cstdio>
+#    include <stdio.h>
 #    define LOGI(...) { fprintf(stdout, __VA_ARGS__); fputc('\n', stdout); }
 #    define LOGW(...) { fprintf(stderr, __VA_ARGS__); fputc('\n', stderr); }
 #  endif
@@ -127,7 +127,7 @@ typedef unsigned int uint32_t;
 #  define ASSERT(exp)
 #  define ASSERT2(exp, ...)
 #else
-#  include <cassert>
+#  include <assert.h>
 #  define ASSERT(exp) { if (!(exp)) { LOGW("ASSERT failed: (%s) at %s:%d", #exp, __FILE__, __LINE__); assert(0);} }
 #  define ASSERT2(exp, ...)	{ if (!(exp)) { LOGW("ASSERT failed: (%s) at %s:%d", #exp, __FILE__, __LINE__); LOGW(__VA_ARGS__); assert(0); } }
 #endif
