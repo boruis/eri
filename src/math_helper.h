@@ -42,6 +42,7 @@ namespace ERI {
 		else if (result > max_value) result = max_value;
 		return result;
 	}
+	
 	template<typename T>
 	inline T Abs(const T& a) { return (a > 0) ? a : -a; }
 	
@@ -118,15 +119,8 @@ namespace ERI {
 		inline bool operator == (const Vector2& v) const { return (x == v.x && y == v.y); }
 		inline bool operator != (const Vector2& v) const { return (x != v.x || y != v.y); }
 		
-		inline float DotProduct(const Vector2& v) const
-        {
-            return x * v.x + y * v.y;
-        }
-		
-		inline float CrossProduct(const Vector2& v) const
-		{
-			return x * v.y - y * v.x;
-		}
+		inline float DotProduct(const Vector2& v) const { return x * v.x + y * v.y; }
+		inline float CrossProduct(const Vector2& v) const { return x * v.y - y * v.x; }
 		
 		float Length() const;
 		float LengthSquared() const;
@@ -136,8 +130,13 @@ namespace ERI {
 		float GetRotateToDegree(const Vector2& target) const;
 		
 		float x, y;
+    
+		static const Vector2 ZERO;
+		static const Vector2 UNIT;
+		static const Vector2 UNIT_X;
+		static const Vector2 UNIT_Y;
 	};
-	
+
 #pragma mark Vector3
 	
 	struct Vector3
@@ -160,21 +159,27 @@ namespace ERI {
 		inline bool operator != (const Vector3& v) const { return (x != v.x || y != v.y || z != v.z); }
 		
 		inline float DotProduct(const Vector3& v) const
-        {
-            return x * v.x + y * v.y + z * v.z;
-        }
+		{
+			return x * v.x + y * v.y + z * v.z;
+		}
 		inline Vector3 CrossProduct(const Vector3& v) const
-        {
-            return Vector3(y * v.z - z * v.y,
+		{
+			return Vector3(y * v.z - z * v.y,
 						   z * v.x - x * v.z,
 						   x * v.y - y * v.x);
-        }
+		}
 		
 		float Length() const;
 		float LengthSquared() const;
 		float Normalize();
 		
 		float x, y, z;
+    
+		static const Vector3 ZERO;
+		static const Vector3 UNIT;
+		static const Vector3 UNIT_X;
+		static const Vector3 UNIT_Y;
+		static const Vector3 UNIT_Z;
 	};
 	
 	enum Matrix3RowCol
@@ -580,9 +585,20 @@ namespace ERI {
 		inline bool operator != (const Color& c) const { return (r != c.r || g != c.g || b != c.b || a != c.a); }
 		
 		float r, g, b, a;
+		
+		static Color FromInt(int r, int g, int b, int a = 255) { return Color(r / 255.f, g / 255.f, b / 255.f, a / 255.f); }
+		static Color FromHSL(float h, float s, float l);
+		
+		static const Color WHITE;
+		static const Color BLACK;
+		static const Color RED;
+		static const Color GREEN;
+		static const Color BLUE;
+		static const Color ORANGE;
+		static const Color YELLOW;
+		static const Color CYAN;
+		static const Color PURPLE;
 	};
-	
-	void HSLtoRGB(float h, float s, float l, Color& out_rgb);
 
 }
 

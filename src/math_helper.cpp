@@ -40,6 +40,10 @@ namespace ERI {
 		return radian * inverse_radian * 360;
 	}
 	
+	const Vector2 Vector2::UNIT = Vector2(1.f, 1.f);
+	const Vector2 Vector2::UNIT_X = Vector2(1.f, 0.f);
+	const Vector2 Vector2::UNIT_Y = Vector2(0.f, 1.f);
+	
 	Vector2::Vector2(const Vector3& v) : x(v.x), y(v.y)
 	{
 	}
@@ -100,6 +104,11 @@ namespace ERI {
 		}
 	}
 	
+	const Vector3 Vector3::UNIT = Vector3(1.f, 1.f, 1.f);
+	const Vector3 Vector3::UNIT_X = Vector3(1.f, 0.f, 0.f);
+	const Vector3 Vector3::UNIT_Y = Vector3(0.f, 1.f, 0.f);
+	const Vector3 Vector3::UNIT_Z = Vector3(0.f, 0.f, 1.f);
+
 	float Vector3::Length() const
 	{
 		return sqrt(x * x + y * y + z * z);
@@ -1649,13 +1658,9 @@ namespace ERI {
 
 #pragma mark Color
 	
-	void HSLtoRGB(float h, float s, float l, Color& out_rgb)
+	Color Color::FromHSL(float h, float s, float l)
 	{
-		if (s == 0.f)
-		{
-			out_rgb.r = out_rgb.g = out_rgb.b = l;
-			return;
-		}
+		if (s == 0.f) return Color(l, l, l);
 		
 		float q = (l < 0.5f) ? (l * (1 + s)) : (l + s - (l * s));
 		float p = 2 * l - q;
@@ -1679,9 +1684,16 @@ namespace ERI {
 			else t[i] = p;
 		}
 		
-		out_rgb.r = t[0];
-		out_rgb.g = t[1];
-		out_rgb.b = t[2];
+		return Color(t[0], t[1], t[2]);
 	}
+
+	const Color Color::BLACK = Color(0.f, 0.f, 0.f);
+	const Color Color::RED = Color(1.f, 0.f, 0.f);
+	const Color Color::GREEN = Color(0.f, 1.f, 0.f);
+	const Color Color::BLUE = Color(0.f, 0.f, 1.f);
+	const Color Color::ORANGE = Color(1.f, 0.5f, 0.f);
+	const Color Color::YELLOW = Color(1.f, 1.f, 0.f);
+	const Color Color::CYAN = Color(0.f, 1.f, 1.f);
+	const Color Color::PURPLE = Color(1.f, 0.f, 1.f);
 
 }
