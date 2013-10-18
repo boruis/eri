@@ -11,6 +11,7 @@
 #define ERI_INPUT_MGR_H
 
 #include <string>
+#include <vector>
 
 namespace ERI {
 	
@@ -22,6 +23,7 @@ namespace ERI {
 		KEY_DELETE,
 		KEY_BACKSPACE,
 		KEY_ESCAPE,
+		KEY_TAB,
 		KEY_LEFT,
 		KEY_RIGHT,
 		KEY_DOWN,
@@ -30,7 +32,14 @@ namespace ERI {
 		KEY_S,
 		KEY_A,
 		KEY_D,
-		KEY_SPACE
+		KEY_SPACE,
+		KEY_Q,
+		KEY_E,
+		KEY_R,
+		KEY_P,
+		KEY_L,
+		KEY_1,
+		KEY_2
 	};
 	
 	enum FunctionKeyFlag
@@ -67,14 +76,14 @@ namespace ERI {
 	struct InputEvent
 	{
 		InputEvent()
-			: uid(0), x(0), y(0), dx(0), dy(0), function_key_status(0) {}
+			: uid(-1), x(0), y(0), dx(0), dy(0), function_key_status(0) {}
 		
-		InputEvent(unsigned int _uid, int _x, int _y)
+		InputEvent(int _uid, int _x, int _y)
 			: uid(_uid), x(_x), y(_y), dx(0), dy(0), function_key_status(0) {}
 		
-		unsigned int	uid;
-		int				x, y, dx, dy;
-		unsigned int	function_key_status;
+		int uid;
+		int x, y, dx, dy;
+		unsigned int function_key_status;
 	};
 	
 	struct InputKeyEvent
@@ -141,14 +150,21 @@ namespace ERI {
 
 		void Accelerate(const Vector3& g);
 		void Shake();
-    
+
 		void JoystickDown(JoystickCode code);
 		void JoystickUp(JoystickCode code);
 		void JoystickAxis(JoystickCode code, float x, float y);
-		
+
 		inline void set_handler(InputHandler* handler) { handler_ = handler; }
 		
+		inline const std::vector<InputEvent>& touches() { return touches_; }
+		
 	private:
+		void AddTouch(const InputEvent& event);
+		void RemoveTouch(const InputEvent& event);
+		
+		std::vector<InputEvent> touches_;
+		
 		InputHandler*	handler_;
 	};
 

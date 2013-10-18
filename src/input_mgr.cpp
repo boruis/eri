@@ -23,11 +23,19 @@ namespace ERI {
 
 	void InputMgr::Press(const InputEvent& event)
 	{
+#ifdef ERI_RECORD_MULTI_TOUCH
+		AddTouch(event);
+#endif
+
 		if (handler_) handler_->Press(event);
 	}
 	
 	void InputMgr::Release(const InputEvent& event)
 	{
+#ifdef ERI_RECORD_MULTI_TOUCH
+		RemoveTouch(event);
+#endif
+
 		if (handler_) handler_->Release(event);
 	}
 	
@@ -58,11 +66,20 @@ namespace ERI {
 
 	void InputMgr::Move(const InputEvent& event)
 	{
+#ifdef ERI_RECORD_MULTI_TOUCH
+		AddTouch(event);
+#endif
+
 		if (handler_) handler_->Move(event);
 	}
 	
 	void InputMgr::MultiMove(const InputEvent* events, int num, bool is_start)
 	{
+#ifdef ERI_RECORD_MULTI_TOUCH
+		for (int i = 0; i < num; ++i)
+			AddTouch(events[i]);
+#endif
+
 		if (handler_) handler_->MultiMove(events, num, is_start);
 	}
 
@@ -109,6 +126,41 @@ namespace ERI {
 	void InputMgr::JoystickAxis(JoystickCode code, float x, float y)
 	{
 		if (handler_) handler_->JoystickAxis(code, x, y);
+	}
+
+	void InputMgr::AddTouch(const InputEvent& event)
+	{
+#ifdef ERI_RECORD_MULTI_TOUCH
+		size_t num = touches_.size();
+		for (int i = 0; i < num; ++i)
+		{
+			if (touches_[i].uid == event.uid)
+			{
+				touches_[i] = event;
+				return;
+			}
+		}
+
+		touches_.push_back(event);
+#endif
+	}
+
+	void InputMgr::RemoveTouch(const InputEvent& event)
+	{
+#ifdef ERI_RECORD_MULTI_TOUCH
+		size_t num = touches_.size();
+		for (int i = 0; i < num; ++i)
+		{
+			if (touches_[i].uid == event.uid)
+			{
+				if (i < (num - 1))
+					touches_[i] = touches_[num - 1];
+				
+				touches_.pop_back();
+				break;
+			}
+		}
+#endif
 	}
 
 }
