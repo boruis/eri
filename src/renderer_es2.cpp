@@ -243,7 +243,7 @@ namespace ERI {
 			glBlendFunc(blend_src_factor_, blend_dst_factor_);
 		}
 		
-#if ERI_PLATFORM != ERI_PLATFORM_NACL
+#ifdef ERI_RENDERER_ES1
 		if (alpha_test_enable_ &&
 			(alpha_test_func_ != data->alpha_test_func ||
 			 alpha_test_ref_ != data->alpha_test_ref))
