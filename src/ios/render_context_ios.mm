@@ -32,17 +32,13 @@ namespace ERI {
 		}
 	}
 	
-	bool RenderContextIphone::Init(int version)
+	bool RenderContextIphone::Init()
 	{
-		switch (version)
-		{
-			case 1:
-				context_ = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES1];
-				break;
-			case 2:
-				context_ = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-				break;
-		}
+#ifdef ERI_RENDERER_ES1
+		context_ = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES1];
+#else
+		context_ = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+#endif
 		
 		if (!context_ || ![EAGLContext setCurrentContext:context_])
 		{
@@ -54,7 +50,11 @@ namespace ERI {
 	
 	void RenderContextIphone::BackingLayer(void* layer)
 	{
+#ifdef ERI_RENDERER_ES1
 		[context_ renderbufferStorage:GL_RENDERBUFFER_OES fromDrawable:(CAEAGLLayer*)layer];
+#else
+		[context_ renderbufferStorage:GL_RENDERBUFFER fromDrawable:(CAEAGLLayer*)layer];
+#endif
 	}
 	
 	void RenderContextIphone::SetAsCurrent()
@@ -64,7 +64,11 @@ namespace ERI {
 	
 	void RenderContextIphone::Present()
 	{
+#ifdef ERI_RENDERER_ES1
 		[context_ presentRenderbuffer:GL_RENDERBUFFER_OES];
+#else
+		[context_ presentRenderbuffer:GL_RENDERBUFFER];
+#endif
 	}
 
 }

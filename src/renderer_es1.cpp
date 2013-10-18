@@ -156,7 +156,7 @@ namespace ERI {
 		context_ = new RenderContextIphone;
 #endif
 
-		if (context_ && !context_->Init(1))
+		if (context_ && !context_->Init())
 		{
 			delete context_;
 			context_ = NULL;
