@@ -110,8 +110,8 @@ namespace ERI {
 		
 		[txt_str drawInRect:CGRectMake(0, 0, actual_size.width, actual_size.height)
 				   withFont:font
-			  lineBreakMode:UILineBreakModeWordWrap
-				  alignment:align_center ? UITextAlignmentCenter : UITextAlignmentLeft];
+			  lineBreakMode:NSLineBreakByWordWrapping
+				  alignment:align_center ? NSTextAlignmentCenter : NSTextAlignmentLeft];
 
 		[txt_str release];
 		UIGraphicsPopContext();
