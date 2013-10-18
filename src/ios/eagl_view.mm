@@ -275,7 +275,7 @@ static bool	in_multi_move;
 	{
 		shake_start_time = CFAbsoluteTimeGetCurrent();
 		ERI::Root::Ins().input_mgr()->Shake();
-    }
+	}
 } 
 
 @end
