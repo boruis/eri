@@ -182,7 +182,15 @@ namespace ERI {
 	
 	static bool SortCompareSceneActor(SceneActor* actor1, SceneActor* actor2)
 	{
-		return (actor1->GetViewDepth() < actor2->GetViewDepth());
+		// null actor move to back
+		
+		if (NULL == actor2)
+			return NULL != actor1;
+		
+		if (NULL == actor1)
+			return false;
+		
+		return actor1->GetViewDepth() < actor2->GetViewDepth();
 	}
 	
 	void SortActorGroup::Render(Renderer* renderer)
@@ -192,13 +200,20 @@ namespace ERI {
 		if (is_sort_dirty_)
 		{
 			std::sort(actors_.begin(), actors_.end(), SortCompareSceneActor);
+			
+			// clean up
+			
+			while (NULL == actors_.back())
+				actors_.pop_back();
+			
 			is_sort_dirty_ = false;
 		}
 		
 		size_t num = actors_.size();
 		for (int i = 0; i < num; ++i)
 		{
-			actors_[i]->Render(renderer);
+			if (actors_[i])
+				actors_[i]->Render(renderer);
 		}
 		
 		is_rendering_ = false;
@@ -224,10 +239,7 @@ namespace ERI {
 		{
 			if (actors_[i] == actor)
 			{
-				if (i != num - 1)
-					actors_[i] = actors_[num - 1];
-
-				actors_.pop_back();
+				actors_[i] = NULL; // clean up when sort
 				break;
 			}
 		}
@@ -245,9 +257,12 @@ namespace ERI {
 		int num = static_cast<int>(actors_.size());
 		for (int i = num - 1; i >= 0; --i)
 		{
-			actor = actors_[i]->GetHitActor(pos);
-			if (actor)
-				return actor;
+			if (actors_[i])
+			{
+				actor = actors_[i]->GetHitActor(pos);
+				if (actor)
+					return actor;
+			}
 		}
 		
 		return NULL;
