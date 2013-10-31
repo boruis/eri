@@ -40,6 +40,7 @@ namespace ERI {
 		return radian * inverse_radian * 360;
 	}
 	
+	const Vector2 Vector2::ZERO;
 	const Vector2 Vector2::UNIT = Vector2(1.f, 1.f);
 	const Vector2 Vector2::UNIT_X = Vector2(1.f, 0.f);
 	const Vector2 Vector2::UNIT_Y = Vector2(0.f, 1.f);
@@ -104,6 +105,7 @@ namespace ERI {
 		}
 	}
 	
+	const Vector3 Vector3::ZERO;
 	const Vector3 Vector3::UNIT = Vector3(1.f, 1.f, 1.f);
 	const Vector3 Vector3::UNIT_X = Vector3(1.f, 0.f, 0.f);
 	const Vector3 Vector3::UNIT_Y = Vector3(0.f, 1.f, 0.f);
@@ -1687,6 +1689,7 @@ namespace ERI {
 		return Color(t[0], t[1], t[2]);
 	}
 
+	const Color Color::WHITE;
 	const Color Color::BLACK = Color(0.f, 0.f, 0.f);
 	const Color Color::RED = Color(1.f, 0.f, 0.f);
 	const Color Color::GREEN = Color(0.f, 1.f, 0.f);
