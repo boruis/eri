@@ -275,8 +275,8 @@ float Framework::PreUpdate()
 //               event.motion.windowID);
 
           ERI::InputEvent e(0, event.motion.x, current_height_ - event.motion.y);
-          e.dx = event.motion.xrel;
-          e.dy = event.motion.yrel;
+          e.dx = -event.motion.xrel;
+          e.dy = -event.motion.yrel;
           switch (event.button.button)
           {
             case 0:

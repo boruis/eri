@@ -168,7 +168,7 @@ bool FileReader::Open(const char* path, bool is_binary)
 	if (info_) AAsset_close(info_->asset);
 	else info_ = new FileReaderInfo;
 
-    info_->asset = AAssetManager_open(g_android_app->activity->assetManager, path, AASSET_MODE_STREAMING);
+	info_->asset = AAssetManager_open(g_android_app->activity->assetManager, path, AASSET_MODE_STREAMING);
 	
 	if (info_->asset) return true;
 	
@@ -182,7 +182,7 @@ bool FileReader::Close()
 {
 	if (info_)
 	{
-        AAsset_close(info_->asset);
+		AAsset_close(info_->asset);
 		delete info_;
 		info_ = NULL;
 		

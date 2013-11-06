@@ -150,7 +150,7 @@ namespace ERI {
 		
 		inline SceneLayer* layer() { return layer_; }
 		
-		inline const SceneActor* parent() const { return parent_; }
+		inline SceneActor* parent() const { return parent_; }
 		
 		bool IsInFrustum();
 		inline const Sphere* bounding_sphere() { return bounding_sphere_; }

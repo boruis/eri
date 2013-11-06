@@ -36,7 +36,7 @@ namespace ERI {
 	template<typename T>
 	inline T Clamp(const T& a, const T& min_value, const T& max_value)
 	{
-		ASSERT(min_value < max_value);
+		ASSERT(min_value <= max_value);
 		T result = a;
 		if (result < min_value) result = min_value;
 		else if (result > max_value) result = max_value;
