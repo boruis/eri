@@ -25,6 +25,7 @@ namespace ERI {
 		rotate_degree(0),
 		need_update_model_matrix(true),
 		need_update_world_model_matrix(true),
+		need_update_inv_world_model_matrix(true),
 		apply_identity_model_matrix(false),
 		is_tex_transform(false),
 		tex_scale(Vector2(1, 1)),
@@ -86,4 +87,13 @@ namespace ERI {
 		world_model_matrix = model_matrix;
 	}
 
+	void RenderData::UpdateInvWorldModelMatrix()
+	{
+		ASSERT(!need_update_world_model_matrix);
+		ASSERT(need_update_inv_world_model_matrix);
+		
+		need_update_inv_world_model_matrix = false;
+		
+		Matrix4::Inverse(inv_world_model_matrix, world_model_matrix);
+	}
 }

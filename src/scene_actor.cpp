@@ -289,8 +289,7 @@ namespace ERI {
 
 	const Matrix4& SceneActor::GetInvTransform()
 	{
-		if (render_data_.need_update_model_matrix)
-			render_data_.UpdateModelMatrix();
+		GetTransform();
 
 		return render_data_.inv_model_matrix;
 	}
@@ -313,7 +312,17 @@ namespace ERI {
 		
 		return render_data_.world_model_matrix;
 	}
-	
+
+	const Matrix4& SceneActor::GetInvWorldTransform()
+	{
+		GetWorldTransform();
+		
+		if (render_data_.need_update_inv_world_model_matrix)
+			render_data_.UpdateInvWorldModelMatrix();
+		
+		return render_data_.inv_world_model_matrix;
+	}
+
 	Vector3 SceneActor::GetLocalSpacePos(const Vector3& world_space_pos)
 	{
 		std::vector<SceneActor*> parent_list;
@@ -692,6 +701,7 @@ namespace ERI {
 	void SceneActor::SetWorldTransformDirty(bool is_depth_dirty, bool is_child_depth_dirty)
 	{
 		render_data_.need_update_world_model_matrix = true;
+		render_data_.need_update_inv_world_model_matrix = true;
 		
 		size_t child_num = childs_.size();
 		for (int i = 0; i < child_num; ++i)

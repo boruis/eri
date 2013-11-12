@@ -79,7 +79,8 @@ namespace ERI {
 		void UpdateModelMatrix();
 		void UpdateWorldModelMatrix(const Matrix4& parent_world_model_matrix);
 		void UpdateWorldModelMatrix();
-		
+		void UpdateInvWorldModelMatrix();
+
 		// model
 		GLuint			vertex_buffer;
 		GLenum			vertex_type;
@@ -98,8 +99,9 @@ namespace ERI {
 		Matrix4	model_matrix;
 		Matrix4	inv_model_matrix;
 		Matrix4	world_model_matrix;
+		Matrix4	inv_world_model_matrix;
 		bool	need_update_model_matrix;
-		bool	need_update_world_model_matrix;
+		bool	need_update_world_model_matrix, need_update_inv_world_model_matrix;
 		bool	apply_identity_model_matrix;
 		
 		Vector3	world_view_pos;

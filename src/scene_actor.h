@@ -82,6 +82,7 @@ namespace ERI {
 		const Matrix4& GetTransform();
 		const Matrix4& GetInvTransform();
 		const Matrix4& GetWorldTransform();
+		const Matrix4& GetInvWorldTransform();
 		Vector3 GetLocalSpacePos(const Vector3& world_space_pos);
 		
 		// TODO: 2D & 3D transform interface is suck, re-design
