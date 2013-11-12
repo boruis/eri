@@ -19,7 +19,7 @@ namespace ERI {
 
 		mana::JavaCaller caller;
 
-		caller.Set("com/exe/eri", "CreateTxtTexture", "(Landroid/app/Activity;Ljava/lang/String;Ljava/lang/String;FZ)I");
+		caller.Set("com/exe/eri", "CreateSysTxtTexture", "(Landroid/app/Activity;Ljava/lang/String;Ljava/lang/String;FZ)I");
 
 		jstring jstr_txt = caller.env->NewStringUTF(txt.c_str());
 		jstring jstr_font_name = caller.env->NewStringUTF(font_name.c_str());
