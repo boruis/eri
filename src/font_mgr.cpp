@@ -82,7 +82,7 @@ void CalculateTxtSize(const uint32_t* chars,
 	}
 	
 	float size_scale = font->GetSizeScale(font_size);
-	height = font->common_line_height() * size_scale;
+	out_height = font->common_line_height() * size_scale;
 		
 	float now_width = 0;
 	for (int i = 0; i < length; ++i)
@@ -95,7 +95,7 @@ void CalculateTxtSize(const uint32_t* chars,
 				out_row_widths->push_back(now_width);
 			
 			now_width = 0;
-			height += font->common_line_height() * size_scale;
+			out_height += font->common_line_height() * size_scale;
 		}
 		else
 		{
@@ -110,7 +110,7 @@ void CalculateTxtSize(const uint32_t* chars,
 					out_row_widths->push_back(now_width);
 
 				now_width = 0;
-				height += font->common_line_height() * size_scale;
+				out_height += font->common_line_height() * size_scale;
 			}
       
 			now_width += setting.x_advance * size_scale;
