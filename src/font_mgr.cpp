@@ -20,42 +20,42 @@
 
 namespace ERI {
 	
-int CreateUnicodeArray(const std::string& txt, bool is_utf8, uint32_t*& out_chars)
+int CreateUnicodeArray(const TxtData& data, uint32_t*& out_chars)
 {
 	int length = 0;
 	
-	if (is_utf8)
+	if (data.is_utf8)
 	{
-		int max_buff_size = static_cast<int>(txt.length()) * 2; // TODO: may not enough
+		int max_buff_size = static_cast<int>(data.str.length()) * 2; // TODO: may not enough
 		out_chars = new uint32_t[max_buff_size];
-		length = GetUnicodeFromUTF8(txt, max_buff_size, out_chars);
+		length = GetUnicodeFromUTF8(data.str, max_buff_size, out_chars);
 	}
 	else
 	{
-		out_chars = new uint32_t[txt.length()];
+		out_chars = new uint32_t[data.str.length()];
 		
-		for (int i = 0; i < txt.length(); ++i)
-			out_chars[i] = txt[i];
+		for (int i = 0; i < data.str.length(); ++i)
+			out_chars[i] = data.str[i];
 		
-		length = static_cast<int>(txt.length());
+		length = static_cast<int>(data.str.length());
 	}
 	
 	return length;
 }
 
-void CalculateTxtSize(const std::string& txt,
+void CalculateTxtSize(const TxtData& data,
 					  const Font* font,
 					  int font_size,
-					  bool is_utf8,
-					  float& width,
-					  float& height)
+					  float max_width,
+					  float& out_width,
+					  float& out_height)
 {
 	ASSERT(font);
 	
 	uint32_t* chars;
-	int length = CreateUnicodeArray(txt, is_utf8, chars);
+	int length = CreateUnicodeArray(data, chars);
 	
-	CalculateTxtSize(chars, length, font, font_size, width, height);
+	CalculateTxtSize(chars, length, font, font_size, max_width, out_width, out_height);
 	
 	delete [] chars;
 }
@@ -64,34 +64,35 @@ void CalculateTxtSize(const uint32_t* chars,
 					  int length,
 					  const Font* font,
 					  int font_size,
-					  float& width,
-					  float& height,
-					  std::vector<float>* row_widths /*= NULL*/)
+					  float max_width,
+					  float& out_width,
+					  float& out_height,
+					  std::vector<float>* out_row_widths /*= NULL*/)
 {
 	ASSERT(font);
 	
-	width = 0.0f;
-	
-	float size_scale = font->GetSizeScale(font_size);
-	height = font->common_line_height() * size_scale;
-	
+	out_width = out_height = 0.f;
+
 	if (length == 0)
 	{
-		if (row_widths)
-			row_widths->push_back(0);
+		if (out_row_widths)
+			out_row_widths->push_back(0.f);
 		
 		return;
 	}
 	
+	float size_scale = font->GetSizeScale(font_size);
+	height = font->common_line_height() * size_scale;
+		
 	float now_width = 0;
 	for (int i = 0; i < length; ++i)
 	{
 		if (chars[i] == '\n')
 		{
-			if (now_width > width) width = now_width;
+			if (now_width > out_width) out_width = now_width;
 			
-			if (row_widths)
-				row_widths->push_back(now_width);
+			if (out_row_widths)
+				out_row_widths->push_back(now_width);
 			
 			now_width = 0;
 			height += font->common_line_height() * size_scale;
@@ -99,14 +100,27 @@ void CalculateTxtSize(const uint32_t* chars,
 		else
 		{
 			const CharSetting& setting = font->GetCharSetting(chars[i]);
+      
+			if (max_width > 0.f &&
+				(now_width + setting.x_advance * size_scale) > max_width)
+			{
+				if (now_width > out_width) out_width = now_width;
+
+				if (out_row_widths)
+					out_row_widths->push_back(now_width);
+
+				now_width = 0;
+				height += font->common_line_height() * size_scale;
+			}
+      
 			now_width += setting.x_advance * size_scale;
 		}
 	}
 	
-	if (now_width > width) width = now_width;
+	if (now_width > out_width) out_width = now_width;
 	
-	if (row_widths)
-		row_widths->push_back(now_width);
+	if (out_row_widths)
+		out_row_widths->push_back(now_width);
 }
 	
 #pragma mark Font
@@ -115,6 +129,8 @@ Font::Font()
 	: texture_(NULL),
 	filter_min_(FILTER_NEAREST),
 	filter_mag_(FILTER_NEAREST),
+	wrap_s_(WRAP_REPEAT),
+	wrap_t_(WRAP_REPEAT),
 	size_(0),
 	common_line_height_(0),
 	common_base_(0)
@@ -141,6 +157,12 @@ void Font::SetTextureFilter(TextureFilter filter_min, TextureFilter filter_mag) 
 {
 	filter_min_ = filter_min;
 	filter_mag_ = filter_mag;
+}
+
+void Font::SetTextureWrap(ERI::TextureWrap wrap_s, ERI::TextureWrap wrap_t) const
+{
+	wrap_s_ = wrap_s;
+	wrap_t_ = wrap_t;
 }
 
 #pragma mark FontFntScript
@@ -226,11 +248,9 @@ public:
 	virtual bool Load(const std::string& path);
 	
 	virtual const Texture* CreateSpriteTxt(const std::string& name,
-		const std::string& txt,
-		int size,
-		bool is_pos_center,
-		bool is_utf8,
-		bool is_anti_alias,
+		const TxtData& data,
+		int font_size,
+		int max_width,
 		int& out_width,
 		int& out_height) const;
 	
@@ -285,21 +305,19 @@ bool FontFreeType::Load(const std::string& path)
 }
 	
 const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
-											 const std::string& txt,
-											 int size,
-											 bool is_pos_center,
-											 bool is_utf8,
-											 bool is_anti_alias,
+											 const TxtData& data,
+											 int font_size,
+											 int max_width,
 											 int& out_width,
 											 int& out_height) const
 {
 	uint32_t* unicodes;
-	int length = CreateUnicodeArray(txt, true, unicodes); // TODO: default use utf8?
+	int length = CreateUnicodeArray(data, unicodes); // TODO: default use utf8?
 	
 	out_width = out_height = 0;
   
-	if (size != size_)
-		ChangeFaceSize(size);
+	if (font_size != size_)
+		ChangeFaceSize(font_size);
 	
 	FT_GlyphSlot slot = face_->glyph;
 	FT_Error error;
@@ -332,6 +350,20 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
 		}
 		
 		CharSetting& setting = settings[i];
+
+		setting.x_advance = static_cast<int>(convert_fix26(slot->metrics.horiAdvance));
+
+		if (max_width > 0 && (start_x + setting.x_advance) > max_width)
+		{
+			if (is_pos_center)
+			{
+				line_width.push_back(start_x);
+				line_end.push_back(i - 1);
+			}
+			
+			start_x = 0;
+			start_y += common_line_height_;
+		}
 		
 		setting.x = start_x;
 		setting.y = start_y;
@@ -339,7 +371,6 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
 		setting.height = static_cast<int>(convert_fix26(slot->metrics.height));
 		setting.x_offset = static_cast<int>(convert_fix26(slot->metrics.horiBearingX));
 		setting.y_offset = common_base_ - static_cast<int>(convert_fix26(slot->metrics.horiBearingY));
-		setting.x_advance = static_cast<int>(convert_fix26(slot->metrics.horiAdvance));
 
 		start_x += setting.x_advance;
 		
@@ -444,11 +475,9 @@ public:
 	virtual bool Load(const std::string& path);
 
 	virtual const Texture* CreateSpriteTxt(const std::string& name,
-		const std::string& txt,
-		int size,
-		bool is_pos_center,
-		bool is_utf8,
-		bool is_anti_alias,
+		const TxtData& data,
+		int font_size,
+		int max_width,
 		int& out_width,
 		int& out_height) const;
 
@@ -465,18 +494,24 @@ bool FontSys::Load(const std::string& path)
 }
 
 const Texture* FontSys::CreateSpriteTxt(const std::string& name,
-		const std::string& txt,
-		int size,
-		bool is_pos_center,
-		bool is_utf8,
-		bool is_anti_alias,
+		const TxtData& data,
+		int font_size,
+		int max_width,
 		int& out_width,
 		int& out_height) const
 {
 	Vector2 acture_size;
 	std::string tex_name(name);
 	Root::Ins().texture_mgr()->ReleaseTexture(tex_name);
-	const Texture* tex = Root::Ins().texture_mgr()->GenerateTxtTexture(txt, name_, size, is_pos_center, acture_size, &tex_name);
+
+	const Texture* tex =
+		Root::Ins().texture_mgr()->GenerateTxtTexture(data.str,
+													  name_,
+													  font_size,
+													  data.is_pos_center,
+													  max_width,
+													  acture_size,
+													  &tex_name);
 	
 	ASSERT(tex);
 	

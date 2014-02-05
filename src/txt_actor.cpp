@@ -65,22 +65,27 @@ class SpriteTxtMeshConstructor : public TxtMeshConstructor
   {
     owner_->SetMaterial(NULL);
     
+    const Font* font = owner_->font_ref_;
+    const TxtData& data = owner_->data_;
+    
     int font_size = Round(owner_->font_size_ * owner_->resolution_scale_);
     float resolution_scale = static_cast<float>(font_size) / owner_->font_size_;
+    int max_width = Round(owner_->max_width_ * owner_->resolution_scale_);
     
     int width, height;
-    const Texture* tex = owner_->font_ref_->CreateSpriteTxt(tex_name_,
-                                                            owner_->txt_,
-                                                            font_size,
-                                                            owner_->is_pos_center_,
-                                                            owner_->is_utf8_,
-                                                            owner_->is_anti_alias_,
-                                                            width,
-                                                            height);
+    const Texture* tex = font->CreateSpriteTxt(tex_name_,
+                                               data,
+                                               font_size,
+                                               max_width,
+                                               width,
+                                               height);
 
     owner_->SetMaterial(tex,
                         owner_->font_ref_->filter_min(),
                         owner_->font_ref_->filter_mag());
+    
+    owner_->SetTextureWrap(owner_->font_ref_->wrap_s(),
+                           owner_->font_ref_->wrap_t());
     
     owner_->width_ = Round(width / resolution_scale);
     owner_->height_ = Round(height / resolution_scale);
@@ -90,11 +95,13 @@ class SpriteTxtMeshConstructor : public TxtMeshConstructor
 			glGenBuffers(1, &owner_->render_data_.vertex_buffer);
 		}
 		    
-    float size_scale = owner_->font_ref_->GetSizeScale(owner_->font_size_);
+    float size_scale = font->GetSizeScale(owner_->font_size_);
 
-    Vector2 size(Round(owner_->width_ * size_scale),  Round(owner_->height_ * size_scale));
+    Vector2 size(Round(owner_->width_ * size_scale),
+                 Round(owner_->height_ * size_scale));
+    
     Vector2 start;
-    if (owner_->is_pos_center_)
+    if (data.is_pos_center)
     {
       start.x =  Round(-size.x * 0.5f);
       start.y =  Round(size.y * 0.5f);
@@ -144,8 +151,11 @@ class AtlasTxtMeshConstructor : public TxtMeshConstructor
   
   virtual void Construct()
   {
+    const Font* font = owner_->font_ref_;
+    const TxtData& data = owner_->data_;
+
     uint32_t* chars;
-    now_len_ = CreateUnicodeArray(owner_->txt_, owner_->is_utf8_, chars);
+    now_len_ = CreateUnicodeArray(data, chars);
     
     int unit_vertex_num = 6;
     
@@ -164,9 +174,9 @@ class AtlasTxtMeshConstructor : public TxtMeshConstructor
       glGenBuffers(1, &owner_->render_data_.vertex_buffer);
     }
     
-    float inv_tex_width = 1.0f / owner_->font_ref_->texture()->width;
-    float inv_tex_height = 1.0f / owner_->font_ref_->texture()->height;
-    float size_scale = static_cast<float>(owner_->font_size_) / owner_->font_ref_->size();
+    float inv_tex_width = 1.0f / font->texture()->width;
+    float inv_tex_height = 1.0f / font->texture()->height;
+    float size_scale = font->GetSizeScale(owner_->font_size_);
     
     std::vector<float> row_widths;
     
@@ -174,11 +184,12 @@ class AtlasTxtMeshConstructor : public TxtMeshConstructor
                      now_len_,
                      owner_->font_ref_,
                      owner_->font_size_,
+                     owner_->max_width_,
                      owner_->width_,
                      owner_->height_,
                      &row_widths);
     
-    float line_height = owner_->font_ref_->common_line_height() * size_scale;
+    float line_height = font->common_line_height() * size_scale;
     if (owner_->force_line_height_ > 0.f)
     {
       owner_->height_ = (row_widths.size() - 1) * owner_->force_line_height_ + line_height;
@@ -186,8 +197,8 @@ class AtlasTxtMeshConstructor : public TxtMeshConstructor
     }
     
     int row = 0;
-    float start_x = owner_->is_pos_center_ ? row_widths[row] * -0.5f : 0;
-    float start_y = owner_->is_pos_center_ ? owner_->height_ * 0.5f : 0;
+    float start_x = data.is_pos_center ? row_widths[row] * -0.5f : 0;
+    float start_y = data.is_pos_center ? owner_->height_ * 0.5f : 0;
     int start_idx = 0;
     float scroll_u, scroll_v, unit_u, unit_v, offset_x, offset_y, size_x, size_y;
     
@@ -200,13 +211,21 @@ class AtlasTxtMeshConstructor : public TxtMeshConstructor
       if (chars[i] == '\n')
       {
         ++row;
-        start_x = owner_->is_pos_center_ ? row_widths[row] * -0.5f : 0;
+        start_x = data.is_pos_center ? row_widths[row] * -0.5f : 0;
         start_y -= line_height;
         ++invisible_num;
       }
       else
       {
-        const CharSetting& setting = owner_->font_ref_->GetCharSetting(chars[i]);
+        const CharSetting& setting = font->GetCharSetting(chars[i]);
+        
+        if (owner_->max_width_ > 0.f &&
+            (start_x + setting.x_advance * size_scale) > owner_->max_width_)
+        {
+          ++row;
+          start_x = data.is_pos_center ? row_widths[row] * -0.5f : 0;
+          start_y -= line_height;
+        }
         
         scroll_u = setting.x * inv_tex_width;
         scroll_v = setting.y * inv_tex_height;
@@ -282,15 +301,14 @@ TxtActor::TxtActor(const std::string& font_path, int font_size,
                    bool is_pos_center /*= false*/)
   : font_ref_(NULL),
     font_size_(font_size),
-    is_pos_center_(is_pos_center),
-    is_utf8_(false),
-    is_anti_alias_(true),
     resolution_scale_(1.f),
+    max_width_(0.f),
     width_(0.0f),
     height_(0.0f),
-    area_border_(0.0f),
     force_line_height_(0.0f)
 {
+  data_.is_pos_center = is_pos_center;
+  
   font_ref_ = Root::Ins().font_mgr()->GetFont(font_path);
   
   ASSERT(font_ref_);
@@ -316,23 +334,23 @@ TxtActor::~TxtActor()
   
 void TxtActor::SetIsUtf8(bool is_utf8)
 {
-  if (is_utf8_ == is_utf8)
+  if (data_.is_utf8 == is_utf8)
     return;
   
-  is_utf8_ = is_utf8;
+  data_.is_utf8 = is_utf8;
   
-  if (!txt_.empty())
+  if (!data_.str.empty())
     mesh_constructor_->Construct();
 }
 
 void TxtActor::SetIsAntiAlias(bool is_anti_alias)
 {
-  if (is_anti_alias_ == is_anti_alias)
+  if (data_.is_anti_alias == is_anti_alias)
     return;
   
-  is_anti_alias_ = is_anti_alias;
+  data_.is_anti_alias = is_anti_alias;
   
-  if (!txt_.empty())
+  if (!data_.str.empty())
     mesh_constructor_->Construct();
 }
 
@@ -343,20 +361,33 @@ void TxtActor::SetResolutionScale(float resolution_scale)
   
   resolution_scale_ = resolution_scale;
   
-  if (!txt_.empty())
+  if (!data_.str.empty())
+    mesh_constructor_->Construct();
+}
+
+void TxtActor::SetMaxWidth(float max_width)
+{
+  ASSERT(max_width > 0.f);
+
+  if (max_width_ == max_width)
+    return;
+  
+  max_width_ = max_width;
+  
+  if (!data_.str.empty())
     mesh_constructor_->Construct();
 }
 
 void TxtActor::SetTxt(const std::string& txt)
 {
-  txt_ = txt;
+  data_.str = txt;
   
   mesh_constructor_->Construct();
 }
   
 void TxtActor::SetForceLineHeight(float force_line_height, bool construct /*= false*/)
 {
-  ASSERT(force_line_height >= 0.0f);
+  ASSERT(force_line_height >= 0.f);
   
   if (force_line_height == force_line_height_)
     return;
@@ -369,10 +400,10 @@ void TxtActor::SetForceLineHeight(float force_line_height, bool construct /*= fa
 
 bool TxtActor::IsInArea(const Vector3& local_space_pos)
 {
-  if (local_space_pos.x >= ((is_pos_center_ ? (-width_ / 2) : 0) - area_border_)
-			&& local_space_pos.x <= ((is_pos_center_ ? (width_ / 2) : width_) + area_border_)
-			&& local_space_pos.y >= ((is_pos_center_ ? (-height_ / 2) : -height_) - area_border_)
-			&& local_space_pos.y <= ((is_pos_center_ ? (height_ / 2) : 0) + area_border_))
+  if (local_space_pos.x >= ((data_.is_pos_center ? (-width_ / 2) : 0) - area_border_.x)
+			&& local_space_pos.x <= ((data_.is_pos_center ? (width_ / 2) : width_) + area_border_.x)
+			&& local_space_pos.y >= ((data_.is_pos_center ? (-height_ / 2) : -height_) - area_border_.y)
+			&& local_space_pos.y <= ((data_.is_pos_center ? (height_ / 2) : 0) + area_border_.y))
   {
     return true;
   }

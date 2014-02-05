@@ -75,6 +75,7 @@ namespace ERI {
 											 const std::string& font_name,
 											 float font_size,
 											 bool align_center,
+											 float max_width,
 											 Vector2& out_actual_size)
 		:
 		TextureReader(true)
@@ -90,9 +91,14 @@ namespace ERI {
 			NSLog(@"Failed to get font object");
 			return;
 		}
+		
+		if (max_width > 0.f)
+		{
+			NSLog(@"txt max width %f", max_width);
+		}
 
 		NSString* txt_str = [[NSString alloc] initWithUTF8String:txt.c_str()];
-		CGSize actual_size = [txt_str sizeWithFont:font constrainedToSize:CGSizeMake(1024.f, 1024.f)];
+		CGSize actual_size = [txt_str sizeWithFont:font constrainedToSize:CGSizeMake(max_width > 0.f ? max_width : 1024.f, 1024.f)];
 		
 		width_ = next_power_of_2(actual_size.width);
 		height_ = next_power_of_2(actual_size.height);
@@ -103,19 +109,27 @@ namespace ERI {
 		CGContextRef context = CGBitmapContextCreate(data, width_, height_, 8, width_, colorSpace, kCGImageAlphaNone);
 		CGColorSpaceRelease(colorSpace);
 		
-		CGContextSetGrayFillColor(context, 1.0, 1.0);
-		CGContextTranslateCTM(context, 0.0, height_);
-		CGContextScaleCTM(context, 1.0, -1.0); // NOTE: NSString draws in UIKit referential i.e. renders upside-down compared to CGBitmapContext referential
-		UIGraphicsPushContext(context);
-		
-		[txt_str drawInRect:CGRectMake(0, 0, actual_size.width, actual_size.height)
-				   withFont:font
-			  lineBreakMode:NSLineBreakByWordWrapping
-				  alignment:align_center ? NSTextAlignmentCenter : NSTextAlignmentLeft];
+		if (NULL == context)
+		{
+			NSLog(@"Failed to create bitmap context");
+		}
+		else
+		{
+			CGContextSetGrayFillColor(context, 1.0, 1.0);
+			CGContextTranslateCTM(context, 0.0, height_);
+			CGContextScaleCTM(context, 1.0, -1.0); // NOTE: NSString draws in UIKit referential i.e. renders upside-down compared to CGBitmapContext referential
+			UIGraphicsPushContext(context);
+			
+			[txt_str drawInRect:CGRectMake(0, 0, actual_size.width, actual_size.height)
+					   withFont:font
+				  lineBreakMode:NSLineBreakByWordWrapping
+					  alignment:align_center ? NSTextAlignmentCenter : NSTextAlignmentLeft];
+			
+			UIGraphicsPopContext();
+			CGContextRelease(context);
+		}
 
 		[txt_str release];
-		UIGraphicsPopContext();
-		CGContextRelease(context);
 		
 		out_actual_size.x = actual_size.width;
 		out_actual_size.y = actual_size.height;

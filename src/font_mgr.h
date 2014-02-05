@@ -23,23 +23,39 @@
 namespace ERI {
 
 class Font;
+  
+struct TxtData
+{
+  TxtData() :
+    is_pos_center(false),
+    is_utf8(false),
+    is_anti_alias(false)
+  {
+  }
+  
+  std::string str;
+  bool is_pos_center;
+  bool is_utf8;
+  bool is_anti_alias;
+};
 
-int CreateUnicodeArray(const std::string& txt, bool is_utf8, uint32_t*& out_chars);
+int CreateUnicodeArray(const TxtData& data, uint32_t*& out_chars);
 	
-void CalculateTxtSize(const std::string& txt,
+void CalculateTxtSize(const TxtData& data,
 					  const Font* font,
 					  int font_size,
-					  bool is_utf8,
-					  float& width,
-					  float& height);
+					  float max_width,
+					  float& out_width,
+					  float& out_height);
 	
 void CalculateTxtSize(const uint32_t* chars,
 					  int length,
 					  const Font* font,
 					  int font_size,
-					  float& width,
-					  float& height,
-					  std::vector<float>* row_widths = NULL);
+					  float max_width,
+					  float& out_width,
+					  float& out_height,
+					  std::vector<float>* out_row_widths = NULL);
 
 #pragma mark Font
 	
@@ -62,21 +78,22 @@ public:
 	const CharSetting& GetCharSetting(uint32_t unicode) const;
 	
 	virtual const Texture* CreateSpriteTxt(const std::string& name,
-										   const std::string& txt,
-										   int size,
-										   bool is_pos_center,
-										   bool is_utf8,
-										   bool is_anti_alias,
+										   const TxtData& data,
+										   int font_size,
+										   int max_width,
 										   int& out_width,
 										   int& out_height) const { return NULL; }
 	
 	virtual float GetSizeScale(int want_size) const;
 	
 	void SetTextureFilter(TextureFilter filter_min, TextureFilter filter_mag) const;
+	void SetTextureWrap(TextureWrap wrap_s, TextureWrap wrap_t) const;
 	
 	inline const Texture* texture() const { return texture_; }
 	inline TextureFilter filter_min() const { return filter_min_; }
 	inline TextureFilter filter_mag() const { return filter_mag_; }
+	inline TextureWrap wrap_s() const { return wrap_s_; }
+	inline TextureWrap wrap_t() const { return wrap_t_; }
 	inline int size() const { return size_; }
 	inline int common_line_height() const { return common_line_height_; }
 	inline int common_base() const { return common_base_; }
@@ -88,6 +105,8 @@ protected:
 	
 	mutable	TextureFilter	filter_min_;
 	mutable	TextureFilter	filter_mag_;
+	mutable TextureWrap wrap_s_;
+	mutable TextureWrap wrap_t_;
 	
 	mutable	int	size_;
 	mutable	int	common_line_height_;

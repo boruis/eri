@@ -39,6 +39,7 @@ namespace ERI {
 							const std::string& font_name,
 							float font_size,
 							bool align_center,
+							float max_width,
 							Vector2& out_actual_size);
 		
 		virtual ~TextureReaderUIFont();

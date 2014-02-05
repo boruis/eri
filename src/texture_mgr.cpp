@@ -257,6 +257,7 @@ namespace ERI {
 												  const std::string& font_name,
 												  float font_size,
 												  bool align_center,
+												  float max_width,
 												  Vector2& out_actual_size,
 												  std::string* out_name /*= NULL*/)
 	{
@@ -266,7 +267,7 @@ namespace ERI {
 		}
 		
 #ifdef ERI_TEXTURE_READER_UIKIT
-		TextureReaderUIFont reader(txt, font_name, font_size, align_center, out_actual_size);
+		TextureReaderUIFont reader(txt, font_name, font_size, align_center, max_width, out_actual_size);
 #elif defined(ERI_TEXTURE_READER_ANDROID)
     TextureReaderSysTxtAndroid reader(txt, font_name, font_size, align_center, out_actual_size);
 #else

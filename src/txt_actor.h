@@ -10,11 +10,11 @@
 #define ERI_TXT_ACTOR_H
 
 #include "scene_actor.h"
+#include "font_mgr.h"
 
 namespace ERI
 {
 
-class Font;
 class TxtMeshConstructor;
   
 class TxtActor : public SceneActor
@@ -28,35 +28,35 @@ class TxtActor : public SceneActor
   void SetIsUtf8(bool is_utf8);
   void SetIsAntiAlias(bool is_anti_alias);
   void SetResolutionScale(float tex_size_scale);
+  void SetMaxWidth(float max_width);
   
   void SetTxt(const std::string& txt);
   void SetForceLineHeight(float force_line_height, bool construct = false);
   
-  inline const std::string& txt() { return txt_; }
+  inline const std::string& txt() { return data_.str; }
 
   inline float width() { return width_; }
   inline float height() { return height_; }
-    
-  inline void set_area_border(float size) { area_border_ = size; }
+
+  inline void set_area_border(float border) { area_border_.x = area_border_.y = border; }
+  inline void set_area_border(float border_x, float border_y) { area_border_.x = border_x; area_border_.y = border_y; }
 
  private:
   virtual bool IsInArea(const Vector3& local_space_pos);
   
   const Font* font_ref_;
   
-  int   font_size_;
-  bool  is_pos_center_;
+  int font_size_;
   
-  bool	is_utf8_;
-  bool  is_anti_alias_;
+  TxtData data_;
+  
   float resolution_scale_;
-
-  std::string txt_;
+  float max_width_;
   
   TxtMeshConstructor* mesh_constructor_;
   
   float width_, height_;
-  float area_border_;
+  Vector2 area_border_;
   
   float force_line_height_;
 
