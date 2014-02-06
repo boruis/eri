@@ -20,6 +20,8 @@ namespace ERI {
 
 	const char* GetResourcePath();
 	const char* GetHomePath();
+	std::string GetWritePath();
+	
 	const char* GetStringFileContent(const std::string& file_path);
 	
 	void SetDeviceOrientation(ViewOrientation orientation);

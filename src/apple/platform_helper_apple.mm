@@ -20,6 +20,11 @@ namespace ERI {
 	{
 		return [NSHomeDirectory() UTF8String];
 	}
+  
+	std::string GetWritePath()
+	{
+		return std::string(GetHomePath()) + "/Documents";
+	}
 	
 	const char* GetStringFileContent(const std::string& file_path)
 	{
@@ -31,12 +36,9 @@ namespace ERI {
 		out_array.clear();
 		
 		std::string absolute_path(name);
-#if ERI_PLATFORM == ERI_PLATFORM_IOS || ERI_PLATFORM == ERI_PLATFORM_MAC
 		if (absolute_path[0] != '/')
-		{
 			absolute_path = GetResourcePath() + std::string("/") + name;
-		}
-#endif
+		
 		absolute_path += ".plist";
 		
 		NSString* path = [NSString stringWithUTF8String:absolute_path.c_str()];
@@ -84,12 +86,9 @@ namespace ERI {
 		out_map.clear();
 		
 		std::string absolute_path(name);
-#if ERI_PLATFORM == ERI_PLATFORM_IOS || ERI_PLATFORM == ERI_PLATFORM_MAC
 		if (absolute_path[0] != '/')
-		{
 			absolute_path = GetResourcePath() + std::string("/") + name;
-		}
-#endif
+		
 		absolute_path += ".plist";
 		
 		NSString* path = [NSString stringWithUTF8String:absolute_path.c_str()];
