@@ -22,6 +22,7 @@
 		F657B91016143BE100690D98 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = F657B90F16143BE100690D98 /* libz.dylib */; };
 		F689F85A1619275800DC7B7C /* renderer_es2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F689F8591619275800DC7B7C /* renderer_es2.cpp */; };
 		F689F85C1619285B00DC7B7C /* shaders in Resources */ = {isa = PBXBuildFile; fileRef = F689F85B1619285B00DC7B7C /* shaders */; };
+		F68BBFC517D0E33100DB8759 /* libfreeimage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F68BBFC417D0E33100DB8759 /* libfreeimage.a */; };
 		F69135F11622E4FB004B8EF6 /* shader_mgr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F69135EF1622E4FB004B8EF6 /* shader_mgr.cpp */; };
 		F6AC86A81360EFB60067F913 /* sys_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6AC86A61360EFB60067F913 /* sys_helper.cpp */; };
 		F6B3AB4E1269CC2E009303FA /* font_mgr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6B3AB311269CC2E009303FA /* font_mgr.cpp */; };
@@ -36,7 +37,6 @@
 		F6B3AB581269CC2E009303FA /* texture_mgr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6B3AB4B1269CC2E009303FA /* texture_mgr.cpp */; };
 		F6B3AB681269CD0F009303FA /* demo_app.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6B3AB661269CD0F009303FA /* demo_app.cpp */; };
 		F6B3AB8F1269D224009303FA /* texture_reader_freeimage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6B3AB8D1269D224009303FA /* texture_reader_freeimage.cpp */; };
-		F6B3ABA71269D966009303FA /* libfreeimage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F6B3ABA61269D966009303FA /* libfreeimage.a */; };
 		F6B3ACB21269DB52009303FA /* media in Resources */ = {isa = PBXBuildFile; fileRef = F6B3ACB11269DB52009303FA /* media */; };
 		F6CCF5EB15358F0B00EFD95F /* texture_reader_libpng.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6CCF5E915358F0B00EFD95F /* texture_reader_libpng.cpp */; };
 		F6CCF5EF15358F5400EFD95F /* libpng.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F6CCF5EE15358F5400EFD95F /* libpng.a */; };
@@ -74,6 +74,7 @@
 		F689F8581619275800DC7B7C /* renderer_es2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = renderer_es2.h; path = ../../src/renderer_es2.h; sourceTree = "<group>"; };
 		F689F8591619275800DC7B7C /* renderer_es2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = renderer_es2.cpp; path = ../../src/renderer_es2.cpp; sourceTree = "<group>"; };
 		F689F85B1619285B00DC7B7C /* shaders */ = {isa = PBXFileReference; lastKnownFileType = folder; name = shaders; path = ../shaders; sourceTree = "<group>"; };
+		F68BBFC417D0E33100DB8759 /* libfreeimage.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libfreeimage.a; path = ../3rd/FreeImage/libfreeimage.a; sourceTree = "<group>"; };
 		F69135EF1622E4FB004B8EF6 /* shader_mgr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = shader_mgr.cpp; path = ../../src/shader_mgr.cpp; sourceTree = "<group>"; };
 		F69135F01622E4FB004B8EF6 /* shader_mgr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = shader_mgr.h; path = ../../src/shader_mgr.h; sourceTree = "<group>"; };
 		F6AC86A61360EFB60067F913 /* sys_helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sys_helper.cpp; path = ../../src/sys_helper.cpp; sourceTree = "<group>"; };
@@ -108,11 +109,10 @@
 		F6B3AB671269CD0F009303FA /* demo_app.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = demo_app.h; path = ../src/demo_app.h; sourceTree = SOURCE_ROOT; };
 		F6B3AB8D1269D224009303FA /* texture_reader_freeimage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = texture_reader_freeimage.cpp; path = ../../src/texture_reader_freeimage.cpp; sourceTree = SOURCE_ROOT; };
 		F6B3AB8E1269D224009303FA /* texture_reader_freeimage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = texture_reader_freeimage.h; path = ../../src/texture_reader_freeimage.h; sourceTree = SOURCE_ROOT; };
-		F6B3ABA61269D966009303FA /* libfreeimage.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libfreeimage.a; path = ../../../3rd/FreeImage/libfreeimage.a; sourceTree = SOURCE_ROOT; };
 		F6B3ACB11269DB52009303FA /* media */ = {isa = PBXFileReference; lastKnownFileType = folder; name = media; path = ../media; sourceTree = SOURCE_ROOT; };
 		F6CCF5E915358F0B00EFD95F /* texture_reader_libpng.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = texture_reader_libpng.cpp; path = ../../src/texture_reader_libpng.cpp; sourceTree = "<group>"; };
 		F6CCF5EA15358F0B00EFD95F /* texture_reader_libpng.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = texture_reader_libpng.h; path = ../../src/texture_reader_libpng.h; sourceTree = "<group>"; };
-		F6CCF5EE15358F5400EFD95F /* libpng.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpng.a; path = ../../../../3rd/libpng/libpng.a; sourceTree = "<group>"; };
+		F6CCF5EE15358F5400EFD95F /* libpng.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpng.a; path = ../3rd/libpng/libpng.a; sourceTree = "<group>"; };
 		F6E5DB111363BDCD00D71F1A /* txt_actor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 2; lastKnownFileType = sourcecode.cpp.cpp; name = txt_actor.cpp; path = ../../src/txt_actor.cpp; sourceTree = "<group>"; tabWidth = 2; usesTabs = 0; };
 		F6E5DB121363BDCD00D71F1A /* txt_actor.h */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 2; lastKnownFileType = sourcecode.c.h; name = txt_actor.h; path = ../../src/txt_actor.h; sourceTree = "<group>"; tabWidth = 2; usesTabs = 0; };
 		F6F1B59D13643297008F5876 /* observer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = observer.h; path = ../../src/observer.h; sourceTree = "<group>"; };
@@ -125,9 +125,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F68BBFC517D0E33100DB8759 /* libfreeimage.a in Frameworks */,
 				F657B91016143BE100690D98 /* libz.dylib in Frameworks */,
 				F6CCF5EF15358F5400EFD95F /* libpng.a in Frameworks */,
-				F6B3ABA71269D966009303FA /* libfreeimage.a in Frameworks */,
 				F657B90E16143BC200690D98 /* OpenGL.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 			);
@@ -195,7 +195,7 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				F6B3ABA61269D966009303FA /* libfreeimage.a */,
+				F68BBFC417D0E33100DB8759 /* libfreeimage.a */,
 				F6CCF5EE15358F5400EFD95F /* libpng.a */,
 				F657B90F16143BE100690D98 /* libz.dylib */,
 				F657B90D16143BC200690D98 /* OpenGL.framework */,
@@ -418,6 +418,7 @@
 					../3rd/libpng,
 					../3rd/FreeImage,
 					../3rd/rapidxml,
+					../3rd/freetype,
 				);
 				INFOPLIST_FILE = "eri-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
@@ -425,8 +426,9 @@
 					"$(inherited)",
 					../3rd/libpng,
 					../3rd/FreeImage,
-					"\"$(SRCROOT)/../../../3rd/FreeImage\"",
+					/usr/local/lib,
 				);
+				OTHER_LDFLAGS = "-lfreetype";
 				PRODUCT_NAME = eri;
 				SDKROOT = macosx;
 			};
@@ -444,6 +446,7 @@
 					../3rd/libpng,
 					../3rd/FreeImage,
 					../3rd/rapidxml,
+					../3rd/freetype,
 				);
 				INFOPLIST_FILE = "eri-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
@@ -451,8 +454,9 @@
 					"$(inherited)",
 					../3rd/libpng,
 					../3rd/FreeImage,
-					"\"$(SRCROOT)/../../../3rd/FreeImage\"",
+					/usr/local/lib,
 				);
+				OTHER_LDFLAGS = "-lfreetype";
 				PRODUCT_NAME = eri;
 				SDKROOT = macosx;
 			};
