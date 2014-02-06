@@ -17,6 +17,7 @@
 namespace ERI {
 	
 	struct Vector2;
+	struct TxtData;
 
 	class TextureReaderUIImage : public TextureReader
 	{
@@ -35,10 +36,9 @@ namespace ERI {
 	class TextureReaderUIFont : public TextureReader
 	{
 	public:
-		TextureReaderUIFont(const std::string& txt,
+		TextureReaderUIFont(const TxtData& data,
 							const std::string& font_name,
 							float font_size,
-							bool align_center,
 							float max_width,
 							Vector2& out_actual_size);
 		

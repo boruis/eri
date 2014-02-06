@@ -365,14 +365,15 @@ void TxtActor::SetResolutionScale(float resolution_scale)
     mesh_constructor_->Construct();
 }
 
-void TxtActor::SetMaxWidth(float max_width)
+void TxtActor::SetMaxWidth(float max_width, LineBreakMode line_break /*= LB_DEFAULT*/)
 {
   ASSERT(max_width > 0.f);
 
-  if (max_width_ == max_width)
+  if (max_width_ == max_width && data_.line_break == line_break)
     return;
   
   max_width_ = max_width;
+  data_.line_break = line_break;
   
   if (!data_.str.empty())
     mesh_constructor_->Construct();

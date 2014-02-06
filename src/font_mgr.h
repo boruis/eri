@@ -24,12 +24,19 @@ namespace ERI {
 
 class Font;
   
+enum LineBreakMode
+{
+  LB_DEFAULT = 0,
+  LB_TRUNCATE_TAIL
+};
+
 struct TxtData
 {
   TxtData() :
     is_pos_center(false),
     is_utf8(false),
-    is_anti_alias(false)
+    is_anti_alias(true),
+    line_break(LB_DEFAULT)
   {
   }
   
@@ -37,6 +44,7 @@ struct TxtData
   bool is_pos_center;
   bool is_utf8;
   bool is_anti_alias;
+  LineBreakMode line_break;
 };
 
 int CreateUnicodeArray(const TxtData& data, uint32_t*& out_chars);
@@ -77,7 +85,7 @@ public:
 
 	const CharSetting& GetCharSetting(uint32_t unicode) const;
 	
-	virtual const Texture* CreateSpriteTxt(const std::string& name,
+	virtual const Texture* CreateSpriteTxt(const std::string& tex_name,
 										   const TxtData& data,
 										   int font_size,
 										   int max_width,

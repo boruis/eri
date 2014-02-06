@@ -28,7 +28,8 @@ class TxtActor : public SceneActor
   void SetIsUtf8(bool is_utf8);
   void SetIsAntiAlias(bool is_anti_alias);
   void SetResolutionScale(float tex_size_scale);
-  void SetMaxWidth(float max_width);
+  
+  void SetMaxWidth(float max_width, LineBreakMode line_break = LB_DEFAULT);
   
   void SetTxt(const std::string& txt);
   void SetForceLineHeight(float force_line_height, bool construct = false);

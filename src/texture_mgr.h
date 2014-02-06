@@ -158,15 +158,8 @@ namespace ERI {
 		
 		const Texture* GetTexture(const std::string& resource_path, bool keep_texture_data = false);
 		const Texture* CreateTexture(const std::string& name, int width, int height, const void* data);
+		const Texture* CreateTexture(const std::string& name, TextureReader* reader);
 		void UpdateTexture(Texture* tex, const void* data);
-
-		const Texture* GenerateTxtTexture(const std::string& txt,
-										  const std::string& font_name,
-										  float font_size,
-										  bool align_center,
-										  float max_width,
-										  Vector2& out_actual_size,
-										  std::string* out_name = NULL);
 		
 		const Texture* GenerateRenderToTexture(int width, int height, PixelFormat format);
 		

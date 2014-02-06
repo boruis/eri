@@ -18,6 +18,16 @@
 #include "platform_helper.h"
 #include "sys_helper.h"
 
+#ifdef ERI_TEXTURE_READER_UIKIT
+#include "ios/texture_reader_uikit.h"
+#endif
+
+#ifdef ERI_TEXTURE_READER_ANDROID
+#include "android/texture_reader_android.h"
+#endif
+
+#include "texture_reader.h"
+
 namespace ERI {
 	
 int CreateUnicodeArray(const TxtData& data, uint32_t*& out_chars)
@@ -42,6 +52,8 @@ int CreateUnicodeArray(const TxtData& data, uint32_t*& out_chars)
 	
 	return length;
 }
+	
+// TODO: FontFreeType, FontSys handle
 
 void CalculateTxtSize(const TxtData& data,
 					  const Font* font,
@@ -247,7 +259,7 @@ public:
 	
 	virtual bool Load(const std::string& path);
 	
-	virtual const Texture* CreateSpriteTxt(const std::string& name,
+	virtual const Texture* CreateSpriteTxt(const std::string& tex_name,
 		const TxtData& data,
 		int font_size,
 		int max_width,
@@ -304,7 +316,7 @@ bool FontFreeType::Load(const std::string& path)
 	return true;
 }
 	
-const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
+const Texture* FontFreeType::CreateSpriteTxt(const std::string& tex_name,
 											 const TxtData& data,
 											 int font_size,
 											 int max_width,
@@ -332,7 +344,7 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
 	{
 		if (unicodes[i] == '\n')
 		{
-			if (is_pos_center)
+			if (data.is_pos_center)
 			{
 				line_width.push_back(start_x);
 				line_end.push_back(i);
@@ -355,7 +367,7 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
 
 		if (max_width > 0 && (start_x + setting.x_advance) > max_width)
 		{
-			if (is_pos_center)
+			if (data.is_pos_center)
 			{
 				line_width.push_back(start_x);
 				line_end.push_back(i - 1);
@@ -379,7 +391,7 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
 			out_height = start_y + common_line_height_;
 	}
 	
-	if (is_pos_center && length > 0)
+	if (data.is_pos_center && length > 0)
 	{
 		line_width.push_back(start_x);
 		line_end.push_back(length - 1);
@@ -418,7 +430,7 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
 			continue;
 		
 		error = FT_Load_Char(face_, unicodes[i],
-							 is_anti_alias ? FT_LOAD_RENDER : FT_LOAD_RENDER | FT_LOAD_MONOCHROME);
+							 data.is_anti_alias ? FT_LOAD_RENDER : FT_LOAD_RENDER | FT_LOAD_MONOCHROME);
 		if (error)
 		{
 			ASSERT2(0, "error load char %d", error);
@@ -448,7 +460,7 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& name,
 	
 	delete [] unicodes;
 
-	return Root::Ins().texture_mgr()->CreateTexture(name, tex_width, tex_height, buff);
+	return Root::Ins().texture_mgr()->CreateTexture(tex_name, tex_width, tex_height, buff);
 }
 
 void FontFreeType::ChangeFaceSize(int want_size) const
@@ -474,7 +486,7 @@ class FontSys : public Font
 public:
 	virtual bool Load(const std::string& path);
 
-	virtual const Texture* CreateSpriteTxt(const std::string& name,
+	virtual const Texture* CreateSpriteTxt(const std::string& tex_name,
 		const TxtData& data,
 		int font_size,
 		int max_width,
@@ -493,30 +505,37 @@ bool FontSys::Load(const std::string& path)
 	return true;
 }
 
-const Texture* FontSys::CreateSpriteTxt(const std::string& name,
+const Texture* FontSys::CreateSpriteTxt(const std::string& tex_name,
 		const TxtData& data,
 		int font_size,
 		int max_width,
 		int& out_width,
 		int& out_height) const
 {
-	Vector2 acture_size;
-	std::string tex_name(name);
+	ASSERT(!tex_name.empty());
+	
 	Root::Ins().texture_mgr()->ReleaseTexture(tex_name);
 
-	const Texture* tex =
-		Root::Ins().texture_mgr()->GenerateTxtTexture(data.str,
-													  name_,
-													  font_size,
-													  data.is_pos_center,
-													  max_width,
-													  acture_size,
-													  &tex_name);
+	Vector2 actual_size;
+	
+#ifdef ERI_TEXTURE_READER_UIKIT
+	TextureReaderUIFont reader(data,
+							   name_,
+							   font_size,
+							   max_width,
+							   actual_size);
+#elif defined(ERI_TEXTURE_READER_ANDROID)
+    TextureReaderSysTxtAndroid reader(data.str, font_name, font_size, data.is_pos_center, actual_size);
+#else
+	TextureReader reader(true);
+#endif
+	
+	const Texture* tex = Root::Ins().texture_mgr()->CreateTexture(tex_name, &reader);
 	
 	ASSERT(tex);
 	
-	out_width = acture_size.x;
-	out_height = acture_size.y;
+	out_width = actual_size.x;
+	out_height = actual_size.y;
 	
 	return tex;
 }

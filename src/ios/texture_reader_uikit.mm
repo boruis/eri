@@ -13,6 +13,7 @@
 #include "renderer.h"
 #include "platform_helper.h"
 #include "sys_helper.h"
+#include "font_mgr.h"
 
 namespace ERI {
 	
@@ -71,14 +72,12 @@ namespace ERI {
 	
 #pragma mark TextureReaderUIFont
 	
-	TextureReaderUIFont::TextureReaderUIFont(const std::string& txt,
+	TextureReaderUIFont::TextureReaderUIFont(const TxtData& data,
 											 const std::string& font_name,
 											 float font_size,
-											 bool align_center,
 											 float max_width,
 											 Vector2& out_actual_size)
-		:
-		TextureReader(true)
+		: TextureReader(true)
 	{
 		NSString* font_str = [[NSString alloc] initWithUTF8String:font_name.c_str()];
 		
@@ -92,21 +91,37 @@ namespace ERI {
 			return;
 		}
 		
+		NSString* txt_str = [[NSString alloc] initWithUTF8String:data.str.c_str()];
+
+		CGSize actual_size;
+		NSLineBreakMode break_mode = NSLineBreakByWordWrapping;
+		
 		if (max_width > 0.f)
 		{
-			NSLog(@"txt max width %f", max_width);
+			switch (data.line_break)
+			{
+				case LB_TRUNCATE_TAIL:
+					break_mode = NSLineBreakByTruncatingTail;
+					actual_size = [txt_str sizeWithFont:font forWidth:max_width lineBreakMode:break_mode];
+					break;
+					
+				default:
+					actual_size = [txt_str sizeWithFont:font constrainedToSize:CGSizeMake(max_width, 1024.f)];
+					break;
+			}
 		}
-
-		NSString* txt_str = [[NSString alloc] initWithUTF8String:txt.c_str()];
-		CGSize actual_size = [txt_str sizeWithFont:font constrainedToSize:CGSizeMake(max_width > 0.f ? max_width : 1024.f, 1024.f)];
+		else
+		{
+			actual_size = [txt_str sizeWithFont:font constrainedToSize:CGSizeMake(1024.f, 1024.f)];
+		}
 		
 		width_ = next_power_of_2(actual_size.width);
 		height_ = next_power_of_2(actual_size.height);
 		
-		void* data = calloc(height_, width_);
+		void* texture_data = calloc(height_, width_);
 		
 		CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceGray();
-		CGContextRef context = CGBitmapContextCreate(data, width_, height_, 8, width_, colorSpace, kCGImageAlphaNone);
+		CGContextRef context = CGBitmapContextCreate(texture_data, width_, height_, 8, width_, colorSpace, kCGImageAlphaNone);
 		CGColorSpaceRelease(colorSpace);
 		
 		if (NULL == context)
@@ -122,8 +137,8 @@ namespace ERI {
 			
 			[txt_str drawInRect:CGRectMake(0, 0, actual_size.width, actual_size.height)
 					   withFont:font
-				  lineBreakMode:NSLineBreakByWordWrapping
-					  alignment:align_center ? NSTextAlignmentCenter : NSTextAlignmentLeft];
+				  lineBreakMode:break_mode
+					  alignment:data.is_pos_center ? NSTextAlignmentCenter : NSTextAlignmentLeft];
 			
 			UIGraphicsPopContext();
 			CGContextRelease(context);
@@ -134,9 +149,9 @@ namespace ERI {
 		out_actual_size.x = actual_size.width;
 		out_actual_size.y = actual_size.height;
 
-		texture_id_ = Root::Ins().renderer()->GenerateTexture(data, width_, height_, ALPHA);
+		texture_id_ = Root::Ins().renderer()->GenerateTexture(texture_data, width_, height_, ALPHA);
 		
-		free(data);
+		free(texture_data);
 	}
 	
 	TextureReaderUIFont::~TextureReaderUIFont()

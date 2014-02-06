@@ -245,59 +245,27 @@ namespace ERI {
 		
 		return tex;
 	}
+  
+	const Texture* TextureMgr::CreateTexture(const std::string& name, TextureReader* reader)
+	{
+		ASSERT(!name.empty() && reader && reader->texture_id() > 0);
+		
+		// TODO: reader may not keep texture data, can't always update texture here
+		
+		ASSERT(texture_map_.find(name) == texture_map_.end());
+		
+		Texture* tex = new Texture(reader->texture_id(), reader->width(), reader->height());
+		
+		texture_map_.insert(std::make_pair(name, tex));
+		
+		return tex;
+	}
 	
 	void TextureMgr::UpdateTexture(Texture* tex, const void* data)
 	{
 		ASSERT(tex && tex->id > 0 && data);
 		
 		Root::Ins().renderer()->UpdateTexture(tex->id, data, tex->width, tex->height, RGBA);
-	}
-	
-	const Texture* TextureMgr::GenerateTxtTexture(const std::string& txt,
-												  const std::string& font_name,
-												  float font_size,
-												  bool align_center,
-												  float max_width,
-												  Vector2& out_actual_size,
-												  std::string* out_name /*= NULL*/)
-	{
-		if (out_name && !out_name->empty())
-		{
-			ASSERT(texture_map_.find(*out_name) == texture_map_.end());
-		}
-		
-#ifdef ERI_TEXTURE_READER_UIKIT
-		TextureReaderUIFont reader(txt, font_name, font_size, align_center, max_width, out_actual_size);
-#elif defined(ERI_TEXTURE_READER_ANDROID)
-    TextureReaderSysTxtAndroid reader(txt, font_name, font_size, align_center, out_actual_size);
-#else
-		TextureReader reader(true);
-#endif
-		
-		// TODO: check texture invalid number, maybe use int -1 is better
-		
-		if (reader.texture_id() == 0)
-			return NULL;
-		
-		Texture* tex = new Texture(reader.texture_id(), reader.width(), reader.height());
-
-		if (out_name && !out_name->empty())
-		{
-			texture_map_.insert(std::make_pair(*out_name, tex));
-		}
-		else
-		{
-			static int serial_number = 0;
-			char key[16];
-			sprintf(key, "%d_txttex", serial_number++);
-			
-			texture_map_.insert(std::make_pair(key, tex));
-			
-			if (out_name)
-				*out_name = key;
-		}
-		
-		return tex;
 	}
 	
 	const Texture* TextureMgr::GenerateRenderToTexture(int width, int height, PixelFormat format)
