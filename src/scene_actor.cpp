@@ -1173,8 +1173,7 @@ namespace ERI {
 		tex_scale2_(Vector2(1.0f, 1.0f)),
 		is_use_tex2_(false),
 		is_dynamic_draw_(false),
-		is_use_line_(false),
-		area_border_(0.0f)
+		is_use_line_(false)
 	{
 		SetSizeOffset(width, height, offset_width, offset_height);
 	}
@@ -1423,10 +1422,10 @@ namespace ERI {
 	
 	bool SpriteActor::IsInArea(const Vector3& local_space_pos)
 	{
-		if (local_space_pos.x >= (offset_.x - 0.5f * size_.x - area_border_)
-			&& local_space_pos.x <= (offset_.x + 0.5f * size_.x + area_border_)
-			&& local_space_pos.y >= (offset_.y - 0.5f * size_.y - area_border_)
-			&& local_space_pos.y <= (offset_.y + 0.5f * size_.y + area_border_))
+		if (local_space_pos.x >= (offset_.x - 0.5f * size_.x - area_border_.x)
+			&& local_space_pos.x <= (offset_.x + 0.5f * size_.x + area_border_.x)
+			&& local_space_pos.y >= (offset_.y - 0.5f * size_.y - area_border_.y)
+			&& local_space_pos.y <= (offset_.y + 0.5f * size_.y + area_border_.y))
 		{
 			return true;
 		}

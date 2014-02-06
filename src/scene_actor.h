@@ -342,15 +342,17 @@ namespace ERI {
 					bool align_center);
 
 		void CreateBounding();
-
-		inline void set_is_dynamic_draw(bool is_dynamic_draw) { is_dynamic_draw_ = is_dynamic_draw; }
-		inline void set_area_border(float border) { area_border_ = border; }
 		
 		inline const Vector2& size() const { return size_; }
 		inline const Vector2& offset() const { return offset_; }
 		inline const Vector2& tex_scale() const { return tex_scale_; }
 		inline const Vector2& tex_scroll() const { return tex_scroll_; }
 		
+		inline void set_is_dynamic_draw(bool is_dynamic_draw) { is_dynamic_draw_ = is_dynamic_draw; }
+
+		inline void set_area_border(float border) { area_border_.x = area_border_.y = border; }
+		inline void set_area_border(float border_x, float border_y) { area_border_.x = border_x; area_border_.y = border_y; }
+
 	private:
 		virtual bool IsInArea(const Vector3& local_space_pos);
 		
@@ -369,7 +371,7 @@ namespace ERI {
 		bool		is_dynamic_draw_;
 		bool		is_use_line_;
 		
-		float		area_border_;
+		Vector2		area_border_;
 		
 		std::string	txt_tex_name_;
 	};
