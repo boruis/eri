@@ -7,9 +7,9 @@
  *
  */
 
-#include "pch.h"
-
 #include "texture_reader_freeimage.h"
+
+#ifdef ERI_TEXTURE_READER_FREEIMAGE
 
 #include "FreeImage.h"
 
@@ -104,3 +104,5 @@ namespace ERI {
 	}
 
 }
+
+#endif // ERI_TEXTURE_READER_FREEIMAGE

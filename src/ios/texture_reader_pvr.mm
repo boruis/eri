@@ -9,6 +9,8 @@
 
 #include "texture_reader_pvr.h"
 
+#ifdef ERI_TEXTURE_READER_PVR
+
 #include "root.h"
 #include "platform_helper.h"
 
@@ -61,7 +63,9 @@ TextureReaderPVR::TextureReaderPVR(const std::string& path, bool generate_immedi
 		
 		load_success_ = UnpackPVRData();
 		
+#if !__has_feature(objc_arc)
 		[data_ release];
+#endif
 		
 		if (load_success_ && generate_immediately)
 		{
@@ -72,7 +76,9 @@ TextureReaderPVR::TextureReaderPVR(const std::string& path, bool generate_immedi
 	
 TextureReaderPVR::~TextureReaderPVR()
 {
+#if !__has_feature(objc_arc)
 	[image_data_ release];
+#endif
 }
 
 bool TextureReaderPVR::UnpackPVRData()
@@ -199,3 +205,5 @@ void TextureReaderPVR::Generate()
 }
 
 }
+
+#endif // ERI_TEXTURE_READER_PVR

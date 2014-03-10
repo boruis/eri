@@ -10,6 +10,10 @@
 #ifndef ERI_TEXTURE_READER_FREEIMAGE_H
 #define ERI_TEXTURE_READER_FREEIMAGE_H
 
+#include "pch.h"
+
+#ifdef ERI_TEXTURE_READER_FREEIMAGE
+
 #include "texture_reader.h"
 
 #include <string>
@@ -34,5 +38,6 @@ namespace ERI {
 
 }
 
-#endif // ERI_TEXTURE_READER_FREEIMAGE_H
+#endif // ERI_TEXTURE_READER_FREEIMAGE
 
+#endif // ERI_TEXTURE_READER_FREEIMAGE_H

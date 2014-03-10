@@ -10,6 +10,10 @@
 #ifndef ERI_TEXTURE_READER_PVR_H
 #define ERI_TEXTURE_READER_PVR_H
 
+#include "pch.h"
+
+#ifdef ERI_TEXTURE_READER_PVR
+
 #include "texture_reader.h"
 
 #include <string>
@@ -47,5 +51,7 @@ private:
 };
 
 }
+
+#endif // ERI_TEXTURE_READER_PVR
 
 #endif // ERI_TEXTURE_READER_PVR_H
