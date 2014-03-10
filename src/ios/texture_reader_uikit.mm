@@ -26,18 +26,19 @@ namespace ERI {
 		texture_data_(NULL)
 	{
 		NSString* absolute_path = [[NSString alloc] initWithUTF8String:GetAbsolutePath(path).c_str()];
-		
 		CGImageRef texture_image = [UIImage imageWithContentsOfFile:absolute_path].CGImage;
 		
+#if !__has_feature(objc_arc)
 		[absolute_path release];
+#endif
 		
 		if (texture_image == nil) {
 			NSLog(@"Failed to load texture image");
 			return;
 		}
 
-		width_ = CGImageGetWidth(texture_image);
-		height_ = CGImageGetHeight(texture_image);
+		width_ = static_cast<int>(CGImageGetWidth(texture_image));
+		height_ = static_cast<int>(CGImageGetHeight(texture_image));
 		
 		texture_data_ = calloc(width_ * height_ * 4, sizeof(unsigned char));
 		
@@ -48,11 +49,11 @@ namespace ERI {
 															 CGImageGetColorSpace(texture_image),
 															 kCGImageAlphaPremultipliedLast);
 		
-        CGContextDrawImage(texture_context,
+		CGContextDrawImage(texture_context,
 						   CGRectMake(0.0, 0.0, (float)width_, (float)height_),
 						   texture_image);
 		
-        CGContextRelease(texture_context);
+		CGContextRelease(texture_context);
 		
 		if (generate_immediately)
 		{
@@ -80,10 +81,11 @@ namespace ERI {
 		: TextureReader(true)
 	{
 		NSString* font_str = [[NSString alloc] initWithUTF8String:font_name.c_str()];
-		
 		UIFont* font = [UIFont fontWithName:font_str size:font_size];
 		
+#if !__has_feature(objc_arc)
 		[font_str release];
+#endif
 		
 		if (font == nil)
 		{
@@ -144,7 +146,9 @@ namespace ERI {
 			CGContextRelease(context);
 		}
 
+#if !__has_feature(objc_arc)
 		[txt_str release];
+#endif
 		
 		out_actual_size.x = actual_size.width;
 		out_actual_size.y = actual_size.height;

@@ -25,7 +25,7 @@ namespace ERI {
 		virtual ~RenderContextIphone();
 		
 		virtual bool Init();
-		virtual void BackingLayer(void* layer);
+		virtual void BackingLayer(const void* layer);
 		virtual void SetAsCurrent();
 		virtual void Present();
 		

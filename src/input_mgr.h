@@ -78,10 +78,10 @@ namespace ERI {
 		InputEvent()
 			: uid(-1), x(0), y(0), dx(0), dy(0), function_key_status(0) {}
 		
-		InputEvent(int _uid, int _x, int _y)
+		InputEvent(long long _uid, int _x, int _y)
 			: uid(_uid), x(_x), y(_y), dx(0), dy(0), function_key_status(0) {}
 		
-		int uid;
+		long long uid;
 		int x, y, dx, dy;
 		unsigned int function_key_status;
 	};

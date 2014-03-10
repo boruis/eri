@@ -28,7 +28,9 @@ namespace ERI {
 			if ([EAGLContext currentContext] == context_)
 				[EAGLContext setCurrentContext:nil];
 			
+#if !__has_feature(objc_arc)
 			[context_ release];
+#endif
 		}
 	}
 	
@@ -48,12 +50,12 @@ namespace ERI {
 		return true;
 	}
 	
-	void RenderContextIphone::BackingLayer(void* layer)
+	void RenderContextIphone::BackingLayer(const void* layer)
 	{
 #ifdef ERI_RENDERER_ES1
-		[context_ renderbufferStorage:GL_RENDERBUFFER_OES fromDrawable:(CAEAGLLayer*)layer];
+		[context_ renderbufferStorage:GL_RENDERBUFFER_OES fromDrawable:(__bridge CAEAGLLayer*)layer];
 #else
-		[context_ renderbufferStorage:GL_RENDERBUFFER fromDrawable:(CAEAGLLayer*)layer];
+		[context_ renderbufferStorage:GL_RENDERBUFFER fromDrawable:(__bridge CAEAGLLayer*)layer];
 #endif
 	}
 	

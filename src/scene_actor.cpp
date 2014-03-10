@@ -669,7 +669,7 @@ namespace ERI {
 				
 		if (current_visible != original_visible)
 		{
-			int child_num = childs_.size();
+			size_t child_num = childs_.size();
 			for (int i = 0; i < child_num; ++i)
 			{
 				childs_[i]->SetVisible(current_visible, true);

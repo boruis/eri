@@ -52,7 +52,9 @@ namespace ERI {
 		NSDictionary* frames = [dict objectForKey:@"frames"];
 		if (frames == nil)
 		{
+#if !__has_feature(objc_arc)
 			[dict release];
+#endif
 			return false;
 		}
 
@@ -75,8 +77,10 @@ namespace ERI {
 			out_array.push_back(data);
 		}
 		
+#if !__has_feature(objc_arc)
 		[keys release];
 		[dict release];
+#endif
 		
 		return true;
 	}
@@ -102,7 +106,9 @@ namespace ERI {
 		NSDictionary* frames = [dict objectForKey:@"frames"];
 		if (frames == nil)
 		{
+#if !__has_feature(objc_arc)
 			[dict release];
+#endif
 			return false;
 		}
 
@@ -121,7 +127,9 @@ namespace ERI {
 			out_map.insert(std::make_pair(std::string([key UTF8String]), data));
 		}
 		
+#if !__has_feature(objc_arc)
 		[dict release];
+#endif
 		
 		return true;
 	}
@@ -143,7 +151,9 @@ namespace ERI {
 					 range:range
 			remainingRange:NULL];
 
+#if !__has_feature(objc_arc)
 		[utf8_str release];
+#endif
 		
 		return static_cast<int>(used_length) / 4;
 	}

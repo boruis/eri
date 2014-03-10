@@ -24,12 +24,12 @@ static bool	in_multi_move;
 // You must implement this method
 + (Class) layerClass
 {
-    return [CAEAGLLayer class];
+	return [CAEAGLLayer class];
 }
 
 - (id)initWithFrame:(CGRect)frame
 {
-    if (self = [super initWithFrame:frame])
+	if (self = [super initWithFrame:frame])
 	{
 		// Enable multipletouch support
 		self.multipleTouchEnabled = YES;
@@ -51,14 +51,17 @@ static bool	in_multi_move;
 										nil];
 		
 		in_multi_move = false;
-    }
+	}
 
-    return self;
+	return self;
 }
 
 - (void)layoutSubviews
 {
-	ERI::Root::Ins().renderer()->BackingLayer(self.layer);
+	const void* layer_pointer = CFBridgingRetain(self.layer);
+	ERI::Root::Ins().renderer()->BackingLayer(layer_pointer);
+	CFBridgingRelease(layer_pointer);
+	
 	ERI::Root::Ins().Update();
 }
 
@@ -73,7 +76,7 @@ static bool	in_multi_move;
 		touch_pos = [touch locationInView:touch.view];
 		[self convertPointByViewOrientation:&touch_pos];
 		
-		ERI::Root::Ins().input_mgr()->Press(ERI::InputEvent((unsigned int)touch, touch_pos.x, touch_pos.y));
+		ERI::Root::Ins().input_mgr()->Press(ERI::InputEvent((long long)touch, touch_pos.x, touch_pos.y));
 	}
 	
 	//LOGI("now begin num %d, total num %d", [touches count], [[event allTouches] count]);
@@ -90,10 +93,8 @@ static bool	in_multi_move;
 		touch_pos = [touch locationInView:touch.view];
 		[self convertPointByViewOrientation:&touch_pos];
 		
-		ERI::InputEvent event((unsigned int)touch, touch_pos.x, touch_pos.y);
-		
-		ERI::Root::Ins().input_mgr()->Release(event);
-		
+		ERI::InputEvent event((long long)touch, touch_pos.x, touch_pos.y);
+    
 #ifdef ERI_USE_DOUBLE_CLICK
 		if ([touch tapCount] == 1)
 #else
@@ -108,6 +109,8 @@ static bool	in_multi_move;
 			ERI::Root::Ins().input_mgr()->DoubleClick(event);
 		}
 #endif
+		
+		ERI::Root::Ins().input_mgr()->Release(event);
 	}
 	
 	if (([[event allTouches] count] - [touches count]) <= 1)
@@ -125,7 +128,7 @@ static bool	in_multi_move;
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
 {
-	int now_touch_num = [[event allTouches] count];
+	int now_touch_num = static_cast<int>([[event allTouches] count]);
 	
 	if (now_touch_num == 1)
 	{
@@ -136,7 +139,7 @@ static bool	in_multi_move;
 		[self convertPointByViewOrientation:&touch_pos];
 		[self convertPointByViewOrientation:&prev_touch_pos];
 		
-		ERI::InputEvent e((unsigned int)touch, touch_pos.x, touch_pos.y);
+		ERI::InputEvent e((long long)touch, touch_pos.x, touch_pos.y);
 		e.dx = touch_pos.x - prev_touch_pos.x;
 		e.dy = touch_pos.y - prev_touch_pos.y;
 		
@@ -160,7 +163,7 @@ static bool	in_multi_move;
 			[self convertPointByViewOrientation:&touch_pos];
 			[self convertPointByViewOrientation:&prev_touch_pos];
 
-			events[i].uid = (unsigned int)touch;
+			events[i].uid = (long long)touch;
 			events[i].x = touch_pos.x;
 			events[i].y = touch_pos.y;
 			events[i].dx = touch_pos.x - prev_touch_pos.x;
@@ -226,9 +229,12 @@ static bool	in_multi_move;
 	point->y *= content_scale;
 }
 
-- (void)dealloc {
-    [super dealloc];
+#if !__has_feature(objc_arc)
+- (void)dealloc
+{
+	[super dealloc];
 }
+#endif
 
 #pragma mark Accelerometer Delegate
 

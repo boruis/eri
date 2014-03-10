@@ -40,7 +40,7 @@ public:
 	bool Open(const char* path, bool is_binary);
 	bool Close();
 	
-	int Read(void* buf, int byte_count);
+	size_t Read(void* buf, size_t byte_count);
 	
 private:
 	FileReaderInfo* info_;

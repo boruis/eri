@@ -26,7 +26,7 @@ namespace ERI {
 		ASSERT(io_ptr);
 		
 		FileReader* reader = (FileReader*)io_ptr;
-		int readed = reader->Read(data, length);
+		size_t readed = reader->Read(data, length);
 		
 		ASSERT(readed == length);
 	}

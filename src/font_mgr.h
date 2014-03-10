@@ -90,7 +90,7 @@ public:
 										   int font_size,
 										   int max_width,
 										   int& out_width,
-										   int& out_height) const { return NULL; }
+										   int& out_height) const { out_width = out_height = 0; return NULL; }
 	
 	virtual float GetSizeScale(int want_size) const;
 	

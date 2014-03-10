@@ -11,22 +11,13 @@
 
 #import "eagl_view.h"
 
+@interface FrameworkViewController : UIViewController
+@end
+
 @interface Framework : NSObject
-{
-  CADisplayLink* updator_;
-
-  id target_;
-  SEL custom_update_;
-
-  BOOL is_running_, keep_delta_time_;
-  CFTimeInterval delta_time_;
-  
-  CFTimeInterval frame_pass_time_;
-  int frame_count_;
-}
-
 @property (strong, nonatomic) EAGLView* gl_view;
-
+@property (strong, nonatomic) FrameworkViewController* view_controller;
+- (id)initWithFrame:(CGRect)frame;
 - (void)Run:(id)target withUpdate:(SEL)custom_update;
 - (void)Stop;
 - (CFTimeInterval)DeltaTime;

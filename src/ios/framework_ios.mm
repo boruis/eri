@@ -13,16 +13,57 @@
 #include "root.h"
 #include "renderer.h"
 
-@implementation Framework
+@implementation FrameworkViewController
 
 - (id)init
 {
-  if (self = [super init])
+  self = [super init];
+  if (self)
+  {
+  }
+  
+  return self;
+}
+
+#if !__has_feature(objc_arc)
+- (void)dealloc
+{
+  [super dealloc];
+}
+#endif
+
+@end
+
+
+@implementation Framework
+{
+  CADisplayLink* updator_;
+  
+  id target_;
+  SEL custom_update_;
+  
+  BOOL is_running_, keep_delta_time_;
+  CFTimeInterval delta_time_;
+  
+  CFTimeInterval frame_pass_time_;
+  int frame_count_;
+}
+
+- (id)initWithFrame:(CGRect)frame
+{
+  self = [super init];
+  if (self)
   {
     ERI::Root::Ins().Init();
+    
+    if ([UIScreen instancesRespondToSelector:@selector(scale)])
+      ERI::Root::Ins().renderer()->set_content_scale([[UIScreen mainScreen] scale]);
 
-    self.gl_view = [[EAGLView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    self.gl_view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    _gl_view = [[EAGLView alloc] initWithFrame:frame];
+    _gl_view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    
+    _view_controller = [[FrameworkViewController alloc] init];
+    [_view_controller.view addSubview:_gl_view];
     
     is_running_ = NO;
     keep_delta_time_ = YES;
@@ -30,6 +71,16 @@
   
   return self;
 }
+
+#if !__has_feature(objc_arc)
+- (void)dealloc
+{
+  [_view_controller release];
+  [_gl_view release];
+  
+  [super dealloc];
+}
+#endif
 
 - (void)update
 {
@@ -57,15 +108,15 @@
   {
 		ERI::Root::Ins().Update();
     
-    frame_count_ += 1;
-    
-    frame_pass_time_ += delta_time_;
-    if (frame_pass_time_ >= 1.0)
-    {
-      NSLog(@"fps %.2f", frame_count_ / frame_pass_time_);
-      frame_pass_time_ = 0.0;
-      frame_count_ = 0;
-    }
+//    frame_count_ += 1;
+//    
+//    frame_pass_time_ += delta_time_;
+//    if (frame_pass_time_ >= 1.0)
+//    {
+//      NSLog(@"fps %.2f", frame_count_ / frame_pass_time_);
+//      frame_pass_time_ = 0.0;
+//      frame_count_ = 0;
+//    }
   }
 }
 

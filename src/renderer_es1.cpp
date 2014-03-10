@@ -208,7 +208,7 @@ namespace ERI {
 		return true;
 	}
 	
-	void RendererES1::BackingLayer(void* layer)
+	void RendererES1::BackingLayer(const void* layer)
 	{
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 		ASSERT(context_);

@@ -111,7 +111,7 @@ void SeperateFileNameBaseExtension(const std::string& file_name,
 	
 void ReplaceBackslashToSlash(std::string& str)
 {
-	int length = str.length();
+	size_t length = str.length();
 	for (int i = 0; i < length; ++i)
 	{
 		if (str[i] == '\\')
@@ -237,7 +237,7 @@ bool FileReader::Close()
 	return false;
 }
 	
-int FileReader::Read(void* buf, int byte_count)
+size_t FileReader::Read(void* buf, size_t byte_count)
 {
 	ASSERT(buf && byte_count > 0 && info_);
 	
