@@ -7,9 +7,9 @@
  *
  */
 
-#include "pch.h"
-
 #include "renderer_es2.h"
+
+#ifdef ERI_RENDERER_ES2
 
 #if ERI_PLATFORM == ERI_PLATFORM_WIN
 #include "win/render_context_win.h"
@@ -45,6 +45,8 @@ namespace ERI {
 
 	RendererES2::RendererES2() :
 		context_(NULL),
+		backing_width_(0),
+		backing_height_(0),
 		width_(0),
 		height_(0),
 		color_render_buffer_(0),
@@ -74,6 +76,8 @@ namespace ERI {
 	
 	RendererES2::~RendererES2()
 	{
+		if (context_) context_->SetAsCurrent();
+
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 		if (depth_buffer_)
 		{
@@ -118,6 +122,8 @@ namespace ERI {
 
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &caps_.max_texture_size);
 		
+		// TODO: check
+		// NOTE: npot no mipmap and only GL_CLAMP_TO_EDGE as wrap mode
 		caps_.is_support_non_power_of_2_texture = true;
 		
 		//
@@ -147,20 +153,38 @@ namespace ERI {
 
 		return true;
 	}
-	
+
+	void RendererES2::SetContextAsCurrent()
+	{
+		if (context_) context_->SetAsCurrent();
+	}
+
 	void RendererES2::BackingLayer(const void* layer)
 	{
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 		ASSERT(context_);
+
+		context_->SetAsCurrent();
+
+		if (depth_buffer_)
+			glDeleteRenderbuffers(1, &depth_buffer_);
+		
+		if (color_render_buffer_)
+			glDeleteRenderbuffers(1, &color_render_buffer_);
+		
+		if (frame_buffers_[kDefaultFrameBufferIdx])
+			glDeleteFramebuffers(1, &frame_buffers_[kDefaultFrameBufferIdx]);
 		
 		// Create default framebuffer object. The backing will be allocated for the current layer in -resizeFromLayer
 		glGenFramebuffers(1, &frame_buffers_[kDefaultFrameBufferIdx]);
 		glGenRenderbuffers(1, &color_render_buffer_);
+
 		glBindFramebuffer(GL_FRAMEBUFFER, frame_buffers_[kDefaultFrameBufferIdx]);
 		glBindRenderbuffer(GL_RENDERBUFFER, color_render_buffer_);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, color_render_buffer_);
-		
+
 		context_->BackingLayer(layer);
+
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, color_render_buffer_);
 		
 		int backing_width, backing_height;
 		
@@ -196,9 +220,6 @@ namespace ERI {
 		glScissor(0, 0, backing_width_, backing_height_);
 
 		Root::Ins().scene_mgr()->OnViewportResize();
-
-		glClear(clear_bits_);
-		if (context_) context_->Present();
 	}
 	
 	void RendererES2::RenderStart()
@@ -234,25 +255,30 @@ namespace ERI {
 		if (data->vertex_count <= 0)
 			return;
 		
+		GLenum data_blend_src_factor = data->blend_src_factor;
+		if (data->alpha_premultiplied && data_blend_src_factor == GL_SRC_ALPHA) // TODO: other situation?
+		{
+			data_blend_src_factor = GL_ONE;
+		}
+		
 		if (blend_enable_ &&
-			(blend_src_factor_ != data->blend_src_factor ||
+			(blend_src_factor_ != data_blend_src_factor ||
 			 blend_dst_factor_ != data->blend_dst_factor))
 		{
-			blend_src_factor_ = data->blend_src_factor;
+			blend_src_factor_ = data_blend_src_factor;
 			blend_dst_factor_ = data->blend_dst_factor;
 			glBlendFunc(blend_src_factor_, blend_dst_factor_);
 		}
 		
-#ifdef ERI_RENDERER_ES1
 		if (alpha_test_enable_ &&
 			(alpha_test_func_ != data->alpha_test_func ||
 			 alpha_test_ref_ != data->alpha_test_ref))
 		{
 			alpha_test_func_ = data->alpha_test_func;
 			alpha_test_ref_ = data->alpha_test_ref;
-			glAlphaFunc(alpha_test_func_, alpha_test_ref_);
+			
+			// TODO: handle in fragment shader
 		}
-#endif
 		
 		if (depth_test_enable_ &&
 			depth_test_func_ != data->depth_test_func)
@@ -409,9 +435,11 @@ namespace ERI {
 		
 		if (texture_enable_)
 		{
+			// TODO: more than 2 texture unit usage
+
 			GLint tex_enable[2] = { texture_unit_enable_[0], texture_unit_enable_[1] };
 			glUniform1iv(current_program_->uniforms()[UNIFORM_TEX_ENABLE], 2, tex_enable);
-						
+			
 			if (texture_unit_enable_[0] || texture_unit_enable_[1])
 			{
 				if (data->is_tex_transform)
@@ -691,6 +719,8 @@ namespace ERI {
 	
 	unsigned int RendererES2::GenerateTexture(const void* buffer, int width, int height, PixelFormat format, int buffer_size /*= 0*/)
 	{
+		if (context_) context_->SetAsCurrent();
+
 		GLuint texture;
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);
@@ -735,6 +765,8 @@ namespace ERI {
   
 	unsigned int RendererES2::GenerateTexture()
 	{
+		if (context_) context_->SetAsCurrent();
+
 		GLuint texture;
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);
@@ -752,6 +784,8 @@ namespace ERI {
 	
 	unsigned int RendererES2::GenerateRenderToTexture(int width, int height, int& out_frame_buffer, PixelFormat format)
 	{
+		if (context_) context_->SetAsCurrent();
+
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 		// create the framebuffer object
 		int frame_buffer = GenerateFrameBuffer();
@@ -814,6 +848,8 @@ namespace ERI {
 	void RendererES2::UpdateTexture(unsigned int texture_id, const void* buffer, int width, int height, PixelFormat format)
 	{
 		ASSERT(texture_id > 0);
+
+		if (context_) context_->SetAsCurrent();
 		
 		glBindTexture(GL_TEXTURE_2D, texture_id);
 		now_texture_ = texture_id;
@@ -839,6 +875,8 @@ namespace ERI {
 	{
 		ASSERT(texture_id > 0);
 		
+		if (context_) context_->SetAsCurrent();
+
 		if (now_texture_ == texture_id)
 		{
 			glBindTexture(GL_TEXTURE_2D, 0);
@@ -868,28 +906,22 @@ namespace ERI {
 	
 	void RendererES2::SetClearDepth(float clamped_depth)
 	{
-#ifdef ERI_GLES
-		glClearDepthf(clamped_depth);
-#else
+#ifdef ERI_GL
 		glClearDepth(clamped_depth);
+#else
+		glClearDepthf(clamped_depth);
 #endif
 	}
 	
 	void RendererES2::UpdateView(const Matrix4& view_matrix)
 	{
 		current_view_matrix_ = view_matrix;
-		
-//		UpdateLightTransform();
-		
 		is_view_proj_dirty_ = true;
 	}
 	
 	void RendererES2::UpdateView(const Vector3& eye, const Vector3& at, const Vector3& up)
 	{
 		MatrixLookAtRH(current_view_matrix_, eye, at, up);
-		
-//		UpdateLightTransform();
-		
 		is_view_proj_dirty_ = true;
 	}
 	
@@ -957,6 +989,8 @@ namespace ERI {
 	int RendererES2::GenerateFrameBuffer()
 	{
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
+		if (context_) context_->SetAsCurrent();
+
 		for (int i = kDefaultFrameBufferIdx + 1; i < kMaxFrameBuffer; ++i)
 		{
 			if (!frame_buffers_[i])
@@ -974,6 +1008,8 @@ namespace ERI {
 	{
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 		ASSERT(frame_buffer > 0);
+
+		if (context_) context_->SetAsCurrent();
 		
 		for (int i = 0; i < kMaxFrameBuffer; ++i)
 		{
@@ -1023,3 +1059,5 @@ namespace ERI {
 	}
 
 }
+
+#endif // ERI_RENDERER_ES2

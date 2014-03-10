@@ -63,6 +63,8 @@ class SpriteTxtMeshConstructor : public TxtMeshConstructor
   
   virtual void Construct()
   {
+    Root::Ins().renderer()->SetContextAsCurrent();
+
     owner_->SetMaterial(NULL);
     
     const Font* font = owner_->font_ref_;
@@ -151,6 +153,8 @@ class AtlasTxtMeshConstructor : public TxtMeshConstructor
   
   virtual void Construct()
   {
+    Root::Ins().renderer()->SetContextAsCurrent();
+    
     const Font* font = owner_->font_ref_;
     const TxtData& data = owner_->data_;
 

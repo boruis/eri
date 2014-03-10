@@ -46,7 +46,8 @@ namespace ERI {
 		width(_width),
 		height(_height),
 		data(NULL),
-		bind_frame_buffer(0)
+		bind_frame_buffer(0),
+		alpha_premultiplied(false)
 	{
 	}
 	
@@ -156,6 +157,7 @@ namespace ERI {
 			if (info.reader->texture_id() != 0)
 			{
 				Texture* tex = new Texture(info.reader->texture_id(), info.reader->width(), info.reader->height());
+				tex->alpha_premultiplied = info.reader->alpha_premultiplied();
 				texture_map_.insert(std::make_pair(info.path, tex));
 			}
 			
@@ -201,6 +203,7 @@ namespace ERI {
 			}
 			
 			Texture* tex = new Texture(reader->texture_id(), reader->width(), reader->height());
+			tex->alpha_premultiplied = reader->alpha_premultiplied();
 			
 			if (keep_texture_data)
 			{
@@ -255,6 +258,7 @@ namespace ERI {
 		ASSERT(texture_map_.find(name) == texture_map_.end());
 		
 		Texture* tex = new Texture(reader->texture_id(), reader->width(), reader->height());
+		tex->alpha_premultiplied = reader->alpha_premultiplied();
 		
 		texture_map_.insert(std::make_pair(name, tex));
 		

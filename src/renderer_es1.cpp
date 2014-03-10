@@ -7,9 +7,9 @@
  *
  */
 
-#include "pch.h"
-
 #include "renderer_es1.h"
+
+#ifdef ERI_RENDERER_ES1
 
 #include <cmath>
 
@@ -84,33 +84,32 @@ namespace ERI {
 	
 	RendererES1::RendererES1() :
 		context_(NULL),
+		backing_width_(0),
+		backing_height_(0),
 		width_(0),
 		height_(0),
 		color_render_buffer_(0),
 		depth_buffer_(0),
 		use_depth_buffer_(true),
-		vertex_normal_enable_(false),
-		vertex_color_enable_(false),
-		light_enable_(false),
+		bg_color_(Color(0.0f, 0.0f, 0.0f, 0.0f)),
+		blend_src_factor_(GL_SRC_ALPHA),
+		blend_dst_factor_(GL_ONE_MINUS_SRC_ALPHA),
+		blend_enable_(false),
+		alpha_test_func_(GL_GREATER),
+		alpha_test_ref_(0.0f),
+		alpha_test_enable_(false),
+		depth_test_func_(GL_LESS),
 		depth_test_enable_(true),
 		depth_write_enable_(true),
-		blend_enable_(false),
-		alpha_test_enable_(false),
 		cull_face_enable_(true),
 		cull_front_(false),
 		texture_enable_(false),
 		now_active_texture_unit_(0),
 		now_client_active_texture_unit_(0),
 		now_texture_(0),
-		bg_color_(Color(0.0f, 0.0f, 0.0f, 0.0f)),
-		blend_src_factor_(GL_SRC_ALPHA),
-		blend_dst_factor_(GL_ONE_MINUS_SRC_ALPHA),
-		//// pre-multiplied alpha?
-		//blend_src_factor_(GL_ONE),
-		//blend_dst_factor_(GL_ONE_MINUS_SRC_ALPHA),
-		alpha_test_func_(GL_GREATER),
-		alpha_test_ref_(0.0f),
-		depth_test_func_(GL_LESS)
+		vertex_normal_enable_(false),
+		vertex_color_enable_(false),
+		light_enable_(false)
 	{
 		memset(frame_buffers_, 0, sizeof(frame_buffers_));
 		memset(texture_unit_enable_, 0, sizeof(texture_unit_enable_));
@@ -123,6 +122,8 @@ namespace ERI {
 	
 	RendererES1::~RendererES1()
 	{
+		if (context_) context_->SetAsCurrent();
+		
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 		if (depth_buffer_)
 		{
@@ -190,48 +191,61 @@ namespace ERI {
 			glEnable(GL_DEPTH_TEST);
 		}
 		
-		//glDisable(GL_DITHER);
-		//glDisable(GL_MULTISAMPLE);
-		
 		glEnable(GL_SCISSOR_TEST);
 		glEnable(GL_CULL_FACE);
-		glEnable(GL_COLOR_MATERIAL);
-		glEnableClientState(GL_VERTEX_ARRAY);
 		
 		glBlendFunc(blend_src_factor_, blend_dst_factor_);
 		
 		float ambient[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 		glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient);
 
+		glEnable(GL_COLOR_MATERIAL);
+		glEnableClientState(GL_VERTEX_ARRAY);
+
 		SetBgColor(bg_color_);
 		
 		return true;
 	}
 	
+	void RendererES1::SetContextAsCurrent()
+	{
+		if (context_) context_->SetAsCurrent();
+	}
+
 	void RendererES1::BackingLayer(const void* layer)
 	{
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 		ASSERT(context_);
-
+		
+		context_->SetAsCurrent();
+		
+		if (depth_buffer_)
+			glDeleteRenderbuffersOES(1, &depth_buffer_);
+		
+		if (color_render_buffer_)
+			glDeleteRenderbuffersOES(1, &color_render_buffer_);
+		
+		if (frame_buffers_[kDefaultFrameBufferIdx])
+			glDeleteFramebuffersOES(1, &frame_buffers_[kDefaultFrameBufferIdx]);
+		
 		// Create default framebuffer object. The backing will be allocated for the current layer in -resizeFromLayer
 		glGenFramebuffersOES(1, &frame_buffers_[kDefaultFrameBufferIdx]);
 		glGenRenderbuffersOES(1, &color_render_buffer_);
+		
 		glBindFramebufferOES(GL_FRAMEBUFFER_OES, frame_buffers_[kDefaultFrameBufferIdx]);
 		glBindRenderbufferOES(GL_RENDERBUFFER_OES, color_render_buffer_);
-		glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_RENDERBUFFER_OES, color_render_buffer_);
 		
 		context_->BackingLayer(layer);
-		
+
+		glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_RENDERBUFFER_OES, color_render_buffer_);
+
 		int backing_width, backing_height;
 		
 		glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_WIDTH_OES, &backing_width);
 		glGetRenderbufferParameterivOES(GL_RENDERBUFFER_OES, GL_RENDERBUFFER_HEIGHT_OES, &backing_height);
 		
 		GLenum status = glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES);
-		if (status != GL_FRAMEBUFFER_COMPLETE_OES)
-		{
-			ASSERT2(0, "Failed to make complete framebuffer object %x", status);
-		}
+		ASSERT2(status == GL_FRAMEBUFFER_COMPLETE_OES, "Failed to make complete framebuffer object %x", status);
 		
 		if (use_depth_buffer_)
 		{
@@ -241,10 +255,7 @@ namespace ERI {
 			glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_DEPTH_ATTACHMENT_OES, GL_RENDERBUFFER_OES, depth_buffer_);
 			
 			status = glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES);
-			if (status != GL_FRAMEBUFFER_COMPLETE_OES)
-			{
-				ASSERT2(0, "Failed to make complete framebuffer object %x", status);
-			}
+			ASSERT2(status == GL_FRAMEBUFFER_COMPLETE_OES, "Failed to make complete framebuffer object %x", status);
 		}
 		
 		Resize(backing_width, backing_height);
@@ -294,213 +305,219 @@ namespace ERI {
 
 	void RendererES1::Render(const RenderData* data)
 	{
+		if (data->vertex_count <= 0)
+			return;
+
 		if (!data->apply_identity_model_matrix)
 		{
 			glMultMatrixf(data->world_model_matrix.m);
 		}
 		
-		if (data->vertex_count > 0)
+		if (now_color_ != data->color)
 		{
-			if (now_color_ != data->color)
-			{
-				glColor4f(data->color.r, data->color.g, data->color.b, data->color.a);
-				now_color_ = data->color;
-			}
-			
-			if (blend_enable_ &&
-				(blend_src_factor_ != data->blend_src_factor ||
-				 blend_dst_factor_ != data->blend_dst_factor))
-			{
-				blend_src_factor_ = data->blend_src_factor;
-				blend_dst_factor_ = data->blend_dst_factor;
-				glBlendFunc(blend_src_factor_, blend_dst_factor_);
-			}
-			
-			if (alpha_test_enable_ &&
-				(alpha_test_func_ != data->alpha_test_func ||
-				 alpha_test_ref_ != data->alpha_test_ref))
-			{
-				alpha_test_func_ = data->alpha_test_func;
-				alpha_test_ref_ = data->alpha_test_ref;
-				glAlphaFunc(alpha_test_func_, alpha_test_ref_);
-			}
-			
-			if (depth_test_enable_ &&
-				depth_test_func_ != data->depth_test_func)
-			{
-				depth_test_func_ = data->depth_test_func;
-				glDepthFunc(depth_test_func_);
-			}
-			
-			glBindBuffer(GL_ARRAY_BUFFER, data->vertex_buffer);
-			
-			GLint vertex_pos_size, vertex_stride;
-			void* vertex_pos_offset;
-			void* vertex_normal_offset;
-			void* vertex_tex_coord_offset[MAX_TEXTURE_UNIT];
-			void* vertex_color_offset;
-			bool use_vertex_normal = false;
-			bool use_vertex_color = false;
+			glColor4f(data->color.r, data->color.g, data->color.b, data->color.a);
+			now_color_ = data->color;
+		}
 
-			switch (data->vertex_format)
-			{
-				case POS_TEX_2:
-					vertex_pos_size = 2;
-					vertex_stride = sizeof(vertex_2_pos_tex);
-					vertex_pos_offset = (void*)offsetof(vertex_2_pos_tex, position);
-					vertex_tex_coord_offset[0] = (void*)offsetof(vertex_2_pos_tex, tex_coord);
-					for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
-						vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
-					}
-					break;
-					
-				case POS_TEX2_2:
-					vertex_pos_size = 2;
-					vertex_stride = sizeof(vertex_2_pos_tex2);
-					vertex_pos_offset = (void*)offsetof(vertex_2_pos_tex2, position);
-					vertex_tex_coord_offset[0] = (void*)offsetof(vertex_2_pos_tex2, tex_coord);
-					vertex_tex_coord_offset[1] = (void*)offsetof(vertex_2_pos_tex2, tex_coord2);
-					for (int i = 2; i < MAX_TEXTURE_UNIT; ++i) {
-						vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
-					}
-					break;
-					
-				case POS_TEX_COLOR_2:
-					vertex_pos_size = 2;
-					vertex_stride = sizeof(vertex_2_pos_tex_color);
-					vertex_pos_offset = (void*)offsetof(vertex_2_pos_tex_color, position);
-					vertex_tex_coord_offset[0] = (void*)offsetof(vertex_2_pos_tex_color, tex_coord);
-					for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
-						vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
-					}
-					vertex_color_offset = (void*)offsetof(vertex_2_pos_tex_color, color);
-					use_vertex_color = true;
-					break;
-					
-				case POS_NORMAL_3:
-					vertex_pos_size = 3;
-					vertex_stride = sizeof(vertex_3_pos_normal);
-					vertex_pos_offset = (void*)offsetof(vertex_3_pos_normal, position);
-					vertex_normal_offset = (void*)offsetof(vertex_3_pos_normal, normal);
-					use_vertex_normal = true;
-					ASSERT(!texture_enable_);
-					break;
-					
-				case POS_NORMAL_TEX_3:
-					vertex_pos_size = 3;
-					vertex_stride = sizeof(vertex_3_pos_normal_tex);
-					vertex_pos_offset = (void*)offsetof(vertex_3_pos_normal_tex, position);
-					vertex_normal_offset = (void*)offsetof(vertex_3_pos_normal_tex, normal);
-					vertex_tex_coord_offset[0] = (void*)offsetof(vertex_3_pos_normal_tex, tex_coord);
-					for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
-						vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
-					}
-					use_vertex_normal = true;
-					break;
-					
-				case POS_NORMAL_COLOR_TEX_3:
-					vertex_pos_size = 3;
-					vertex_stride = sizeof(vertex_3_pos_normal_color_tex);
-					vertex_pos_offset = (void*)offsetof(vertex_3_pos_normal_color_tex, position);
-					vertex_normal_offset = (void*)offsetof(vertex_3_pos_normal_color_tex, normal);
-					vertex_tex_coord_offset[0] = (void*)offsetof(vertex_3_pos_normal_color_tex, tex_coord);
-					for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
-						vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
-					}
-					use_vertex_normal = true;
-					vertex_color_offset = (void*)offsetof(vertex_3_pos_normal_color_tex, color);
-					use_vertex_color = true;
-					break;
-					
-				case POS_COLOR_TEX_3:
-					vertex_pos_size = 3;
-					vertex_stride = sizeof(vertex_3_pos_color_tex);
-					vertex_pos_offset = (void*)offsetof(vertex_3_pos_color_tex, position);
-					vertex_tex_coord_offset[0] = (void*)offsetof(vertex_3_pos_color_tex, tex_coord);
-					for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
-						vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
-					}
-					vertex_color_offset = (void*)offsetof(vertex_3_pos_color_tex, color);
-					use_vertex_color = true;
-					break;
-
-				default:
-					ASSERT(0);
-					break;
-			}
+		GLenum data_blend_src_factor = data->blend_src_factor;
+		if (data->alpha_premultiplied && data_blend_src_factor == GL_SRC_ALPHA) // TODO: other situation?
+		{
+			data_blend_src_factor = GL_ONE;
+		}
 		
-			// pos
-			glVertexPointer(vertex_pos_size, GL_FLOAT, vertex_stride, vertex_pos_offset);
-			// normal
-			if (vertex_normal_enable_ != use_vertex_normal)
-			{
-				vertex_normal_enable_ = use_vertex_normal;
-				if (vertex_normal_enable_)
-					glEnableClientState(GL_NORMAL_ARRAY);
-				else
-					glDisableClientState(GL_NORMAL_ARRAY);
-			}
+		if (blend_enable_ &&
+			(blend_src_factor_ != data_blend_src_factor ||
+			 blend_dst_factor_ != data->blend_dst_factor))
+		{
+			blend_src_factor_ = data_blend_src_factor;
+			blend_dst_factor_ = data->blend_dst_factor;
+			glBlendFunc(blend_src_factor_, blend_dst_factor_);
+		}
+		
+		if (alpha_test_enable_ &&
+			(alpha_test_func_ != data->alpha_test_func ||
+			 alpha_test_ref_ != data->alpha_test_ref))
+		{
+			alpha_test_func_ = data->alpha_test_func;
+			alpha_test_ref_ = data->alpha_test_ref;
+			glAlphaFunc(alpha_test_func_, alpha_test_ref_);
+		}
+		
+		if (depth_test_enable_ &&
+			depth_test_func_ != data->depth_test_func)
+		{
+			depth_test_func_ = data->depth_test_func;
+			glDepthFunc(depth_test_func_);
+		}
+		
+		glBindBuffer(GL_ARRAY_BUFFER, data->vertex_buffer);
+		
+		GLint vertex_pos_size, vertex_stride;
+		void* vertex_pos_offset;
+		void* vertex_normal_offset;
+		void* vertex_tex_coord_offset[MAX_TEXTURE_UNIT];
+		void* vertex_color_offset;
+		bool use_vertex_normal = false;
+		bool use_vertex_color = false;
+
+		switch (data->vertex_format)
+		{
+			case POS_TEX_2:
+				vertex_pos_size = 2;
+				vertex_stride = sizeof(vertex_2_pos_tex);
+				vertex_pos_offset = (void*)offsetof(vertex_2_pos_tex, position);
+				vertex_tex_coord_offset[0] = (void*)offsetof(vertex_2_pos_tex, tex_coord);
+				for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
+					vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
+				}
+				break;
+				
+			case POS_TEX2_2:
+				vertex_pos_size = 2;
+				vertex_stride = sizeof(vertex_2_pos_tex2);
+				vertex_pos_offset = (void*)offsetof(vertex_2_pos_tex2, position);
+				vertex_tex_coord_offset[0] = (void*)offsetof(vertex_2_pos_tex2, tex_coord);
+				vertex_tex_coord_offset[1] = (void*)offsetof(vertex_2_pos_tex2, tex_coord2);
+				for (int i = 2; i < MAX_TEXTURE_UNIT; ++i) {
+					vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
+				}
+				break;
+				
+			case POS_TEX_COLOR_2:
+				vertex_pos_size = 2;
+				vertex_stride = sizeof(vertex_2_pos_tex_color);
+				vertex_pos_offset = (void*)offsetof(vertex_2_pos_tex_color, position);
+				vertex_tex_coord_offset[0] = (void*)offsetof(vertex_2_pos_tex_color, tex_coord);
+				for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
+					vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
+				}
+				vertex_color_offset = (void*)offsetof(vertex_2_pos_tex_color, color);
+				use_vertex_color = true;
+				break;
+				
+			case POS_NORMAL_3:
+				vertex_pos_size = 3;
+				vertex_stride = sizeof(vertex_3_pos_normal);
+				vertex_pos_offset = (void*)offsetof(vertex_3_pos_normal, position);
+				vertex_normal_offset = (void*)offsetof(vertex_3_pos_normal, normal);
+				use_vertex_normal = true;
+				ASSERT(!texture_enable_);
+				break;
+				
+			case POS_NORMAL_TEX_3:
+				vertex_pos_size = 3;
+				vertex_stride = sizeof(vertex_3_pos_normal_tex);
+				vertex_pos_offset = (void*)offsetof(vertex_3_pos_normal_tex, position);
+				vertex_normal_offset = (void*)offsetof(vertex_3_pos_normal_tex, normal);
+				vertex_tex_coord_offset[0] = (void*)offsetof(vertex_3_pos_normal_tex, tex_coord);
+				for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
+					vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
+				}
+				use_vertex_normal = true;
+				break;
+				
+			case POS_NORMAL_COLOR_TEX_3:
+				vertex_pos_size = 3;
+				vertex_stride = sizeof(vertex_3_pos_normal_color_tex);
+				vertex_pos_offset = (void*)offsetof(vertex_3_pos_normal_color_tex, position);
+				vertex_normal_offset = (void*)offsetof(vertex_3_pos_normal_color_tex, normal);
+				vertex_tex_coord_offset[0] = (void*)offsetof(vertex_3_pos_normal_color_tex, tex_coord);
+				for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
+					vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
+				}
+				use_vertex_normal = true;
+				vertex_color_offset = (void*)offsetof(vertex_3_pos_normal_color_tex, color);
+				use_vertex_color = true;
+				break;
+				
+			case POS_COLOR_TEX_3:
+				vertex_pos_size = 3;
+				vertex_stride = sizeof(vertex_3_pos_color_tex);
+				vertex_pos_offset = (void*)offsetof(vertex_3_pos_color_tex, position);
+				vertex_tex_coord_offset[0] = (void*)offsetof(vertex_3_pos_color_tex, tex_coord);
+				for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
+					vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
+				}
+				vertex_color_offset = (void*)offsetof(vertex_3_pos_color_tex, color);
+				use_vertex_color = true;
+				break;
+
+			default:
+				ASSERT(0);
+				break;
+		}
+	
+		// pos
+		glVertexPointer(vertex_pos_size, GL_FLOAT, vertex_stride, vertex_pos_offset);
+		// normal
+		if (vertex_normal_enable_ != use_vertex_normal)
+		{
+			vertex_normal_enable_ = use_vertex_normal;
 			if (vertex_normal_enable_)
-			{
-				glNormalPointer(GL_FLOAT, vertex_stride, vertex_normal_offset);
-			}
-			// color
-			if (vertex_color_enable_ != use_vertex_color)
-			{
-				vertex_color_enable_ = use_vertex_color;
-				if (vertex_color_enable_)
-					glEnableClientState(GL_COLOR_ARRAY);
-				else
-					glDisableClientState(GL_COLOR_ARRAY);
-			}
-			if (vertex_color_enable_)
-			{
-				glColorPointer(4, GL_UNSIGNED_BYTE, vertex_stride, vertex_color_offset);
-			}
-			// tex coord
-			bool is_need_recover_transform = false;
-			if (texture_enable_)
-			{
-				if (data->is_tex_transform)
-				{
-					glPushMatrix();
-					glMatrixMode(GL_TEXTURE);
-					
-					glLoadIdentity();
-					glTranslatef(data->tex_translate.x, data->tex_translate.y, 0.0f);
-					glScalef(data->tex_scale.x, data->tex_scale.y, 1.0f);
-					
-					is_need_recover_transform = true;
-				}
-				
-				for (int i = 0; i < MAX_TEXTURE_UNIT; ++i)
-				{
-					if (texture_unit_enable_[i])
-					{
-						ClientActiveTextureUnit(GL_TEXTURE0 + i);
-						
-						glTexCoordPointer(2, GL_FLOAT, vertex_stride, vertex_tex_coord_offset[i]);
-					}
-				}
-			}
-			
-			if (data->index_count > 0)
-			{
-				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data->index_buffer);
-				glDrawElements(data->vertex_type, data->index_count, GL_UNSIGNED_SHORT, 0);
-			}
+				glEnableClientState(GL_NORMAL_ARRAY);
 			else
+				glDisableClientState(GL_NORMAL_ARRAY);
+		}
+		if (vertex_normal_enable_)
+		{
+			glNormalPointer(GL_FLOAT, vertex_stride, vertex_normal_offset);
+		}
+		// color
+		if (vertex_color_enable_ != use_vertex_color)
+		{
+			vertex_color_enable_ = use_vertex_color;
+			if (vertex_color_enable_)
+				glEnableClientState(GL_COLOR_ARRAY);
+			else
+				glDisableClientState(GL_COLOR_ARRAY);
+		}
+		if (vertex_color_enable_)
+		{
+			glColorPointer(4, GL_UNSIGNED_BYTE, vertex_stride, vertex_color_offset);
+		}
+		// tex coord
+		bool is_need_recover_transform = false;
+		if (texture_enable_)
+		{
+			if (data->is_tex_transform)
 			{
-				glDrawArrays(data->vertex_type, 0,  data->vertex_count);
+				glPushMatrix();
+				glMatrixMode(GL_TEXTURE);
+				
+				glLoadIdentity();
+				glTranslatef(data->tex_translate.x, data->tex_translate.y, 0.0f);
+				glScalef(data->tex_scale.x, data->tex_scale.y, 1.0f);
+				
+				is_need_recover_transform = true;
 			}
 			
-			if (is_need_recover_transform)
+			for (int i = 0; i < MAX_TEXTURE_UNIT; ++i)
 			{
-				glLoadIdentity();
-				
-				glMatrixMode(GL_MODELVIEW);
-				glPopMatrix();
+				if (texture_unit_enable_[i])
+				{
+					ClientActiveTextureUnit(GL_TEXTURE0 + i);
+					
+					glTexCoordPointer(2, GL_FLOAT, vertex_stride, vertex_tex_coord_offset[i]);
+				}
 			}
+		}
+		
+		if (data->index_count > 0)
+		{
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, data->index_buffer);
+			glDrawElements(data->vertex_type, data->index_count, GL_UNSIGNED_SHORT, 0);
+		}
+		else
+		{
+			glDrawArrays(data->vertex_type, 0,  data->vertex_count);
+		}
+		
+		if (is_need_recover_transform)
+		{
+			glLoadIdentity();
+			
+			glMatrixMode(GL_MODELVIEW);
+			glPopMatrix();
 		}
 	}
 	
@@ -930,6 +947,8 @@ namespace ERI {
 	
 	unsigned int RendererES1::GenerateTexture(const void* buffer, int width, int height, PixelFormat format, int buffer_size /*= 0*/)
 	{
+		if (context_) context_->SetAsCurrent();
+		
 		GLuint texture;
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);
@@ -974,6 +993,8 @@ namespace ERI {
 	
 	unsigned int RendererES1::GenerateTexture()
 	{
+		if (context_) context_->SetAsCurrent();
+
 		GLuint texture;
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);
@@ -991,6 +1012,8 @@ namespace ERI {
 	
 	unsigned int RendererES1::GenerateRenderToTexture(int width, int height, int& out_frame_buffer, PixelFormat format)
 	{
+		if (context_) context_->SetAsCurrent();
+
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 		// create the framebuffer object
 		int frame_buffer = GenerateFrameBuffer();
@@ -1042,10 +1065,7 @@ namespace ERI {
 		//glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_DEPTH_ATTACHMENT_OES, GL_RENDERBUFFER_OES, depth_render_buffer);
 
 		GLenum status = glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) ;
-		if(status != GL_FRAMEBUFFER_COMPLETE_OES)
-		{
-			ASSERT2(0, "Failed to make complete framebuffer object %x", status);
-		}
+		ASSERT2(status == GL_FRAMEBUFFER_COMPLETE_OES, "Failed to make complete framebuffer object %x", status);
 		
 		out_frame_buffer = frame_buffer;
 #endif
@@ -1056,6 +1076,8 @@ namespace ERI {
 	void RendererES1::UpdateTexture(unsigned int texture_id, const void* buffer, int width, int height, PixelFormat format)
 	{
 		ASSERT(texture_id > 0);
+		
+		if (context_) context_->SetAsCurrent();
 
 		glBindTexture(GL_TEXTURE_2D, texture_id);
 		now_texture_ = texture_id;
@@ -1080,6 +1102,8 @@ namespace ERI {
 	void RendererES1::ReleaseTexture(int texture_id)
 	{
 		ASSERT(texture_id > 0);
+		
+		if (context_) context_->SetAsCurrent();
 		
 		if (now_texture_ == texture_id)
 		{
@@ -1231,6 +1255,8 @@ namespace ERI {
 	int RendererES1::GenerateFrameBuffer()
 	{
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
+		if (context_) context_->SetAsCurrent();
+
 		for (int i = kDefaultFrameBufferIdx + 1; i < kMaxFrameBuffer; ++i)
 		{
 			if (!frame_buffers_[i])
@@ -1248,6 +1274,8 @@ namespace ERI {
 	{
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 		ASSERT(frame_buffer > 0);
+		
+		if (context_) context_->SetAsCurrent();
 
 		for (int i = 0; i < kMaxFrameBuffer; ++i)
 		{
@@ -1316,3 +1344,5 @@ namespace ERI {
 	}
 	
 }
+
+#endif // ERI_RENDERER_ES1

@@ -117,6 +117,7 @@ namespace ERI {
 		Color	color;
 		
 		GLenum blend_src_factor, blend_dst_factor;
+		bool alpha_premultiplied;
 		
 		GLenum		alpha_test_func;
 		GLclampf	alpha_test_ref;

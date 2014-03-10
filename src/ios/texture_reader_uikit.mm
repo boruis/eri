@@ -48,6 +48,8 @@ namespace ERI {
 															 8, width_ * 4,
 															 CGImageGetColorSpace(texture_image),
 															 kCGImageAlphaPremultipliedLast);
+    
+		alpha_premultiplied_ = true;
 		
 		CGContextDrawImage(texture_context,
 						   CGRectMake(0.0, 0.0, (float)width_, (float)height_),
@@ -119,12 +121,24 @@ namespace ERI {
 		
 		width_ = next_power_of_2(actual_size.width);
 		height_ = next_power_of_2(actual_size.height);
+
+#ifdef ERI_RENDERER_ES2
+		size_t bytes_per_row = width_ * 4;
+		CGColorSpaceRef color_space = CGColorSpaceCreateDeviceRGB();
+		CGBitmapInfo bitmap_info = kCGImageAlphaPremultipliedLast;
+		alpha_premultiplied_ = true;
+		PixelFormat pixel_format = RGBA;
+#else
+		size_t bytes_per_row = width_;
+		CGColorSpaceRef color_space = CGColorSpaceCreateDeviceGray();
+		CGBitmapInfo bitmap_info = kCGImageAlphaNone;
+		PixelFormat pixel_format = ALPHA;
+#endif
 		
-		void* texture_data = calloc(height_, width_);
+		void* texture_data = calloc(height_, bytes_per_row);
 		
-		CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceGray();
-		CGContextRef context = CGBitmapContextCreate(texture_data, width_, height_, 8, width_, colorSpace, kCGImageAlphaNone);
-		CGColorSpaceRelease(colorSpace);
+		CGContextRef context = CGBitmapContextCreate(texture_data, width_, height_, 8, bytes_per_row, color_space, bitmap_info);
+		CGColorSpaceRelease(color_space);
 		
 		if (NULL == context)
 		{
@@ -132,15 +146,27 @@ namespace ERI {
 		}
 		else
 		{
-			CGContextSetGrayFillColor(context, 1.0, 1.0);
+//			CGContextSetGrayFillColor(context, 1.0, 1.0);
+			
 			CGContextTranslateCTM(context, 0.0, height_);
 			CGContextScaleCTM(context, 1.0, -1.0); // NOTE: NSString draws in UIKit referential i.e. renders upside-down compared to CGBitmapContext referential
 			UIGraphicsPushContext(context);
 			
+//			[txt_str drawInRect:CGRectMake(0, 0, actual_size.width, actual_size.height)
+//					   withFont:font
+//				  lineBreakMode:break_mode
+//					  alignment:data.is_pos_center ? NSTextAlignmentCenter : NSTextAlignmentLeft];
+			
+			NSMutableParagraphStyle* style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+			style.alignment = data.is_pos_center ? NSTextAlignmentCenter : NSTextAlignmentLeft;
+			style.lineBreakMode = break_mode;
+			
 			[txt_str drawInRect:CGRectMake(0, 0, actual_size.width, actual_size.height)
-					   withFont:font
-				  lineBreakMode:break_mode
-					  alignment:data.is_pos_center ? NSTextAlignmentCenter : NSTextAlignmentLeft];
+           withAttributes:@{
+                            NSFontAttributeName: font,
+                            NSParagraphStyleAttributeName: style,
+                            NSForegroundColorAttributeName: [UIColor whiteColor]
+                            }];
 			
 			UIGraphicsPopContext();
 			CGContextRelease(context);
@@ -153,7 +179,7 @@ namespace ERI {
 		out_actual_size.x = actual_size.width;
 		out_actual_size.y = actual_size.height;
 
-		texture_id_ = Root::Ins().renderer()->GenerateTexture(texture_data, width_, height_, ALPHA);
+		texture_id_ = Root::Ins().renderer()->GenerateTexture(texture_data, width_, height_, pixel_format);
 		
 		free(texture_data);
 	}

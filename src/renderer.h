@@ -57,6 +57,8 @@ namespace ERI {
 		
 		virtual bool Init(bool use_depth_buffer) = 0;
 		
+		virtual void SetContextAsCurrent() = 0;
+		
 		// TODO: bad naming
 		virtual void BackingLayer(const void* layer) = 0;
 		virtual void Resize(int width, int height) = 0;

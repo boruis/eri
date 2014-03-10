@@ -12,6 +12,8 @@
 
 #include "pch.h"
 
+#ifdef ERI_RENDERER_ES1
+
 #include "renderer.h"
 #include "material_data.h"
 
@@ -19,8 +21,8 @@
 
 namespace ERI {
 	
-	class RenderContext;
 	struct TextureUnit;
+	class RenderContext;
 	
 	struct LightInfo
 	{
@@ -48,7 +50,9 @@ namespace ERI {
 		
 		virtual bool Init(bool use_depth_buffer);
 		
-		virtual void BackingLayer(void* layer);
+		virtual void SetContextAsCurrent();
+		
+		virtual void BackingLayer(const void* layer);
 		virtual void Resize(int width, int height);
 		
 		virtual int width() { return width_; }
@@ -125,6 +129,7 @@ namespace ERI {
 		void ClientActiveTextureUnit(GLenum idx);
 
 		void UpdateLightTransform();
+
 		void AdjustProjectionForViewOrientation();
 		
 		static const int kMaxFrameBuffer = 8;
@@ -138,22 +143,26 @@ namespace ERI {
 		int backing_width_backup_, backing_height_backup_;
 		int width_, height_;
 		
-		GLuint color_render_buffer_;
-		
 		GLuint frame_buffers_[kMaxFrameBuffer];
+		GLuint color_render_buffer_;
 		
 		GLuint depth_buffer_;
 		bool use_depth_buffer_;
 		
 		GLbitfield clear_bits_;
-		
-		bool vertex_normal_enable_;
-		bool vertex_color_enable_;
-		bool light_enable_;
+		Color bg_color_, now_color_;
+
+		GLenum blend_src_factor_, blend_dst_factor_;
+		bool blend_enable_;
+
+		GLenum		alpha_test_func_;
+		GLclampf	alpha_test_ref_;
+		bool alpha_test_enable_;
+
+		GLenum		depth_test_func_;
 		bool depth_test_enable_;
 		bool depth_write_enable_;
-		bool blend_enable_;
-		bool alpha_test_enable_;
+
 		bool cull_face_enable_;
 		bool cull_front_;
 		
@@ -165,16 +174,11 @@ namespace ERI {
 
 		GLenum now_active_texture_unit_, now_client_active_texture_unit_;
 		unsigned int now_texture_;
+
+		bool vertex_normal_enable_;
+		bool vertex_color_enable_;
 		
-		Color bg_color_;
-		Color now_color_;
-		
-		GLenum blend_src_factor_, blend_dst_factor_;
-		
-		GLenum		alpha_test_func_;
-		GLclampf	alpha_test_ref_;
-		
-		GLenum		depth_test_func_;
+		bool light_enable_;
 		
 		LightInfo light_infos_[MAX_LIGHT];
 		
@@ -182,5 +186,7 @@ namespace ERI {
 	};
 
 }
+
+#endif //ERI_RENDERER_ES1
 
 #endif // ERI_RENDERER_ES1_H

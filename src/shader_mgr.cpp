@@ -8,6 +8,8 @@
 
 #include "shader_mgr.h"
 
+#ifdef ERI_RENDERER_ES2
+
 #include "renderer_es2.h"
 #include "platform_helper.h"
 
@@ -232,3 +234,5 @@ ShaderProgram* ShaderMgr::Get(const std::string& name)
 }
 
 }
+
+#endif // ERI_RENDERER_ES2

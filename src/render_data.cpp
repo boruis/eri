@@ -31,6 +31,7 @@ namespace ERI {
 		tex_scale(Vector2(1, 1)),
 		blend_src_factor(GL_SRC_ALPHA),
 		blend_dst_factor(GL_ONE_MINUS_SRC_ALPHA),
+		alpha_premultiplied(false),
 		alpha_test_func(GL_GREATER),
 		alpha_test_ref(0.0f),
 		depth_test_func(GL_LESS),

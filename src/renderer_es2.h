@@ -10,7 +10,9 @@
 #ifndef ERI_RENDERER_ES2_H
 #define ERI_RENDERER_ES2_H
 
-#include <string>
+#include "pch.h"
+
+#ifdef ERI_RENDERER_ES2
 
 #if ERI_PLATFORM == ERI_PLATFORM_MAC
 #include <OpenGL/gl.h>
@@ -36,7 +38,10 @@ namespace ERI {
 		virtual ~RendererES2();
 		
 		virtual bool Init(bool use_depth_buffer);
-		virtual void BackingLayer(void* layer);
+		
+		virtual void SetContextAsCurrent();
+
+		virtual void BackingLayer(const void* layer);
 		virtual void Resize(int width, int height);
 		
 		virtual int width() { return width_; }
@@ -117,12 +122,15 @@ namespace ERI {
 		
 		RenderContext*	context_;
 		
+		// The pixel dimensions of the CAEAGLLayer
+		// TODO: bad naming
 		GLint backing_width_, backing_height_;
 		int backing_width_backup_, backing_height_backup_;
 		int width_, height_;
 		
 		GLuint frame_buffers_[kMaxFrameBuffer];
 		GLuint color_render_buffer_;
+
 		GLuint depth_buffer_;
 		bool use_depth_buffer_;
 		
@@ -160,5 +168,7 @@ namespace ERI {
 	};
 	
 }
+
+#endif // ERI_RENDERER_ES2
 
 #endif // ERI_RENDERER_ES2_H

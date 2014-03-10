@@ -731,6 +731,33 @@ namespace ERI {
 			{
 				material_data_.texture_units[idx].texture = tex;
 			}
+			
+			const Texture* in_use_tex = NULL;
+
+			for (int i = 0; i < material_data_.used_unit; ++i)
+			{
+				if (i != idx && material_data_.texture_units[i].texture)
+				{
+					in_use_tex = material_data_.texture_units[i].texture;
+					break;
+				}
+			}
+			
+			if (tex)
+			{
+				if (in_use_tex)
+				{
+					ASSERT(in_use_tex->alpha_premultiplied == tex->alpha_premultiplied);
+				}
+				else
+				{
+					render_data_.alpha_premultiplied = tex->alpha_premultiplied;
+				}
+			}
+			else if (NULL == in_use_tex)
+			{
+				render_data_.alpha_premultiplied = false;
+			}
 		}
 	}
 	
@@ -1138,6 +1165,8 @@ namespace ERI {
 	
 	void LineActor::UpdateVertexBuffer()
 	{
+		Root::Ins().renderer()->SetContextAsCurrent();
+
 		if (render_data_.vertex_buffer == 0)
 		{
 			glGenBuffers(1, &render_data_.vertex_buffer);
@@ -1187,6 +1216,8 @@ namespace ERI {
 	
 	void SpriteActor::UpdateVertexBuffer()
 	{
+		Root::Ins().renderer()->SetContextAsCurrent();
+
 		if (render_data_.vertex_buffer == 0)
 		{
 			glGenBuffers(1, &render_data_.vertex_buffer);
@@ -1452,6 +1483,8 @@ namespace ERI {
 	
 	void BoxActor::UpdateVertexBuffer()
 	{
+		Root::Ins().renderer()->SetContextAsCurrent();
+
 		if (render_data_.vertex_buffer == 0)
 		{
 			glGenBuffers(1, &render_data_.vertex_buffer);
@@ -1615,6 +1648,8 @@ namespace ERI {
 	
 	void NumberActor::UpdateVertexBuffer()
 	{
+		Root::Ins().renderer()->SetContextAsCurrent();
+
 		char number_str[16];
 		
 		if (is_float_)

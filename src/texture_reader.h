@@ -17,7 +17,7 @@ namespace ERI {
 	class TextureReader
 	{
 	public:
-		TextureReader(bool generate_immediately) : width_(-1), height_(-1), texture_id_(0) {}
+		TextureReader(bool generate_immediately) : width_(-1), height_(-1), texture_id_(0), alpha_premultiplied_(false) {}
 		virtual ~TextureReader() {}
 		
 		virtual void Generate() {}
@@ -27,6 +27,8 @@ namespace ERI {
 		
 		inline unsigned int texture_id() { return texture_id_; }
 		
+		inline bool alpha_premultiplied() { return alpha_premultiplied_; }
+		
 		virtual void* texture_data() { return NULL; }
 		
 	protected:
@@ -34,6 +36,8 @@ namespace ERI {
 		int			height_;
 		
 		unsigned int	texture_id_;
+		
+		bool	alpha_premultiplied_;
 	};
 }
 

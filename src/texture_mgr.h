@@ -139,6 +139,8 @@ namespace ERI {
 
 		int		bind_frame_buffer;
 		
+		bool	alpha_premultiplied;
+		
 		mutable TextureParams	current_params;
 	};
 	

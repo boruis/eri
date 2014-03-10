@@ -9,6 +9,8 @@
 #ifndef ERI_SHADER_MGR_H
 #define ERI_SHADER_MGR_H
 
+#ifdef ERI_RENDERER_ES2
+
 #include <vector>
 #include <map>
 
@@ -80,4 +82,6 @@ private:
 
 }
 
-#endif
+#endif // ERI_RENDERER_ES2
+
+#endif // ERI_SHADER_MGR_H
