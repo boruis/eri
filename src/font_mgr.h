@@ -107,6 +107,8 @@ public:
 	inline int common_base() const { return common_base_; }
 	
 	virtual bool is_atlas() const { return false; }
+	
+	virtual bool is_utf8() const { return false; }
 
 protected:
 	const Texture*	texture_;

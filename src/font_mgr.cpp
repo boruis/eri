@@ -268,6 +268,8 @@ public:
 	
 	virtual float GetSizeScale(int want_size) const { return 1.f; }
 	
+	virtual bool is_utf8() const { return true; }
+	
 private:
 	void ChangeFaceSize(int want_size) const;
   
@@ -324,7 +326,7 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& tex_name,
 											 int& out_height) const
 {
 	uint32_t* unicodes;
-	int length = CreateUnicodeArray(data, unicodes); // TODO: default use utf8?
+	int length = CreateUnicodeArray(data, unicodes);
 	
 	out_width = out_height = 0;
   
@@ -525,7 +527,7 @@ const Texture* FontSys::CreateSpriteTxt(const std::string& tex_name,
 							   max_width,
 							   actual_size);
 #elif defined(ERI_TEXTURE_READER_ANDROID)
-    TextureReaderSysTxtAndroid reader(data.str, font_name, font_size, data.is_pos_center, actual_size);
+	TextureReaderSysTxtAndroid reader(data.str, name_, font_size, data.is_pos_center, actual_size);
 #else
 	TextureReader reader(true);
 #endif

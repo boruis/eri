@@ -316,6 +316,8 @@ TxtActor::TxtActor(const std::string& font_path, int font_size,
   font_ref_ = Root::Ins().font_mgr()->GetFont(font_path);
   
   ASSERT(font_ref_);
+
+  SetIsUtf8(font_ref_->is_utf8()); // TODO: bad rule
   
   if (font_ref_->is_atlas())
   {
