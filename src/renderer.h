@@ -31,6 +31,13 @@ namespace ERI {
 		RGBA_PVR_2BPP
 	};
 	
+	enum FogMode
+	{
+		FOG_LINEAR,
+		FOG_EXP,
+		FOG_EXP2
+	};
+	
 	struct RenderData;
 	struct MaterialData;
 	
@@ -96,7 +103,11 @@ namespace ERI {
 		virtual void SetLightAttenuation(int idx, float constant, float linear, float quadratic) = 0;
 		virtual void SetLightSpotExponent(int idx, float exponent) = 0;
 		virtual void SetLightSpotCutoff(int idx, float cutoff) = 0;
-		
+
+		virtual void SetFog(FogMode mode, float density = 1.f) = 0;
+		virtual void SetFogDistance(float start, float end = 1.f) = 0;
+		virtual void SetFogColor(const Color& color) = 0;
+
 		virtual unsigned int GenerateTexture(const void* buffer, int width, int height, PixelFormat format, int buffer_size = 0) = 0;
 		virtual unsigned int GenerateTexture() = 0;
 		virtual unsigned int GenerateRenderToTexture(int width, int height, int& out_frame_buffer, PixelFormat format) = 0;

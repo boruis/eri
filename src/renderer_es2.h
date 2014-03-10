@@ -85,7 +85,11 @@ namespace ERI {
 		virtual void SetLightAttenuation(int idx, float constant, float linear, float quadratic) {}
 		virtual void SetLightSpotExponent(int idx, float exponent) {}
 		virtual void SetLightSpotCutoff(int idx, float cutoff) {}
-		
+
+		virtual void SetFog(FogMode mode, float density = 1.f) {}
+		virtual void SetFogDistance(float start, float end = 1.f) {}
+		virtual void SetFogColor(const Color& color) {}
+
 		virtual unsigned int GenerateTexture(const void* buffer, int width, int height, PixelFormat format, int buffer_size = 0);
 		virtual unsigned int GenerateTexture();
 		virtual unsigned int GenerateRenderToTexture(int width, int height, int& out_frame_buffer, PixelFormat format);

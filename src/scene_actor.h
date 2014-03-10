@@ -115,6 +115,7 @@ namespace ERI {
 		// TODO: bad interface, re-design
 		
 		inline void set_accept_light(bool accept) { material_data_.accept_light = accept; }
+		inline void set_accept_fog(bool accept) { material_data_.accept_fog = accept; }
 		
 		const Texture* SetMaterial(const std::string& texture_path, TextureFilter filter_min = FILTER_NEAREST, TextureFilter filter_mag = FILTER_NEAREST);
 		void SetMaterial(const Texture* tex, TextureFilter filter_min = FILTER_NEAREST, TextureFilter filter_mag = FILTER_NEAREST);

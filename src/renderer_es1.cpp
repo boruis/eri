@@ -82,6 +82,13 @@ namespace ERI {
 		GL_ONE_MINUS_SRC_ALPHA
 	};
 	
+	const GLint kFogModes[] =
+	{
+		GL_LINEAR,
+		GL_EXP,
+		GL_EXP2
+	};
+	 
 	RendererES1::RendererES1() :
 		context_(NULL),
 		backing_width_(0),
@@ -109,7 +116,8 @@ namespace ERI {
 		now_texture_(0),
 		vertex_normal_enable_(false),
 		vertex_color_enable_(false),
-		light_enable_(false)
+		light_enable_(false),
+		fog_enable_(false)
 	{
 		memset(frame_buffers_, 0, sizeof(frame_buffers_));
 		memset(texture_unit_enable_, 0, sizeof(texture_unit_enable_));
@@ -638,6 +646,7 @@ namespace ERI {
 	void RendererES1::EnableMaterial(const MaterialData* data)
 	{
 		EnableLight(data->accept_light);
+		EnableFog(data->accept_fog);
 		EnableDepthTest(data->depth_test);
 		EnableDepthWrite(data->depth_write);
 		EnableCullFace(data->cull_face, data->cull_front);
@@ -664,6 +673,19 @@ namespace ERI {
 				glEnable(GL_LIGHTING);
 			else
 				glDisable(GL_LIGHTING);
+		}
+	}
+
+	void RendererES1::EnableFog(bool enable)
+	{
+		if (fog_enable_ != enable)
+		{
+			fog_enable_ = enable;
+			
+			if (enable)
+				glEnable(GL_FOG);
+			else
+				glDisable(GL_FOG);
 		}
 	}
 	
@@ -944,7 +966,29 @@ namespace ERI {
 		
 		glLightf(GL_LIGHT0 + idx, GL_SPOT_CUTOFF, cutoff);
 	}
+  
+	void RendererES1::SetFog(FogMode mode, float density /*= 1.f*/)
+	{
+#ifdef ERI_GL
+		glFogi(GL_FOG_MODE, kFogModes[mode]);
+#else
+		glFogx(GL_FOG_MODE, kFogModes[mode]);
+#endif
+		glFogf(GL_FOG_DENSITY, density);
+	}
 	
+	void RendererES1::SetFogDistance(float start, float end /*= 1.f*/)
+	{
+		glFogf(GL_FOG_START, start);
+		glFogf(GL_FOG_END, end);
+	}
+	
+	void RendererES1::SetFogColor(const Color& color)
+	{
+		GLfloat params[] = { color.r, color.g, color.b, 1.0f };
+		glFogfv(GL_FOG_COLOR, params);
+	}
+  
 	unsigned int RendererES1::GenerateTexture(const void* buffer, int width, int height, PixelFormat format, int buffer_size /*= 0*/)
 	{
 		if (context_) context_->SetAsCurrent();
