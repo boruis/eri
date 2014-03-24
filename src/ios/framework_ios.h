@@ -18,6 +18,7 @@
 @property (strong, nonatomic) EAGLView* gl_view;
 @property (strong, nonatomic) FrameworkViewController* view_controller;
 - (id)initWithFrame:(CGRect)frame;
+- (void)LogFPS:(BOOL)enable;
 - (void)Run:(id)target withUpdate:(SEL)custom_update;
 - (void)Stop;
 - (CFTimeInterval)DeltaTime;

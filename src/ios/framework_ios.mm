@@ -45,6 +45,7 @@
   BOOL is_running_, keep_delta_time_;
   CFTimeInterval delta_time_;
   
+  BOOL log_fps_;
   CFTimeInterval frame_pass_time_;
   int frame_count_;
 }
@@ -67,6 +68,7 @@
     
     is_running_ = NO;
     keep_delta_time_ = YES;
+    log_fps_ = NO;
   }
   
   return self;
@@ -81,6 +83,13 @@
   [super dealloc];
 }
 #endif
+
+- (void)LogFPS:(BOOL)enable
+{
+  log_fps_ = enable;
+  frame_pass_time_ = 0.0;
+  frame_count_ = 0;
+}
 
 - (void)update
 {
@@ -108,15 +117,18 @@
   {
 		ERI::Root::Ins().Update();
     
-//    frame_count_ += 1;
-//    
-//    frame_pass_time_ += delta_time_;
-//    if (frame_pass_time_ >= 1.0)
-//    {
-//      NSLog(@"fps %.2f", frame_count_ / frame_pass_time_);
-//      frame_pass_time_ = 0.0;
-//      frame_count_ = 0;
-//    }
+    if (log_fps_)
+    {
+      frame_count_ += 1;
+      
+      frame_pass_time_ += delta_time_;
+      if (frame_pass_time_ >= 1.0)
+      {
+        NSLog(@"fps %.2f", frame_count_ / frame_pass_time_);
+        frame_pass_time_ = 0.0;
+        frame_count_ = 0;
+      }
+    }
   }
 }
 
