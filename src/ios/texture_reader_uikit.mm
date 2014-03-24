@@ -168,6 +168,10 @@ namespace ERI {
                             NSForegroundColorAttributeName: [UIColor whiteColor]
                             }];
 			
+#if !__has_feature(objc_arc)
+			[style release];
+#endif
+			
 			UIGraphicsPopContext();
 			CGContextRelease(context);
 		}
