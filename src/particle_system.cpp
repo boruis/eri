@@ -278,7 +278,7 @@ namespace ERI
 		if (indices_) delete [] indices_;
 		if (vertices_) delete [] vertices_;
 		
-		int num = particles_.size();
+		size_t num = particles_.size();
 		for (int i = 0; i < num; ++i)
 		{
 			delete particles_[i];
@@ -312,7 +312,7 @@ namespace ERI
 		emitter_ = emitter;
 		
 		int need_particle_num = static_cast<int>(emitter_->rate() * setup_ref_->particle_life_max * 1.25f);
-		int original_particle_num = particles_.size();
+		int original_particle_num = static_cast<int>(particles_.size());
 		
 		for (int i = 0; i < need_particle_num; ++i)
 		{
@@ -368,8 +368,8 @@ namespace ERI
 		}
 		
 		Particle* p;
-		int num = particles_.size();
-		int affector_num = affectors_.size();
+		size_t num = particles_.size();
+		size_t affector_num = affectors_.size();
 		Vector2 delta_pos;
 		
 		system_scale_.x = 1.0f;
@@ -421,7 +421,7 @@ namespace ERI
 	
 	void ParticleSystem::ResetParticles()
 	{
-		int num = particles_.size();
+		size_t num = particles_.size();
 		for (int i = 0; i < num; ++i)
 		{
 			particles_[i]->Reset();
@@ -437,7 +437,7 @@ namespace ERI
 		Vector2 v;
 		float rotate;
 		const SceneActor* inherit_actor;
-		int affector_num = affectors_.size();
+		size_t affector_num = affectors_.size();
 
 		for (int i = 0; i < num; ++i)
 		{
@@ -485,7 +485,7 @@ namespace ERI
 
 	Particle* ParticleSystem::ObtainParticle()
 	{
-		int num = particles_.size();
+		size_t num = particles_.size();
 		
 		if (first_available_particle_idx_ < 0)
 		{
@@ -524,7 +524,7 @@ namespace ERI
 
 	void ParticleSystem::CreateBuffer()
 	{
-		int particle_num = particles_.size();
+		int particle_num = static_cast<int>(particles_.size());
 		
 		if (render_data_.vertex_buffer == 0)
 		{
@@ -579,7 +579,7 @@ namespace ERI
 		ASSERT(render_data_.vertex_buffer || render_data_.vertex_count == 0);
 		ASSERT(render_data_.index_buffer || render_data_.index_count == 0);
 		
-		int num = particles_.size();
+		size_t num = particles_.size();
 		int in_use_num = 0;
 		
 		Particle* p;
