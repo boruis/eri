@@ -32,6 +32,8 @@ namespace ERI {
 	private:
 #ifdef __OBJC__
 		EAGLContext* context_;
+#else
+		void*	dummy_;
 #endif
 	};
 }
