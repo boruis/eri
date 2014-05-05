@@ -14,26 +14,7 @@
 #include "renderer.h"
 
 @implementation FrameworkViewController
-
-- (id)init
-{
-  self = [super init];
-  if (self)
-  {
-  }
-  
-  return self;
-}
-
-#if !__has_feature(objc_arc)
-- (void)dealloc
-{
-  [super dealloc];
-}
-#endif
-
 @end
-
 
 @implementation Framework
 {
@@ -50,39 +31,49 @@
   int frame_count_;
 }
 
-- (id)initWithFrame:(CGRect)frame
+- (void)initEri:(CGRect)frame
+{
+  ERI::Root::Ins().Init();
+  
+  if ([UIScreen instancesRespondToSelector:@selector(scale)])
+    ERI::Root::Ins().renderer()->set_content_scale([[UIScreen mainScreen] scale]);
+  
+  _gl_view = [[EAGLView alloc] initWithFrame:frame];
+  _gl_view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  
+  is_running_ = NO;
+  keep_delta_time_ = YES;
+  log_fps_ = NO;
+}
+
+- (id)initWithFrame:(CGRect)frame needViewController:(BOOL)need_view_controller;
 {
   self = [super init];
   if (self)
   {
-    ERI::Root::Ins().Init();
+    [self initEri:frame];
     
-    if ([UIScreen instancesRespondToSelector:@selector(scale)])
-      ERI::Root::Ins().renderer()->set_content_scale([[UIScreen mainScreen] scale]);
-
-    _gl_view = [[EAGLView alloc] initWithFrame:frame];
-    _gl_view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    
-    _view_controller = [[FrameworkViewController alloc] init];
-    [_view_controller.view addSubview:_gl_view];
-    
-    is_running_ = NO;
-    keep_delta_time_ = YES;
-    log_fps_ = NO;
+    if (need_view_controller)
+    {
+      _view_controller = [[FrameworkViewController alloc] init];
+      [_view_controller.view addSubview:_gl_view];
+    }
   }
   
   return self;
 }
 
-#if !__has_feature(objc_arc)
 - (void)dealloc
 {
+  ERI::Root::DestroyIns();
+  
+#if !__has_feature(objc_arc)
   [_view_controller release];
   [_gl_view release];
   
   [super dealloc];
-}
 #endif
+}
 
 - (void)LogFPS:(BOOL)enable
 {

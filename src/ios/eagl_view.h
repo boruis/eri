@@ -10,9 +10,8 @@
 
 
 @interface EAGLView : UIView <UIAccelerometerDelegate>
-{
-}
 
+- (void)enableRetainedBacking:(BOOL)enable;
 - (void)enableAccelerometer:(BOOL)enable withTimeInterval:(NSTimeInterval)interval;
 - (void)convertPointByViewOrientation:(CGPoint*)point;
 

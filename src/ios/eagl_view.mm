@@ -17,9 +17,10 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-static bool	in_multi_move;
-
 @implementation EAGLView
+{
+	bool	in_multi_move;
+}
 
 // You must implement this method
 + (Class) layerClass
@@ -42,9 +43,9 @@ static bool	in_multi_move;
 		// Get the layer
 		CAEAGLLayer *eaglLayer = (CAEAGLLayer*)self.layer;
 
-		eaglLayer.opaque = TRUE;
+		eaglLayer.opaque = YES;
 		eaglLayer.drawableProperties = [NSDictionary dictionaryWithObjectsAndKeys:
-										[NSNumber numberWithBool:FALSE],
+										[NSNumber numberWithBool:NO],
 										kEAGLDrawablePropertyRetainedBacking,
 										kEAGLColorFormatRGBA8,
 										kEAGLDrawablePropertyColorFormat,
@@ -176,6 +177,18 @@ static bool	in_multi_move;
 		
 		in_multi_move = true;
 	}
+}
+
+- (void)enableRetainedBacking:(BOOL)enable
+{
+	CAEAGLLayer *eaglLayer = (CAEAGLLayer*)self.layer;
+	
+	eaglLayer.drawableProperties = [NSDictionary dictionaryWithObjectsAndKeys:
+									[NSNumber numberWithBool:enable],
+									kEAGLDrawablePropertyRetainedBacking,
+									kEAGLColorFormatRGBA8,
+									kEAGLDrawablePropertyColorFormat,
+									nil];
 }
 
 - (void)enableAccelerometer:(BOOL)enable withTimeInterval:(NSTimeInterval)interval

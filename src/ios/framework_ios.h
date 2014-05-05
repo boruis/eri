@@ -17,7 +17,7 @@
 @interface Framework : NSObject
 @property (strong, nonatomic) EAGLView* gl_view;
 @property (strong, nonatomic) FrameworkViewController* view_controller;
-- (id)initWithFrame:(CGRect)frame;
+- (id)initWithFrame:(CGRect)frame needViewController:(BOOL)need_view_controller;
 - (void)LogFPS:(BOOL)enable;
 - (void)Run:(id)target withUpdate:(SEL)custom_update;
 - (void)Stop;
