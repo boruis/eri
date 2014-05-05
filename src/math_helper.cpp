@@ -101,7 +101,11 @@ namespace ERI {
 		}
 		else
 		{
-			return (start.CrossProduct(end) < 0) ? -90.0f : 90.0f;
+			float cross_value = start.CrossProduct(end);
+			if (0.0f == cross_value)
+				return 0.0f;
+			
+			return (cross_value < 0.0f) ? -90.0f : 90.0f;
 		}
 	}
 	
