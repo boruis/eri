@@ -532,14 +532,10 @@ const Texture* FontSys::CreateSpriteTxt(const std::string& tex_name,
 	TextureReader reader(true);
 #endif
 	
-	const Texture* tex = Root::Ins().texture_mgr()->CreateTexture(tex_name, &reader);
-	
-	ASSERT(tex);
-	
 	out_width = actual_size.x;
 	out_height = actual_size.y;
 	
-	return tex;
+	return Root::Ins().texture_mgr()->CreateTexture(tex_name, &reader);
 }
 
 #endif // defined(ERI_TEXTURE_READER_UIKIT) || defined(ERI_TEXTURE_READER_ANDROID)

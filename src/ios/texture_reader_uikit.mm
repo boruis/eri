@@ -119,8 +119,14 @@ namespace ERI {
 			actual_size = [txt_str sizeWithFont:font constrainedToSize:CGSizeMake(1024.f, 1024.f)];
 		}
 		
+		out_actual_size.x = actual_size.width;
+		out_actual_size.y = actual_size.height;
+		
 		width_ = next_power_of_2(actual_size.width);
 		height_ = next_power_of_2(actual_size.height);
+		
+		if (width_ == 0 || height_ == 0)
+			return;
 
 #ifdef ERI_RENDERER_ES2
 		size_t bytes_per_row = width_ * 4;
@@ -146,17 +152,20 @@ namespace ERI {
 		}
 		else
 		{
-//			CGContextSetGrayFillColor(context, 1.0, 1.0);
+#ifndef ERI_RENDERER_ES2
+			CGContextSetGrayFillColor(context, 1.0, 1.0);
+#endif
 			
 			CGContextTranslateCTM(context, 0.0, height_);
 			CGContextScaleCTM(context, 1.0, -1.0); // NOTE: NSString draws in UIKit referential i.e. renders upside-down compared to CGBitmapContext referential
 			UIGraphicsPushContext(context);
 			
-//			[txt_str drawInRect:CGRectMake(0, 0, actual_size.width, actual_size.height)
-//					   withFont:font
-//				  lineBreakMode:break_mode
-//					  alignment:data.is_pos_center ? NSTextAlignmentCenter : NSTextAlignmentLeft];
-			
+			[txt_str drawInRect:CGRectMake(0, 0, actual_size.width, actual_size.height)
+					   withFont:font
+				  lineBreakMode:break_mode
+					  alignment:data.is_pos_center ? NSTextAlignmentCenter : NSTextAlignmentLeft];
+
+/*
 			NSMutableParagraphStyle* style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
 			style.alignment = data.is_pos_center ? NSTextAlignmentCenter : NSTextAlignmentLeft;
 			style.lineBreakMode = break_mode;
@@ -171,6 +180,7 @@ namespace ERI {
 #if !__has_feature(objc_arc)
 			[style release];
 #endif
+ */
 			
 			UIGraphicsPopContext();
 			CGContextRelease(context);

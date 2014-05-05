@@ -81,21 +81,24 @@ class SpriteTxtMeshConstructor : public TxtMeshConstructor
                                                max_width,
                                                width,
                                                height);
-
-    owner_->SetMaterial(tex,
-                        owner_->font_ref_->filter_min(),
-                        owner_->font_ref_->filter_mag());
     
-    owner_->SetTextureWrap(owner_->font_ref_->wrap_s(),
-                           owner_->font_ref_->wrap_t());
+    if (tex)
+    {
+      owner_->SetMaterial(tex,
+                          owner_->font_ref_->filter_min(),
+                          owner_->font_ref_->filter_mag());
+      
+      owner_->SetTextureWrap(owner_->font_ref_->wrap_s(),
+                             owner_->font_ref_->wrap_t());
+    }
     
     owner_->width_ = Round(width / resolution_scale);
     owner_->height_ = Round(height / resolution_scale);
     
     if (owner_->render_data_.vertex_buffer == 0)
-		{
-			glGenBuffers(1, &owner_->render_data_.vertex_buffer);
-		}
+    {
+      glGenBuffers(1, &owner_->render_data_.vertex_buffer);
+    }
 		    
     float size_scale = font->GetSizeScale(owner_->font_size_);
 
@@ -109,8 +112,12 @@ class SpriteTxtMeshConstructor : public TxtMeshConstructor
       start.y =  Round(size.y * 0.5f);
     }
     
-    Vector2 uv_size(static_cast<float>(width) / tex->width,
-                    static_cast<float>(height) / tex->height);
+    Vector2 uv_size;
+    if (tex)
+    {
+      uv_size.x = static_cast<float>(width) / tex->width;
+      uv_size.y = static_cast<float>(height) / tex->height;
+    }
     
     //  2 - 3
     //  | \ |

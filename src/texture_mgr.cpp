@@ -222,9 +222,9 @@ namespace ERI {
 		}
 	}
 	
-	const Texture* TextureMgr::CreateTexture(const std::string& name, int width, int height, const void* data)
+	const Texture* TextureMgr::CreateTexture(const std::string& name, int width, int height, const void* data, PixelFormat pixel_format /*= RGBA*/)
 	{
-		ASSERT(!name.empty() && width > 0 && height > 0 && data);
+		ASSERT(!name.empty() && width > 0 && height > 0);
 		
 		std::map<std::string, Texture*>::iterator it = texture_map_.find(name);
 
@@ -238,7 +238,7 @@ namespace ERI {
 			return it->second;
 		}
 
-		unsigned int texture_id = Root::Ins().renderer()->GenerateTexture(data, width, height, RGBA);
+		unsigned int texture_id = Root::Ins().renderer()->GenerateTexture(data, width, height, pixel_format);
 		if (texture_id == 0)
 			return NULL;
 		
@@ -251,11 +251,14 @@ namespace ERI {
   
 	const Texture* TextureMgr::CreateTexture(const std::string& name, TextureReader* reader)
 	{
-		ASSERT(!name.empty() && reader && reader->texture_id() > 0);
+		ASSERT(!name.empty() && reader);
 		
 		// TODO: reader may not keep texture data, can't always update texture here
 		
 		ASSERT(texture_map_.find(name) == texture_map_.end());
+		
+		if (reader->texture_id() <= 0)
+			return NULL;
 		
 		Texture* tex = new Texture(reader->texture_id(), reader->width(), reader->height());
 		tex->alpha_premultiplied = reader->alpha_premultiplied();

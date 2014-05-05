@@ -159,7 +159,7 @@ namespace ERI {
 		void ConstructPreloadTextures();
 		
 		const Texture* GetTexture(const std::string& resource_path, bool keep_texture_data = false);
-		const Texture* CreateTexture(const std::string& name, int width, int height, const void* data);
+		const Texture* CreateTexture(const std::string& name, int width, int height, const void* data, PixelFormat pixel_format = RGBA);
 		const Texture* CreateTexture(const std::string& name, TextureReader* reader);
 		void UpdateTexture(Texture* tex, const void* data);
 		
