@@ -496,7 +496,8 @@ namespace ERI {
 		IT_SEGMENT
 	};
 
-	float GetPointSegment2DistanceSquared(const Vector2& point, const Segment2& segment);
+	float GetPointLine2DistanceSquared(const Vector2& point, const Line2& line, Vector2* out_closest_point);
+	float GetPointSegment2DistanceSquared(const Vector2& point, const Segment2& segment, Vector2* out_closest_point);
 	float GetPointBox2DistanceSquared(const Vector2& point, const Box2& box);
 
 	IntersectionType CheckIntersectLineLine2(const Line2& line1, const Line2& line2,

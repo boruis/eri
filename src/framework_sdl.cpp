@@ -8,6 +8,8 @@
 
 #include "framework_sdl.h"
 
+#ifdef ERI_DESKTOP
+
 #include "pch.h"
 
 #include "root.h"
@@ -275,7 +277,7 @@ float Framework::PreUpdate()
 //               event.motion.windowID);
 
           ERI::InputEvent e(0, event.motion.x, current_height_ - event.motion.y);
-          e.dx = -event.motion.xrel;
+          e.dx = event.motion.xrel;
           e.dy = -event.motion.yrel;
           switch (event.button.button)
           {
@@ -577,3 +579,5 @@ void Framework::AddGameController(SDL_GameController* game_controller)
     LOGI("add game controller %s to slots[%d]!", SDL_GameControllerName(game_controller), empty_idx);
   }
 }
+
+#endif // ERI_DESKTOP

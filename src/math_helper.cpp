@@ -832,7 +832,22 @@ namespace ERI {
 	
 #pragma mark Intersection
 	
-	float GetPointSegment2DistanceSquared(const Vector2& point, const Segment2& segment)
+	float GetPointLine2DistanceSquared(const Vector2& point, const Line2& line, Vector2* out_closest_point)
+	{
+		Vector2 diff = point - line.origin;
+		float param = line.dir.DotProduct(diff);
+		
+		Vector2 closest_point = line.origin + line.dir * param;
+		
+		if (out_closest_point)
+			*out_closest_point = closest_point;
+		
+		diff = closest_point - point;
+		
+		return diff.LengthSquared();
+	}
+
+	float GetPointSegment2DistanceSquared(const Vector2& point, const Segment2& segment, Vector2* out_closest_point)
 	{
 		Vector2 diff = point - segment.center;
 		float param = segment.dir.DotProduct(diff);
@@ -850,6 +865,9 @@ namespace ERI {
 		{
 			closest_point = segment.begin;
 		}
+    
+    if (out_closest_point)
+      *out_closest_point = closest_point;
 		
 		return (closest_point - point).LengthSquared();
 	}
@@ -1522,7 +1540,7 @@ namespace ERI {
 	
 	float SphereInFrustum(const Sphere& sphere, const Plane* frustum)
 	{
-		float d;
+		float d = 0.0f;
 		
 		for (int p = 0; p < 6; ++p)
 		{
