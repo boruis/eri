@@ -32,6 +32,9 @@ namespace ERI {
 	
 int CreateUnicodeArray(const TxtData& data, uint32_t*& out_chars)
 {
+	if (data.str.empty())
+		return 0;
+
 	int length = 0;
 	
 	if (data.is_utf8)
@@ -325,10 +328,13 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& tex_name,
 											 int& out_width,
 											 int& out_height) const
 {
+	out_width = out_height = 0;
+
+	if (data.str.empty())
+		return NULL;
+
 	uint32_t* unicodes;
 	int length = CreateUnicodeArray(data, unicodes);
-	
-	out_width = out_height = 0;
   
 	if (font_size != size_)
 		ChangeFaceSize(font_size);
