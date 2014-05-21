@@ -52,7 +52,7 @@ static unsigned int GetFunctionKeyStatus(unsigned long flags)
 		0
 	};
 	
-	NSOpenGLPixelFormat *pf = [[[NSOpenGLPixelFormat alloc] initWithAttributes:attrs] autorelease];
+	NSOpenGLPixelFormat *pf = [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs];
 	[self setPixelFormat:pf];
 }
 
@@ -216,7 +216,9 @@ static ERI::InputKeyCode TranslateKeyCode(int event_key_code)
 
 - (void)dealloc
 {
-    [super dealloc];
+#if !__has_feature(objc_arc)
+	[super dealloc];
+#endif
 }
 
 
