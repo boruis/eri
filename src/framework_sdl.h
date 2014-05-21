@@ -9,6 +9,10 @@
 #ifndef __archery__framework_sdl__
 #define __archery__framework_sdl__
 
+#include "pch.h"
+
+#ifdef ERI_DESKTOP
+
 #include <cstddef>
 
 #include "SDL.h"
@@ -58,5 +62,7 @@ private:
   
   SDL_GameController* game_controllers_[kGameControllerMax];
 };
+
+#endif // ERI_DESKTOP
 
 #endif /* defined(__archery__framework_sdl__) */
