@@ -42,6 +42,8 @@ namespace ERI
 		float	lived_time;
 		float	lived_percent;
 		bool	in_use;
+		
+		std::vector<float> affector_timers;
 	};
 	
 #pragma mark Emitter
@@ -113,13 +115,19 @@ namespace ERI
 	class BaseAffector
 	{
 	public:
-		BaseAffector() {}
+		BaseAffector() : period_(-1.f) {}
 		virtual ~BaseAffector() {}
 		
 		virtual void InitSetup(Particle* p) {}
 		virtual void Update(float delta_time, Particle* p) = 0;
 		
 		virtual BaseAffector* Clone() = 0;
+		
+		inline float period() { return period_; }
+		inline void set_period(float period) { period_ = period; }
+		
+	private:
+		float period_;
 	};
 	
 	class RotateAffector : public BaseAffector
@@ -130,8 +138,7 @@ namespace ERI
 
 		virtual void InitSetup(Particle* p);
 		virtual void Update(float delta_time, Particle* p);
-		
-		virtual BaseAffector* Clone() { return new RotateAffector(speed_, acceleration_); }
+		virtual BaseAffector* Clone();
 		
 	private:
 		float	speed_, acceleration_;
@@ -144,8 +151,7 @@ namespace ERI
 		virtual ~ForceAffector();
 		
 		virtual void Update(float delta_time, Particle* p);
-		
-		virtual BaseAffector* Clone() { return new ForceAffector(acceleration_); }
+		virtual BaseAffector* Clone();
 		
 	private:
 		Vector2	acceleration_;
@@ -158,8 +164,7 @@ namespace ERI
 		virtual ~AccelerationAffector();
 		
 		virtual void Update(float delta_time, Particle* p);
-		
-		virtual BaseAffector* Clone() { return new AccelerationAffector(acceleration_); }
+		virtual BaseAffector* Clone();
 		
 	private:
 		float	acceleration_;
@@ -172,8 +177,7 @@ namespace ERI
 		virtual ~ScaleAffector();
 		
 		virtual void Update(float delta_time, Particle* p);
-		
-		virtual BaseAffector* Clone() { return new ScaleAffector(speed_); }
+		virtual BaseAffector* Clone();
 		
 	private:
 		Vector2	speed_;

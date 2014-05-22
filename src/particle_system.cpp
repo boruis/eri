@@ -130,6 +130,13 @@ namespace ERI
 		p->rotate_angle += p->rotate_speed * delta_time;
 	}
 	
+	BaseAffector* RotateAffector::Clone()
+	{
+		BaseAffector* affector = new RotateAffector(speed_, acceleration_);
+		affector->set_period(period());
+		return affector;
+	}
+	
 	ForceAffector::ForceAffector(const Vector2& acceleration) :
 		acceleration_(acceleration)
 	{
@@ -144,6 +151,13 @@ namespace ERI
 		p->velocity += acceleration_ * delta_time;
 	}
 	
+	BaseAffector* ForceAffector::Clone()
+	{
+		BaseAffector* affector = new ForceAffector(acceleration_);
+		affector->set_period(period());
+		return affector;
+	}
+	
 	AccelerationAffector::AccelerationAffector(float acceleration) :
 		acceleration_(acceleration)
 	{
@@ -156,9 +170,21 @@ namespace ERI
 	void AccelerationAffector::Update(float delta_time, Particle* p)
 	{
 		Vector2 velocity_dir = p->velocity;
-		velocity_dir.Normalize();
 		
-		p->velocity += velocity_dir * (acceleration_ * delta_time);
+		float speed = velocity_dir.Normalize();
+		float delta_speed = acceleration_ * delta_time;
+		
+		if ((speed + delta_speed) <= 0.f)
+			p->velocity = Vector2::ZERO;
+		else
+			p->velocity += velocity_dir * (acceleration_ * delta_time);
+	}
+	
+	BaseAffector* AccelerationAffector::Clone()
+	{
+		BaseAffector* affector = new AccelerationAffector(acceleration_);
+		affector->set_period(period());
+		return affector;
 	}
 	
 	ScaleAffector::ScaleAffector(const Vector2& speed) : speed_(speed)
@@ -174,6 +200,13 @@ namespace ERI
 		p->scale += speed_ * delta_time;
 		if (p->scale.x < 0.0f) p->scale.x = 0.0f;
 		if (p->scale.y < 0.0f) p->scale.y = 0.0f;
+	}
+	
+	BaseAffector* ScaleAffector::Clone()
+	{
+		BaseAffector* affector = new ScaleAffector(speed_);
+		affector->set_period(period());
+		return affector;
 	}
 	
 	ColorAffector::ColorAffector(const Color& start, const Color& end) :
@@ -311,7 +344,7 @@ namespace ERI
 		
 		emitter_ = emitter;
 		
-		int need_particle_num = static_cast<int>(emitter_->rate() * setup_ref_->particle_life_max * 1.25f);
+		int need_particle_num = Max(static_cast<int>(emitter_->rate() * setup_ref_->particle_life_max * 1.25f), 1);
 		int original_particle_num = static_cast<int>(particles_.size());
 		
 		for (int i = 0; i < need_particle_num; ++i)
@@ -396,7 +429,15 @@ namespace ERI
 					
 					for (int affector_idx = 0; affector_idx < affector_num; ++affector_idx)
 					{
-						affectors_[affector_idx]->Update(delta_time, p);
+						float& affector_timer = p->affector_timers[affector_idx];
+						
+						if (affector_timer == -1.f || affector_timer > 0.f)
+						{
+							affectors_[affector_idx]->Update(delta_time, p);
+							
+							if (affector_timer > 0.f)
+								affector_timer = Max(affector_timer - delta_time, 0.f);
+						}
 					}
 				}
 				else
@@ -465,7 +506,7 @@ namespace ERI
 			p->pos = pos;
 			
 			p->size = setup_ref_->particle_size * RangeRandom(setup_ref_->particle_scale_min, setup_ref_->particle_scale_max);
-			p->rotate_angle = RangeRandom(setup_ref_->particle_rotate_min, setup_ref_->particle_rotate_max);
+			p->rotate_angle = RangeRandom(setup_ref_->particle_rotate_min, setup_ref_->particle_rotate_max) + rotate;
 			p->life = RangeRandom(setup_ref_->particle_life_min, setup_ref_->particle_life_max);
 
 			v.x = 0.0f;
@@ -480,6 +521,10 @@ namespace ERI
 			
 			p->lived_time = 0.0f;
 			p->in_use = true;
+			
+			p->affector_timers.resize(affectors_.size());
+			for (int j = 0; j < affectors_.size(); ++j)
+				p->affector_timers[j] = affectors_[j]->period();
 		}
 	}
 
@@ -769,7 +814,12 @@ namespace ERI
 							GetAttrFloat(node2, "acceleration", acceleration);
 							if (speed != 0.0f || acceleration != 0.0f)
 							{
-								creator->affectors.push_back(new RotateAffector(speed, acceleration));
+								RotateAffector* affector = new RotateAffector(speed, acceleration);
+								float period;
+								if (GetAttrFloat(node2, "period", period))
+									affector->set_period(period);
+								
+								creator->affectors.push_back(affector);
 							}
 						}
 						else if (strcmp(node2->name(), "force_affector") == 0)
@@ -779,7 +829,12 @@ namespace ERI
 							GetAttrFloat(node2, "acceleration_y", acceleration.y);
 							if (acceleration.x != 0.0f || acceleration.y != 0.0f)
 							{
-								creator->affectors.push_back(new ForceAffector(acceleration));
+								ForceAffector* affector = new ForceAffector(acceleration);
+								float period;
+								if (GetAttrFloat(node2, "period", period))
+									affector->set_period(period);
+								
+								creator->affectors.push_back(affector);
 							}					
 						}
 						else if (strcmp(node2->name(), "acceleration_affector") == 0)
@@ -788,7 +843,12 @@ namespace ERI
 							GetAttrFloat(node2, "acceleration", acceleration);
 							if (acceleration != 0.0f)
 							{
-								creator->affectors.push_back(new AccelerationAffector(acceleration));
+								AccelerationAffector* affector = new AccelerationAffector(acceleration);
+								float period;
+								if (GetAttrFloat(node2, "period", period))
+									affector->set_period(period);
+								
+								creator->affectors.push_back(affector);
 							}
 						}
 						else if (strcmp(node2->name(), "scale_affector") == 0)
@@ -798,7 +858,12 @@ namespace ERI
 							GetAttrFloat(node2, "speed_y", speed.y);
 							if (speed.x != 0.0f || speed.y != 0.0f)
 							{
-								creator->affectors.push_back(new ScaleAffector(speed));
+								ScaleAffector* affector = new ScaleAffector(speed);
+								float period;
+								if (GetAttrFloat(node2, "period", period))
+									affector->set_period(period);
+								
+								creator->affectors.push_back(affector);
 							}
 						}
 						else if (strcmp(node2->name(), "color_affector") == 0)
