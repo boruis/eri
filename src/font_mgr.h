@@ -27,6 +27,7 @@ class Font;
 enum LineBreakMode
 {
   LB_DEFAULT = 0,
+  LB_TRUNCATE_HEAD,
   LB_TRUNCATE_TAIL
 };
 
@@ -83,7 +84,7 @@ public:
 
 	virtual bool Load(const std::string& path) = 0;
 
-	const CharSetting& GetCharSetting(uint32_t unicode) const;
+	virtual const CharSetting& GetCharSetting(uint32_t unicode) const;
 	
 	virtual const Texture* CreateSpriteTxt(const std::string& tex_name,
 										   const TxtData& data,

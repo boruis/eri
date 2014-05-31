@@ -56,7 +56,7 @@ int CreateUnicodeArray(const TxtData& data, uint32_t*& out_chars)
 	return length;
 }
 	
-// TODO: FontFreeType, FontSys handle
+// TODO: FontSys handle
 
 void CalculateTxtSize(const TxtData& data,
 					  const Font* font,
@@ -66,6 +66,12 @@ void CalculateTxtSize(const TxtData& data,
 					  float& out_height)
 {
 	ASSERT(font);
+	
+	if (data.str.empty())
+	{
+		out_width = out_height = 0.f;
+		return;
+	}
 	
 	uint32_t* chars;
 	int length = CreateUnicodeArray(data, chars);
@@ -262,6 +268,8 @@ public:
 	
 	virtual bool Load(const std::string& path);
 	
+	virtual const CharSetting& GetCharSetting(uint32_t unicode) const;
+	
 	virtual const Texture* CreateSpriteTxt(const std::string& tex_name,
 		const TxtData& data,
 		int font_size,
@@ -269,7 +277,7 @@ public:
 		int& out_width,
 		int& out_height) const;
 	
-	virtual float GetSizeScale(int want_size) const { return 1.f; }
+	virtual float GetSizeScale(int want_size) const;
 	
 	virtual bool is_utf8() const { return true; }
 	
@@ -320,6 +328,26 @@ bool FontFreeType::Load(const std::string& path)
 
 	return true;
 }
+  
+const CharSetting& FontFreeType::GetCharSetting(uint32_t unicode) const
+{
+	static CharSetting setting;
+	FT_Error error = FT_Load_Char(face_, unicode, FT_LOAD_DEFAULT);
+	if (error)
+	{
+		ASSERT2(0, "error load char %d", error);
+	}
+	
+	FT_GlyphSlot slot = face_->glyph;
+	
+	setting.x_advance = static_cast<int>(convert_fix26(slot->metrics.horiAdvance));
+	setting.width = static_cast<int>(convert_fix26(slot->metrics.width));
+	setting.height = static_cast<int>(convert_fix26(slot->metrics.height));
+	setting.x_offset = static_cast<int>(convert_fix26(slot->metrics.horiBearingX));
+	setting.y_offset = common_base_ - static_cast<int>(convert_fix26(slot->metrics.horiBearingY));
+
+	return setting;
+}
 	
 const Texture* FontFreeType::CreateSpriteTxt(const std::string& tex_name,
 											 const TxtData& data,
@@ -341,81 +369,200 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& tex_name,
 	
 	FT_GlyphSlot slot = face_->glyph;
 	FT_Error error;
-	
-	int start_x, start_y;
-	start_x = start_y = 0;
-	
-	std::vector<CharSetting> settings(length);
-	std::vector<int> line_width, line_end;
-	
-	for (int i = 0; i < length; ++i)
+		
+	std::vector<CharSetting> settings;
+  
+	if (max_width > 0 && data.line_break == LB_TRUNCATE_HEAD)
 	{
-		if (unicodes[i] == '\n')
+		std::vector<CharSetting> invert_settings;
+		std::vector<uint32_t> invert_unicodes;
+		
+		CharSetting setting;
+		int current_width = 0;
+		
+		for (int i = length - 1; i >= 0; --i)
 		{
-			if (data.is_pos_center)
+			if (unicodes[i] == '\n')
 			{
-				line_width.push_back(start_x);
-				line_end.push_back(i);
+				setting.x_advance = 0;
+			}
+			else
+			{
+				setting = GetCharSetting(unicodes[i]);
+				
+				if ((current_width + setting.x_advance) > max_width)
+					break;
+			}
+
+			invert_settings.push_back(setting);
+			invert_unicodes.push_back(unicodes[i]);
+			current_width += setting.x_advance;
+		}
+
+		if (invert_settings.size() < length)
+		{
+			CharSetting period_setting = GetCharSetting('.');
+			
+			while ((current_width + period_setting.x_advance * 3) > max_width)
+			{
+				current_width -= invert_settings.back().x_advance;
+				invert_settings.pop_back();
+				invert_unicodes.pop_back();
+			}
+
+			for (int i = 0; i < 3; ++i)
+			{
+				invert_settings.push_back(period_setting);
+				invert_unicodes.push_back('.');
+				current_width += period_setting.x_advance;
 			}
 			
-			start_x = 0;
-			start_y += common_line_height_;
-			continue;
-		}
-		
-		error = FT_Load_Char(face_, unicodes[i], FT_LOAD_DEFAULT);
-		if (error)
-		{
-			ASSERT2(0, "error load char %d", error);
-		}
-		
-		CharSetting& setting = settings[i];
-
-		setting.x_advance = static_cast<int>(convert_fix26(slot->metrics.horiAdvance));
-
-		if (max_width > 0 && (start_x + setting.x_advance) > max_width)
-		{
-			if (data.is_pos_center)
+			int prev_length = length;
+			length = static_cast<int>(invert_settings.size());
+			
+			if (length > prev_length)
 			{
-				line_width.push_back(start_x);
-				line_end.push_back(i - 1);
+				delete [] unicodes;
+				unicodes = new uint32_t[length];
+			}
+		}
+		
+		int start_x = 0;
+		settings.resize(length);
+		for (int i = 0; i < length; ++i)
+		{
+			settings[i] = invert_settings[length - 1 - i];
+			settings[i].x = start_x;
+			start_x += settings[i].x_advance;
+			
+			unicodes[i] = invert_unicodes[length - 1 - i];
+		}
+		
+		out_width = current_width;
+		out_height = common_line_height_;
+	}
+	else if (max_width > 0 && data.line_break == LB_TRUNCATE_TAIL)
+	{
+		CharSetting setting;
+		int current_width = 0;
+		
+		for (int i = 0; i < length; ++i)
+		{
+			if (unicodes[i] == '\n')
+			{
+				setting.x_advance = 0;
+			}
+			else
+			{
+				setting = GetCharSetting(unicodes[i]);
+				
+				if ((current_width + setting.x_advance) > max_width)
+					break;
+			}
+
+			setting.x = current_width;
+			current_width += setting.x_advance;
+			settings.push_back(setting);
+		}
+		
+		if (settings.size() < length)
+		{
+			CharSetting period_setting = GetCharSetting('.');
+			
+			while ((current_width + period_setting.x_advance * 3) > max_width)
+			{
+				current_width -= settings.back().x_advance;
+				settings.pop_back();
 			}
 			
-			start_x = 0;
-			start_y += common_line_height_;
+			if ((settings.size() + 3) > length)
+			{
+				delete [] unicodes;
+				unicodes = new uint32_t[settings.size() + 3];
+			}
+			
+			for (int i = 0; i < 3; ++i)
+			{
+				period_setting.x = current_width;
+				current_width += period_setting.x_advance;
+				settings.push_back(period_setting);
+				unicodes[settings.size() - 1] = '.';
+			}
+			
+			length = static_cast<int>(settings.size());
 		}
 		
-		setting.x = start_x;
-		setting.y = start_y;
-		setting.width = static_cast<int>(convert_fix26(slot->metrics.width));
-		setting.height = static_cast<int>(convert_fix26(slot->metrics.height));
-		setting.x_offset = static_cast<int>(convert_fix26(slot->metrics.horiBearingX));
-		setting.y_offset = common_base_ - static_cast<int>(convert_fix26(slot->metrics.horiBearingY));
+		out_width = current_width;
+		out_height = common_line_height_;
+	}
+	else
+	{
+		int start_x, start_y;
+		start_x = start_y = 0;
 
-		start_x += setting.x_advance;
+		std::vector<int> line_width, line_end;
+
+		settings.resize(length);
+
+		for (int i = 0; i < length; ++i)
+		{
+			if (unicodes[i] == '\n')
+			{
+				if (data.is_pos_center)
+				{
+					line_width.push_back(start_x);
+					line_end.push_back(i);
+				}
+				
+				start_x = 0;
+				start_y += common_line_height_;
+				continue;
+			}
+			
+			CharSetting& setting = settings[i];
+
+			setting = GetCharSetting(unicodes[i]);
+
+			if (max_width > 0 && (start_x + setting.x_advance) > max_width)
+			{
+				if (data.is_pos_center)
+				{
+					line_width.push_back(start_x);
+					line_end.push_back(i - 1);
+				}
+				
+				start_x = 0;
+				start_y += common_line_height_;
+			}
+			
+			setting.x = start_x;
+			setting.y = start_y;
+
+			start_x += setting.x_advance;
+			
+			if (start_x > out_width) out_width = start_x;
+			if ((start_y + common_line_height_) > out_height)
+				out_height = start_y + common_line_height_;
+		}
 		
-		if (start_x > out_width) out_width = start_x;
-		if ((start_y + common_line_height_) > out_height)
-			out_height = start_y + common_line_height_;
+		if (data.is_pos_center && length > 0)
+		{
+			line_width.push_back(start_x);
+			line_end.push_back(length - 1);
+			
+			int start_c  = 0;
+			for (int i = 0; i < line_width.size(); ++i)
+			{
+				int offset_x = (out_width - line_width[i]) / 2;
+				
+				for (int c = start_c; c <= line_end[i]; ++c)
+					settings[c].x += offset_x;
+				
+				start_c = line_end[i] + 1;
+			}
+		}
 	}
 	
-	if (data.is_pos_center && length > 0)
-	{
-		line_width.push_back(start_x);
-		line_end.push_back(length - 1);
-		
-		int start_c  = 0;
-		for (int i = 0; i < line_width.size(); ++i)
-		{
-			int offset_x = (out_width - line_width[i]) / 2;
-			
-			for (int c = start_c; c <= line_end[i]; ++c)
-				settings[c].x += offset_x;
-			
-			start_c = line_end[i] + 1;
-		}
-	}
-
 	int tex_width = next_power_of_2(out_width);
 	int tex_height = next_power_of_2(out_height);
 	int pixel_num = tex_width * tex_height;
@@ -467,8 +614,20 @@ const Texture* FontFreeType::CreateSpriteTxt(const std::string& tex_name,
 	}
 	
 	delete [] unicodes;
+	
+	const Texture* tex = Root::Ins().texture_mgr()->CreateTexture(tex_name, tex_width, tex_height, buff);
+	
+	free(buff);
 
-	return Root::Ins().texture_mgr()->CreateTexture(tex_name, tex_width, tex_height, buff);
+	return tex;
+}
+
+float FontFreeType::GetSizeScale(int want_size) const
+{
+	if (want_size != size_)
+		ChangeFaceSize(want_size);
+
+	return 1.f;
 }
 
 void FontFreeType::ChangeFaceSize(int want_size) const

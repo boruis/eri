@@ -41,6 +41,8 @@ class TxtActor : public SceneActor
 
   inline void set_area_border(float border) { area_border_.x = area_border_.y = border; }
   inline void set_area_border(float border_x, float border_y) { area_border_.x = border_x; area_border_.y = border_y; }
+  
+  inline const Font* font() const { return font_ref_; }
 
  private:
   virtual bool IsInArea(const Vector3& local_space_pos);

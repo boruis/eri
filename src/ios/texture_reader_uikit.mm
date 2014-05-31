@@ -104,6 +104,11 @@ namespace ERI {
 		{
 			switch (data.line_break)
 			{
+				case LB_TRUNCATE_HEAD:
+					break_mode = NSLineBreakByTruncatingHead;
+					actual_size = [txt_str sizeWithFont:font forWidth:max_width lineBreakMode:break_mode];
+					break;
+
 				case LB_TRUNCATE_TAIL:
 					break_mode = NSLineBreakByTruncatingTail;
 					actual_size = [txt_str sizeWithFont:font forWidth:max_width lineBreakMode:break_mode];
