@@ -97,6 +97,18 @@ namespace ERI
 		return NULL;
 	}
 
+	rapidxml::xml_attribute<>* GetAttrDouble(rapidxml::xml_node<>* node, const char* name, double& out_value)
+	{
+		rapidxml::xml_attribute<>* attr = node->first_attribute(name);
+		if (attr)
+		{
+			out_value = atof(attr->value());
+			return attr;
+		}
+		
+		return NULL;
+	}
+
 	rapidxml::xml_attribute<>* GetAttrStr(rapidxml::xml_node<>* node, const char* name, std::string& out_value)
 	{
 		rapidxml::xml_attribute<>* attr = node->first_attribute(name);
@@ -301,12 +313,22 @@ namespace ERI
 	{
 		char* alloc_name = doc.allocate_string(name);
 		char buf[32];
-		sprintf(buf, "%f", value);
+		sprintf(buf, "%g", value);
 		char* alloc_value = doc.allocate_string(buf);
 		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(alloc_name, alloc_value);
 		node->append_attribute(attr);
 	}
-	
+
+	void PutAttrDouble(rapidxml::xml_document<>& doc, rapidxml::xml_node<>* node, const char* name, double value)
+	{
+		char* alloc_name = doc.allocate_string(name);
+		char buf[32];
+		sprintf(buf, "%g", value);
+		char* alloc_value = doc.allocate_string(buf);
+		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(alloc_name, alloc_value);
+		node->append_attribute(attr);
+	}
+
 	void PutAttrStr(rapidxml::xml_document<>& doc, rapidxml::xml_node<>* node, const char* name, const std::string& value)
 	{
 		char* alloc_name = doc.allocate_string(name);
@@ -319,7 +341,7 @@ namespace ERI
 	{
 		char* alloc_name = doc.allocate_string(name);
 		char buf[32];
-		sprintf(buf, "%f,%f", value.x, value.y);
+		sprintf(buf, "%g,%g", value.x, value.y);
 		char* alloc_value = doc.allocate_string(buf);
 		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(alloc_name, alloc_value);
 		node->append_attribute(attr);
@@ -340,7 +362,7 @@ namespace ERI
 		}
 		else
 		{
-			sprintf(buf, "%f,%f,%f,%f", value.r, value.g, value.b, value.a);
+			sprintf(buf, "%g,%g,%g,%g", value.r, value.g, value.b, value.a);
 		}
 		
 		char* alloc_value = doc.allocate_string(buf);
@@ -352,7 +374,7 @@ namespace ERI
 	{
 		char* alloc_name = doc.allocate_string(name);
 		char buf[64];
-		sprintf(buf, "%f,%f,%f,%f", left_top.x, left_top.y, right_bottom.x, right_bottom.y);
+		sprintf(buf, "%g,%g,%g,%g", left_top.x, left_top.y, right_bottom.x, right_bottom.y);
 		char* alloc_value = doc.allocate_string(buf);
 		rapidxml::xml_attribute<>* attr = doc.allocate_attribute(alloc_name, alloc_value);
 		node->append_attribute(attr);
