@@ -144,6 +144,19 @@ bool GetFileContentString(const std::string& path, std::string& out_content)
 
 	return true;
 }
+  
+bool IsFileExist(const std::string& path)
+{
+	std::ifstream ifs;
+	ifs.open(path.c_str(), std::ios::binary);
+	
+	if (ifs.fail())
+		return false;
+	
+	ifs.close();
+	
+	return true;
+}
 
 FileReader::FileReader() : info_(NULL)
 {

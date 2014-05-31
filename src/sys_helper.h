@@ -29,6 +29,8 @@ void SeperateFileNameBaseExtension(const std::string& file_name,
 void ReplaceBackslashToSlash(std::string& str);
 	
 bool GetFileContentString(const std::string& path, std::string& out_content);
+  
+bool IsFileExist(const std::string& path);
 
 struct FileReaderInfo;
 class FileReader
