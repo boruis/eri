@@ -103,6 +103,11 @@ namespace ERI {
 		if (handler_) handler_->KeyUp(event);
 	}
 	
+	void InputMgr::Char(const InputKeyEvent& event)
+	{
+		if (handler_) handler_->Char(event);
+	}
+	
 	void InputMgr::Accelerate(const Vector3& g)
 	{
 		if (handler_) handler_->Accelerate(g);

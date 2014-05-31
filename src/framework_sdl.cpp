@@ -24,6 +24,7 @@ static ERI::InputKeyCode TranslateKeyCode(int event_key_code)
   {
     case SDLK_DELETE: code = ERI::KEY_DELETE; break;
     case SDLK_BACKSPACE: code = ERI::KEY_BACKSPACE; break;
+    case SDLK_RETURN: code = ERI::KEY_RETUEN; break;
     case SDLK_ESCAPE: code = ERI::KEY_ESCAPE; break;
     case SDLK_TAB: code = ERI::KEY_TAB; break;
     case SDLK_LEFT: code = ERI::KEY_LEFT; break;
@@ -40,6 +41,8 @@ static ERI::InputKeyCode TranslateKeyCode(int event_key_code)
     case SDLK_r: code = ERI::KEY_R; break;
     case SDLK_p: code = ERI::KEY_P; break;
     case SDLK_l: code = ERI::KEY_L; break;
+    case SDLK_n: code = ERI::KEY_N; break;
+    case SDLK_o: code = ERI::KEY_O; break;
     case SDLK_1: code = ERI::KEY_1; break;
     case SDLK_2: code = ERI::KEY_2; break;
   }
@@ -295,6 +298,20 @@ float Framework::PreUpdate()
         }
         break;
         
+      case SDL_MOUSEWHEEL:
+        {
+//          LOGI("Mouse: wheel scrolled %d in x and %d in y in window %d",
+//               event.wheel.x, event.wheel.y, event.wheel.windowID);
+          
+          ERI::InputEvent e;
+          e.dx = event.wheel.x;
+          e.dy = event.wheel.y;
+          e.function_key_status = GetFunctionKeyStatus();
+
+          ERI::Root::Ins().input_mgr()->Scroll(e);
+        }
+        break;
+        
       case SDL_MOUSEBUTTONDOWN:
         {
 //          LOGI("Mouse: button %d pressed at %d,%d in window %d",
@@ -400,8 +417,15 @@ float Framework::PreUpdate()
         break;
         
       case SDL_TEXTINPUT:
-        LOGI("Keyboard: text input \"%s\" in window %d",
-             event.text.text, event.text.windowID);
+        {
+          LOGI("Keyboard: text input \"%s\" in window %d",
+               event.text.text, event.text.windowID);
+          
+          ERI::InputKeyEvent e;
+          e.characters = event.text.text;
+          
+          ERI::Root::Ins().input_mgr()->Char(e);
+        }
         break;
         
       case SDL_CONTROLLERAXISMOTION:

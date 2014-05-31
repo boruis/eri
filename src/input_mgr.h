@@ -22,6 +22,7 @@ namespace ERI {
 		KEY_NONE,
 		KEY_DELETE,
 		KEY_BACKSPACE,
+		KEY_RETUEN,
 		KEY_ESCAPE,
 		KEY_TAB,
 		KEY_LEFT,
@@ -38,6 +39,8 @@ namespace ERI {
 		KEY_R,
 		KEY_P,
 		KEY_L,
+		KEY_N,
+		KEY_O,
 		KEY_1,
 		KEY_2
 	};
@@ -115,6 +118,7 @@ namespace ERI {
     
 		virtual void KeyDown(const InputKeyEvent& event) {}
 		virtual void KeyUp(const InputKeyEvent& event) {}
+		virtual void Char(const InputKeyEvent& event) {}
 		
 		virtual void Accelerate(const Vector3& g) {}
 		virtual void Shake() {}
@@ -147,6 +151,7 @@ namespace ERI {
     
 		void KeyDown(const InputKeyEvent& event);
 		void KeyUp(const InputKeyEvent& event);
+		void Char(const InputKeyEvent& event);
 
 		void Accelerate(const Vector3& g);
 		void Shake();
