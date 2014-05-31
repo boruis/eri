@@ -10,7 +10,7 @@
 #include "pch.h"
 
 #include "particle_system.h"
-
+#include "sys_helper.h"
 #include "xml_helper.h"
 
 using namespace rapidxml;
@@ -18,19 +18,26 @@ using namespace rapidxml;
 namespace ERI
 {
 
-	BaseEmitter::BaseEmitter(float rate, float angle_min, float angle_max) :
-		rate_(rate),
+	BaseEmitter::BaseEmitter(EmitterType type, float rate, float angle_min, float angle_max)
+		: type_(type),
 		angle_min_(angle_min),
 		angle_max_(angle_max),
+		align_angle_(false),
 		emit_remain_time_(0.0f)
 	{
-		ASSERT(rate_ > 0.0f);
-		
-		emit_interval_ = 1.0f / rate_;
+		SetRate(rate);
 	}
 
 	BaseEmitter::~BaseEmitter()
 	{
+	}
+	
+	void BaseEmitter::SetRate(float rate)
+	{
+		ASSERT(rate > 0.0f);
+		
+		rate_ = rate;
+		emit_interval_ = 1.0f / rate_;
 	}
 
 	bool BaseEmitter::CheckIsTimeToEmit(float delta_time, int& out_emit_num)
@@ -52,9 +59,9 @@ namespace ERI
 		return RangeRandom(angle_min_, angle_max_);
 	}
 
-	BoxEmitter::BoxEmitter(Vector2 half_size, float rate, float angle_min, float angle_max) :
+	BoxEmitter::BoxEmitter(const Vector2& half_size, float rate, float angle_min, float angle_max) :
 		half_size_(half_size),
-		BaseEmitter(rate, angle_min, angle_max)
+		BaseEmitter(EMITTER_BOX, rate, angle_min, angle_max)
 	{
 	}
 
@@ -64,10 +71,12 @@ namespace ERI
 	
 	BaseEmitter* BoxEmitter::Clone()
 	{
-		return new BoxEmitter(half_size_, rate(), angle_min(), angle_max());
+		BaseEmitter* emitter = new BoxEmitter(half_size_, rate(), angle_min(), angle_max());
+		emitter->set_align_angle(align_angle());
+		return emitter;
 	}
 
-	void BoxEmitter::GetEmitPos(Vector2& pos)
+	void BoxEmitter::GetEmitPos(Vector2& pos) const
 	{
 		pos.x = RangeRandom(-half_size_.x, half_size_.x);
 		pos.y = RangeRandom(-half_size_.y, half_size_.y);
@@ -75,7 +84,7 @@ namespace ERI
 	
 	CircleEmitter::CircleEmitter(float radius, float rate, float angle_min, float angle_max) :
 		radius_(radius),
-		BaseEmitter(rate, angle_min, angle_max)
+		BaseEmitter(EMITTER_CIRCLE, rate, angle_min, angle_max)
 	{
 	}
 	
@@ -85,10 +94,12 @@ namespace ERI
 	
 	BaseEmitter* CircleEmitter::Clone()
 	{
-		return new CircleEmitter(radius_, rate(), angle_min(), angle_max());
+		BaseEmitter* emitter = new CircleEmitter(radius_, rate(), angle_min(), angle_max());
+		emitter->set_align_angle(align_angle());
+		return emitter;
 	}
 	
-	void CircleEmitter::GetEmitPos(Vector2& pos)
+	void CircleEmitter::GetEmitPos(Vector2& pos) const
 	{
 		pos.x = RangeRandom(-radius_, radius_);
 		pos.y = RangeRandom(-radius_, radius_);
@@ -109,7 +120,8 @@ namespace ERI
 	
 #pragma mark Affector
 	
-	RotateAffector::RotateAffector(float speed, float acceleration /*＝ 0.0f*/) :
+	RotateAffector::RotateAffector(float speed, float acceleration /*＝ 0.0f*/)
+		: BaseAffector(AFFECTOR_ROTATE),
 		speed_(speed),
 		acceleration_(acceleration)
 	{
@@ -137,7 +149,8 @@ namespace ERI
 		return affector;
 	}
 	
-	ForceAffector::ForceAffector(const Vector2& acceleration) :
+	ForceAffector::ForceAffector(const Vector2& acceleration)
+		: BaseAffector(AFFECTOR_FORCE),
 		acceleration_(acceleration)
 	{
 	}
@@ -158,7 +171,8 @@ namespace ERI
 		return affector;
 	}
 	
-	AccelerationAffector::AccelerationAffector(float acceleration) :
+	AccelerationAffector::AccelerationAffector(float acceleration)
+		: BaseAffector(AFFECTOR_ACCELERATION),
 		acceleration_(acceleration)
 	{
 	}
@@ -187,7 +201,9 @@ namespace ERI
 		return affector;
 	}
 	
-	ScaleAffector::ScaleAffector(const Vector2& speed) : speed_(speed)
+	ScaleAffector::ScaleAffector(const Vector2& speed)
+		: BaseAffector(AFFECTOR_SCALE),
+		speed_(speed)
 	{
 	}
 	
@@ -209,7 +225,8 @@ namespace ERI
 		return affector;
 	}
 	
-	ColorAffector::ColorAffector(const Color& start, const Color& end) :
+	ColorAffector::ColorAffector(const Color& start, const Color& end)
+		: BaseAffector(AFFECTOR_COLOR),
 		start_(start),
 		end_(end)
 	{
@@ -230,44 +247,48 @@ namespace ERI
 	}
 	
 	ColorIntervalAffector::ColorIntervalAffector()
+		: BaseAffector(AFFECTOR_COLOR_INTERVAL)
 	{
 	}
 	
 	ColorIntervalAffector::~ColorIntervalAffector()
 	{
+		for (int i = 0; i < intervals_.size(); ++i)
+			delete intervals_[i];
 	}
 	
 	void ColorIntervalAffector::InitSetup(Particle* p)
 	{
-		ASSERT(intervals_.size() > 0);
+    if (intervals_.empty())
+      return;
 		
-		p->color = intervals_[0].color;
+		p->color = intervals_[0]->color;
 		p->color_interval = 0;
 	}
 	
 	void ColorIntervalAffector::Update(float delta_time, Particle* p)
 	{
-		if (p->color_interval >= intervals_.size() - 1)
+		if (p->color_interval >= (static_cast<int>(intervals_.size()) - 1))
 			return;
 		
-		if (p->lived_percent <= intervals_[p->color_interval].lived_percent)
+		if (p->lived_percent <= intervals_[p->color_interval]->lived_percent)
 			return;
 
-		if (p->lived_percent >= intervals_[p->color_interval + 1].lived_percent)
+		if (p->lived_percent >= intervals_[p->color_interval + 1]->lived_percent)
 		{
 			++p->color_interval;
 		}
 		
 		if (p->color_interval >= intervals_.size() - 1)
 		{
-			p->color = intervals_[p->color_interval].color;
+			p->color = intervals_[p->color_interval]->color;
 		}
 		else
 		{
-			float total = intervals_[p->color_interval + 1].lived_percent - intervals_[p->color_interval].lived_percent;
-			float diff = p->lived_percent - intervals_[p->color_interval].lived_percent;
+			float total = intervals_[p->color_interval + 1]->lived_percent - intervals_[p->color_interval]->lived_percent;
+			float diff = p->lived_percent - intervals_[p->color_interval]->lived_percent;
 			float diff_percent = diff / total;
-			p->color = intervals_[p->color_interval].color * (1.0f - diff_percent) + intervals_[p->color_interval + 1].color * diff_percent;
+			p->color = intervals_[p->color_interval]->color * (1.0f - diff_percent) + intervals_[p->color_interval + 1]->color * diff_percent;
 		}
 	}
 	
@@ -276,21 +297,27 @@ namespace ERI
 		ColorIntervalAffector* affector = new ColorIntervalAffector;
 		
 		for (int i = 0; i < intervals_.size(); ++i)
-		{
-			affector->intervals_.push_back(intervals_[i]);
-		}
+			affector->AddInterval(intervals_[i]->lived_percent, intervals_[i]->color);
 		
 		return affector;
 	}
 	
 	void ColorIntervalAffector::AddInterval(float lived_percent, const Color& color)
 	{
-		ColorInterval interval;
-		interval.lived_percent = lived_percent;
-		interval.color = color;
+		ColorInterval* interval = new ColorInterval;
+		interval->lived_percent = lived_percent;
+		interval->color = color;
 		intervals_.push_back(interval);
 	}
+	
+	void ColorIntervalAffector::RemoveInterval(int idx)
+	{
+		ASSERT(idx >= 0 && idx < intervals_.size());
 		
+		delete intervals_[idx];
+		intervals_.erase(intervals_.begin() + idx);
+	}
+
 #pragma mark ParticleSystem
 
 	ParticleSystem::ParticleSystem(const ParticleSystemSetup* setup_ref) :
@@ -329,7 +356,6 @@ namespace ERI
 	void ParticleSystem::RefreshSetup()
 	{
 		ASSERT(setup_ref_);
-		ASSERT(setup_ref_->particle_life_min <= setup_ref_->particle_life_max);
 		
 		custom_life_ = setup_ref_->life;
 
@@ -344,7 +370,14 @@ namespace ERI
 		
 		emitter_ = emitter;
 		
-		int need_particle_num = Max(static_cast<int>(emitter_->rate() * setup_ref_->particle_life_max * 1.25f), 1);
+		float life_max = Max(setup_ref_->particle_life_min, setup_ref_->particle_life_max);
+
+//		int need_particle_num = Ceil(emitter_->rate() * life_max) + 1;
+//		
+//		if (setup_ref_->life > 0.f)
+//			need_particle_num = Min(need_particle_num, Ceil(emitter_->rate() * setup_ref_->life) + 1);
+		
+		int need_particle_num = Max(static_cast<int>(emitter_->rate() * life_max * 1.25f), 1);
 		int original_particle_num = static_cast<int>(particles_.size());
 		
 		for (int i = 0; i < need_particle_num; ++i)
@@ -376,6 +409,12 @@ namespace ERI
 		ASSERT(affector);
 		
 		affectors_.push_back(affector);
+	}
+	
+	void ParticleSystem::ClearAffectors()
+	{
+		for (int i = 0; i < affectors_.size(); ++i) delete affectors_[i];
+		affectors_.clear();
 	}
 	
 	void ParticleSystem::Play()
@@ -506,8 +545,13 @@ namespace ERI
 			p->pos = pos;
 			
 			p->size = setup_ref_->particle_size * RangeRandom(setup_ref_->particle_scale_min, setup_ref_->particle_scale_max);
-			p->rotate_angle = RangeRandom(setup_ref_->particle_rotate_min, setup_ref_->particle_rotate_max) + rotate;
-			p->life = RangeRandom(setup_ref_->particle_life_min, setup_ref_->particle_life_max);
+			
+			p->rotate_angle = RangeRandom(setup_ref_->particle_rotate_min, setup_ref_->particle_rotate_max);
+			if (emitter_->align_angle())
+				p->rotate_angle += rotate;
+			
+			p->life = RangeRandom(static_cast<float>(setup_ref_->particle_life_min),
+                            static_cast<float>(setup_ref_->particle_life_max));
 
 			v.x = 0.0f;
 			v.y = 1.0f;
@@ -942,17 +986,24 @@ namespace ERI
 					attr = GetAttrStr(node, "tex", s);
 					if (attr && s.length() > 0)
 					{
-						std::string real_path;
+						std::string absolute_path;
 						
-						size_t pos = path.rfind('/');
-						if (pos == std::string::npos)
-							pos = path.rfind('\\');
-						if (pos != std::string::npos)
-							real_path = path.substr(0, pos);
-						
-						real_path += "/" + s;
+						if (s[0] == '/' || (s.length() >= 2 && s[1] == ':')) // already absolute path
+						{
+							absolute_path = s;
+						}
+						else
+						{
+							size_t pos = path.rfind('/');
+							if (pos == std::string::npos)
+								pos = path.rfind('\\');
+							if (pos != std::string::npos)
+								absolute_path = path.substr(0, pos);
+							
+							absolute_path += "/" + s;
+						}
 
-						creator->material_setup.tex_path = real_path;
+						creator->material_setup.tex_path = absolute_path;
 						
 						if (GetAttrStr(node, "tex_filter", s))
 						{
@@ -991,6 +1042,251 @@ namespace ERI
 		}
 
 		return creator;
+	}
+
+	bool SaveParticleSystemToScriptByCreator(const ParticleSystemCreator* creator, const std::string& path)
+	{
+		ASSERT(creator);
+		
+		XmlCreateData data;
+		
+		// system
+		
+		ParticleSystemSetup default_setup;
+		
+		xml_node<>* node = CreateNode(data.doc, "particle_system");
+		if (creator->setup->is_coord_relative != default_setup.is_coord_relative)
+			PutAttrBool(data.doc, node, "coord_related", creator->setup->is_coord_relative);
+		if (creator->setup->life != default_setup.life)
+			PutAttrFloat(data.doc, node, "life", creator->setup->life);
+		
+		// material
+		
+		ParticleMaterialSetup default_material;
+		
+		bool modified = false;
+		
+		xml_node<>* material_node = CreateNode(data.doc, "material");
+		
+		if (!creator->material_setup.tex_path.empty())
+		{
+			std::string name = GetFileName(creator->material_setup.tex_path);
+			PutAttrStr(data.doc, material_node, "tex", name);
+			modified = true;
+		}
+		if (creator->material_setup.tex_filter == FILTER_NEAREST)
+		{
+			PutAttrStr(data.doc, material_node, "tex_filter", "nearest");
+			modified = true;
+		}
+		if (creator->material_setup.u_start != default_material.u_start)
+		{
+			PutAttrFloat(data.doc, material_node, "tex_u", creator->material_setup.u_start);
+			modified = true;
+		}
+		if (creator->material_setup.v_start != default_material.v_start)
+		{
+			PutAttrFloat(data.doc, material_node, "tex_v", creator->material_setup.v_start);
+			modified = true;
+		}
+		if (creator->material_setup.u_width != default_material.u_width)
+		{
+			PutAttrFloat(data.doc, material_node, "tex_w", creator->material_setup.u_width);
+			modified = true;
+		}
+		if (creator->material_setup.v_height != default_material.v_height)
+		{
+			PutAttrFloat(data.doc, material_node, "tex_h", creator->material_setup.v_height);
+			modified = true;
+		}
+		if (creator->material_setup.depth_write != default_material.depth_write)
+		{
+			PutAttrBool(data.doc, material_node, "depth_write", creator->material_setup.depth_write);
+			modified = true;
+		}
+		if (creator->material_setup.blend_add)
+		{
+			PutAttrStr(data.doc, material_node, "blend", "add");
+			modified = true;
+		}
+		
+		if (modified)
+			node->append_node(material_node);
+		
+		// emitter
+		
+		ASSERT(creator->emitter);
+		
+		xml_node<>* emitter_node = NULL;
+		
+		if (creator->emitter->type() == EMITTER_BOX)
+		{
+			emitter_node = CreateNode(data.doc, "box_emitter");
+			BoxEmitter* box_emitter = static_cast<BoxEmitter*>(creator->emitter);
+			
+			PutAttrFloat(data.doc, emitter_node, "size_x", box_emitter->half_size().x * 2);
+			PutAttrFloat(data.doc, emitter_node, "size_y", box_emitter->half_size().y * 2);
+		}
+		else if (creator->emitter->type() == EMITTER_CIRCLE)
+		{
+			emitter_node = CreateNode(data.doc, "circle_emitter");
+			CircleEmitter* circle_emitter = static_cast<CircleEmitter*>(creator->emitter);
+			
+			PutAttrFloat(data.doc, emitter_node, "radius", circle_emitter->radius());
+		}
+		
+		ASSERT(emitter_node)
+		
+		PutAttrFloat(data.doc, emitter_node, "rate", creator->emitter->rate());
+		PutAttrFloat(data.doc, emitter_node, "angle_min", creator->emitter->angle_min());
+		PutAttrFloat(data.doc, emitter_node, "angle_max", creator->emitter->angle_max());
+		
+		node->append_node(emitter_node);
+		
+		// particle
+		
+		xml_node<>* particle_node = CreateNode(data.doc, "particle");
+		xml_node<>* node2;
+		
+		if (creator->setup->particle_size != default_setup.particle_size)
+		{
+			node2 = CreateNode(data.doc, "size");
+			PutAttrFloat(data.doc, node2, "x", creator->setup->particle_size.x);
+			PutAttrFloat(data.doc, node2, "y", creator->setup->particle_size.y);
+			particle_node->append_node(node2);
+		}
+		
+		if (creator->setup->particle_life_min != default_setup.particle_life_min ||
+			creator->setup->particle_life_max != default_setup.particle_life_max)
+		{
+			node2 = CreateNode(data.doc, "life");
+			PutAttrFloat(data.doc, node2, "min", creator->setup->particle_life_min);
+			PutAttrFloat(data.doc, node2, "max", creator->setup->particle_life_max);
+			particle_node->append_node(node2);
+		}
+		
+		if (creator->setup->particle_speed_min != default_setup.particle_speed_min ||
+			creator->setup->particle_speed_max != default_setup.particle_speed_max)
+		{
+			node2 = CreateNode(data.doc, "speed");
+			PutAttrFloat(data.doc, node2, "min", creator->setup->particle_speed_min);
+			PutAttrFloat(data.doc, node2, "max", creator->setup->particle_speed_max);
+			particle_node->append_node(node2);
+		}
+		
+		if (creator->setup->particle_rotate_min != default_setup.particle_rotate_min ||
+			creator->setup->particle_rotate_max != default_setup.particle_rotate_max)
+		{
+			node2 = CreateNode(data.doc, "rotate");
+			PutAttrFloat(data.doc, node2, "min", creator->setup->particle_rotate_min);
+			PutAttrFloat(data.doc, node2, "max", creator->setup->particle_rotate_max);
+			particle_node->append_node(node2);
+		}
+		
+		if (creator->setup->particle_scale_min != default_setup.particle_scale_min ||
+			creator->setup->particle_scale_max != default_setup.particle_scale_max)
+		{
+			node2 = CreateNode(data.doc, "scale");
+			PutAttrFloat(data.doc, node2, "min", creator->setup->particle_scale_min);
+			PutAttrFloat(data.doc, node2, "max", creator->setup->particle_scale_max);
+			particle_node->append_node(node2);
+		}
+		
+		node->append_node(particle_node);
+		
+		// affector
+		
+		for (int i = 0; i < creator->affectors.size(); ++i)
+		{
+			xml_node<>* affector_node = NULL;
+			
+			switch (creator->affectors[i]->type())
+			{
+				case AFFECTOR_ROTATE:
+				{
+					RotateAffector* rotate_affector = static_cast<RotateAffector*>(creator->affectors[i]);
+					
+					affector_node = CreateNode(data.doc, "rotate_affector");
+					PutAttrFloat(data.doc, affector_node, "speed", rotate_affector->speed());
+					PutAttrFloat(data.doc, affector_node, "acceleration", rotate_affector->acceleration());
+					if (rotate_affector->period() > 0.f)
+						PutAttrFloat(data.doc, affector_node, "period", rotate_affector->period());
+				}
+					break;
+				case AFFECTOR_FORCE:
+				{
+					ForceAffector* force_affector = static_cast<ForceAffector*>(creator->affectors[i]);
+					
+					affector_node = CreateNode(data.doc, "force_affector");
+					PutAttrFloat(data.doc, affector_node, "acceleration_x", force_affector->acceleration().x);
+					PutAttrFloat(data.doc, affector_node, "acceleration_y", force_affector->acceleration().y);
+					if (force_affector->period() > 0.f)
+						PutAttrFloat(data.doc, affector_node, "period", force_affector->period());
+				}
+					break;
+				case AFFECTOR_ACCELERATION:
+				{
+					AccelerationAffector* acceleration_affector = static_cast<AccelerationAffector*>(creator->affectors[i]);
+					
+					affector_node = CreateNode(data.doc, "acceleration_affector");
+					PutAttrFloat(data.doc, affector_node, "acceleration", acceleration_affector->acceleration());
+					if (acceleration_affector->period() > 0.f)
+						PutAttrFloat(data.doc, affector_node, "period", acceleration_affector->period());
+				}
+					break;
+				case AFFECTOR_SCALE:
+				{
+					ScaleAffector* scale_affector = static_cast<ScaleAffector*>(creator->affectors[i]);
+					
+					affector_node = CreateNode(data.doc, "scale_affector");
+					PutAttrFloat(data.doc, affector_node, "speed_x", scale_affector->speed().x);
+					PutAttrFloat(data.doc, affector_node, "speed_y", scale_affector->speed().y);
+					if (scale_affector->period() > 0.f)
+						PutAttrFloat(data.doc, affector_node, "period", scale_affector->period());
+				}
+					break;
+				case AFFECTOR_COLOR:
+				{
+					ColorAffector* color_affector = static_cast<ColorAffector*>(creator->affectors[i]);
+					
+					affector_node = CreateNode(data.doc, "color_affector");
+					PutAttrColor(data.doc, affector_node, "start", color_affector->start());
+					PutAttrColor(data.doc, affector_node, "end", color_affector->end());
+				}
+					break;
+				case AFFECTOR_COLOR_INTERVAL:
+				{
+					std::vector<ColorIntervalAffector::ColorInterval*>& intervals = static_cast<ColorIntervalAffector*>(creator->affectors[i])->intervals();
+					
+					if (!intervals.empty())
+					{
+						affector_node = CreateNode(data.doc, "color_interval_affector");
+						
+						for (int j = 0; j < intervals.size(); ++j)
+						{
+							node2 = CreateNode(data.doc, "interval");
+							PutAttrFloat(data.doc, node2, "lived_time", intervals[j]->lived_percent);
+							PutAttrColor(data.doc, node2, "color", intervals[j]->color);
+							affector_node->append_node(node2);
+						}
+					}
+				}
+					break;
+					
+				default:
+					ASSERT(0);
+					break;
+			}
+			
+			if (affector_node)
+				particle_node->append_node(affector_node);
+		}
+		
+		//
+		
+		data.doc.append_node(node);
+		
+		return SaveFile(path, data);
 	}
 	
 }
