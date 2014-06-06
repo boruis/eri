@@ -585,14 +585,18 @@ namespace ERI {
 		inline bool operator == (const Color& c) const { return (r == c.r && g == c.g && b == c.b && a == c.a); }
 		inline bool operator != (const Color& c) const { return (r != c.r || g != c.g || b != c.b || a != c.a); }
 		
+		void GetHSV(float& h, float& s, float& v) const; // HSB
+		void GetHSL(float& h, float& s, float& l) const;
+		
 		float r, g, b, a;
 		
 		static Color FromInt(int r, int g, int b, int a = 255) { return Color(r / 255.f, g / 255.f, b / 255.f, a / 255.f); }
+		static Color FromHSV(float h, float s, float v);
 		static Color FromHSL(float h, float s, float l);
 		
 		static const Color WHITE;
+		static const Color WHITE_TRANSPARENT;
 		static const Color BLACK;
-		static const Color TRANSPARENT;
 		static const Color GRAY;
 		static const Color RED;
 		static const Color GREEN;

@@ -1682,38 +1682,88 @@ namespace ERI {
 
 #pragma mark Color
 	
+	void Color::GetHSV(float& h, float& s, float& v) const
+	{
+		float max = Max(Max(r, g), b);
+		float min = Min(Min(r, g), b);
+		float delta = max - min;
+		
+		if (delta == 0.f)
+			h = 0.f;
+		else if (max == r)
+			h = 60 * ((g - b) / delta + (g >= b ? 0 : 6));
+		else if (max == g)
+			h = 60 * ((b - r) / delta + 2);
+		else
+			h = 60 * ((r - g) / delta + 4);
+		
+		v = max;
+		
+		s = (delta == 0.f) ? 0.f : (delta / max);
+	}
+
+	void Color::GetHSL(float& h, float& s, float& l) const
+	{
+		float max = Max(Max(r, g), b);
+		float min = Min(Min(r, g), b);
+		float delta = max - min;
+		
+		if (delta == 0.f)
+			h = 0.f;
+		else if (max == r)
+			h = 60 * ((g - b) / delta + (g >= b ? 0 : 6));
+		else if (max == g)
+			h = 60 * ((b - r) / delta + 2);
+		else
+			h = 60 * ((r - g) / delta + 4);
+		
+		l = (max + min) * 0.5f;
+		
+		if (l == 0.f || delta == 0.f)
+			s = 0.f;
+		else
+			s = delta / (1.f - Abs(l * 2 - 1));
+	}
+	
+	Color Color::FromHSV(float h, float s, float v)
+	{
+		float c = v * s;
+		float h2 = h / 60.f;
+		float x = c * (1 - Abs(fmodf(h2, 2.f) - 1));
+		
+		Color base;
+		if (h2 < 1) base = Color(c, x, 0.f);
+		else if (h2 < 2) base = Color(x, c, 0.f);
+		else if (h2 < 3) base = Color(0.f, c, x);
+		else if (h2 < 4) base = Color(0.f, x, c);
+		else if (h2 < 5) base = Color(x, 0.f, c);
+		else base = Color(c, 0.f, x);
+		
+		float m = v - c;
+		return Color(base.r + m, base.g + m, base.b + m);
+	}
+	
 	Color Color::FromHSL(float h, float s, float l)
 	{
-		if (s == 0.f) return Color(l, l, l);
+		float c = (1 - Abs(2 * l - 1));
+		float h2 = h / 60.f;
+		float x = c * (1 - Abs(fmodf(h2, 2.f) - 1));
 		
-		float q = (l < 0.5f) ? (l * (1 + s)) : (l + s - (l * s));
-		float p = 2 * l - q;
-		float t[3];
+		Color base;
+		if (h2 < 1) base = Color(c, x, 0.f);
+		else if (h2 < 2) base = Color(x, c, 0.f);
+		else if (h2 < 3) base = Color(0.f, c, x);
+		else if (h2 < 4) base = Color(0.f, x, c);
+		else if (h2 < 5) base = Color(x, 0.f, c);
+		else base = Color(c, 0.f, x);
 		
-		float inv_3 = 1.f / 3;
-		float inv_6 = 1.f / 6;
-		float div_2_3 = 2.f / 3;
-		
-		t[0] = h + inv_3;
-		t[1] = h;
-		t[2] = h - inv_3;
-		for (int i = 0; i < 3; ++i)
-		{
-			if (t[i] < 0) t[i] += 1.f;
-			if (t[i] > 1.f) t[i] -= 1.f;
-			
-			if (t[i] < inv_6) t[i] = p + ((q - p) * 6 * t[i]);
-			else if (t[i] < 0.5f) t[i] = q;
-			else if (t[i] < div_2_3) t[i] = p + ((q - p) * 6 * (div_2_3 - t[i]));
-			else t[i] = p;
-		}
-		
-		return Color(t[0], t[1], t[2]);
+		float m = l - c * 0.5f;
+		return Color(base.r + m, base.g + m, base.b + m);
 	}
 
 	const Color Color::WHITE;
+	const Color Color::WHITE_TRANSPARENT = Color(1.f, 1.f, 1.f, 0.f);
 	const Color Color::BLACK = Color(0.f, 0.f, 0.f);
-	const Color Color::TRANSPARENT = Color(1.f, 1.f, 1.f, 0.f);
 	const Color Color::GRAY = Color(0.5f, 0.5f, 0.5f);
 	const Color Color::RED = Color(1.f, 0.f, 0.f);
 	const Color Color::GREEN = Color(0.f, 1.f, 0.f);
