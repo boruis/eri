@@ -361,10 +361,10 @@ namespace ERI {
 		glBindBuffer(GL_ARRAY_BUFFER, data->vertex_buffer);
 		
 		GLint vertex_pos_size, vertex_stride;
-		void* vertex_pos_offset;
-		void* vertex_normal_offset;
+		void* vertex_pos_offset = NULL;
+		void* vertex_normal_offset = NULL;
 		void* vertex_tex_coord_offset[MAX_TEXTURE_UNIT];
-		void* vertex_color_offset;
+		void* vertex_color_offset = NULL;
 		bool use_vertex_normal = false;
 		bool use_vertex_color = false;
 
@@ -400,6 +400,19 @@ namespace ERI {
 					vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
 				}
 				vertex_color_offset = (void*)offsetof(vertex_2_pos_tex_color, color);
+				use_vertex_color = true;
+				break;
+
+      case POS_TEX2_COLOR_2:
+				vertex_pos_size = 2;
+				vertex_stride = sizeof(vertex_2_pos_tex2_color);
+				vertex_pos_offset = (void*)offsetof(vertex_2_pos_tex2_color, position);
+				vertex_tex_coord_offset[0] = (void*)offsetof(vertex_2_pos_tex2_color, tex_coord);
+				vertex_tex_coord_offset[1] = (void*)offsetof(vertex_2_pos_tex2_color, tex_coord2);
+				for (int i = 2; i < MAX_TEXTURE_UNIT; ++i) {
+					vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
+				}
+				vertex_color_offset = (void*)offsetof(vertex_2_pos_tex2_color, color);
 				use_vertex_color = true;
 				break;
 				

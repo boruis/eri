@@ -35,6 +35,13 @@ namespace ERI {
 		GLfloat tex_coord[2];
 	};
 
+	struct vertex_2_pos_tex2_color {
+		GLfloat position[2];
+		GLbyte	color[4];
+		GLfloat tex_coord[2];
+		GLfloat tex_coord2[2];
+	};
+	
 	struct vertex_3_pos_normal {
 		GLfloat position[3];
 		GLfloat normal[3];
@@ -64,6 +71,7 @@ namespace ERI {
 		POS_TEX_2 = 0,
 		POS_TEX2_2,
 		POS_TEX_COLOR_2,
+		POS_TEX2_COLOR_2,
 		POS_NORMAL_3,
 		POS_NORMAL_TEX_3,
 		POS_NORMAL_COLOR_TEX_3,
