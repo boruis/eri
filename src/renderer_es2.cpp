@@ -305,7 +305,10 @@ namespace ERI {
 			is_view_proj_dirty_ = false;
 		}
 		
-		Matrix4::Multiply(tmp_matrix_[0], current_view_proj_matrix_, data->world_model_matrix);
+		if (data->apply_identity_model_matrix)
+			tmp_matrix_[0] = current_view_proj_matrix_;
+		else
+			Matrix4::Multiply(tmp_matrix_[0], current_view_proj_matrix_, data->world_model_matrix);
 		
 		glUniformMatrix4fv(current_program_->uniforms()[UNIFORM_MODEL_VIEW_PROJ_MATRIX], 1, GL_FALSE, tmp_matrix_[0].m);
 		
