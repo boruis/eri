@@ -955,14 +955,17 @@ namespace ERI
 					float rate = 1.0f;
 					float angle_min = 0.0f;
 					float angle_max = 0.0f;
+					bool align_angle = false;
 					GetAttrFloat(node, "size_x", size.x);
 					GetAttrFloat(node, "size_y", size.y);
 					GetAttrFloat(node, "rate", rate);
 					GetAttrFloat(node, "angle_min", angle_min);
 					GetAttrFloat(node, "angle_max", angle_max);
+					GetAttrBool(node, "align_angle", align_angle);
 					
 					if (creator->emitter) delete creator->emitter;
 					creator->emitter = new BoxEmitter(size * 0.5f, rate, angle_min, angle_max);
+					creator->emitter->set_align_angle(align_angle);
 				}
 				else if (strcmp(node->name(), "circle_emitter") == 0)
 				{
@@ -970,13 +973,16 @@ namespace ERI
 					float rate = 1.0f;
 					float angle_min = 0.0f;
 					float angle_max = 0.0f;
+					bool align_angle = false;
 					GetAttrFloat(node, "radius", radius);
 					GetAttrFloat(node, "rate", rate);
 					GetAttrFloat(node, "angle_min", angle_min);
 					GetAttrFloat(node, "angle_max", angle_max);
+					GetAttrBool(node, "align_angle", align_angle);
 					
 					if (creator->emitter) delete creator->emitter;
 					creator->emitter = new CircleEmitter(radius, rate, angle_min, angle_max);
+					creator->emitter->set_align_angle(align_angle);
 				}
 				else if (strcmp(node->name(), "material") == 0)
 				{
@@ -1140,6 +1146,7 @@ namespace ERI
 		PutAttrFloat(data.doc, emitter_node, "rate", creator->emitter->rate());
 		PutAttrFloat(data.doc, emitter_node, "angle_min", creator->emitter->angle_min());
 		PutAttrFloat(data.doc, emitter_node, "angle_max", creator->emitter->angle_max());
+		PutAttrBool(data.doc, emitter_node, "align_angle", creator->emitter->align_angle());
 		
 		node->append_node(emitter_node);
 		
