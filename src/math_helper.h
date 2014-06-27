@@ -433,8 +433,16 @@ namespace ERI {
 	{
 		Box2()
 		{
-			axis[0] = Vector2(1.0f, 0.0f);
-			axis[1] = Vector2(0.0f, 1.0f);
+			axis[0] = Vector2::UNIT_X;
+			axis[1] = Vector2::UNIT_Y;
+		}
+		
+		void SetRotate(float rotate)
+		{
+			axis[0] = Vector2::UNIT_X;
+			axis[0].Rotate(rotate);
+			axis[1] = Vector2::UNIT_Y;
+			axis[1].Rotate(rotate);
 		}
 		
 		Vector2	center;
@@ -446,9 +454,9 @@ namespace ERI {
 	{
 		Box3()
 		{
-			axis[0] = Vector3(1.0f, 0.0f, 0.0f);
-			axis[1] = Vector3(0.0f, 1.0f, 0.0f);
-			axis[2] = Vector3(0.0f, 0.0f, 1.0f);
+			axis[0] = Vector3::UNIT_X;
+			axis[1] = Vector3::UNIT_Y;
+			axis[2] = Vector3::UNIT_Z;
 		}
 
 		void GetVertices(Vector3* vertices) const
