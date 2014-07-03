@@ -64,6 +64,7 @@ namespace ERI
 		
 		void SetRate(float rate);
 		
+		void Restart();
 		bool CheckIsTimeToEmit(float delta_time, int& out_emit_num);
 		
 		float GetEmitAngle();

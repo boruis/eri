@@ -40,6 +40,11 @@ namespace ERI
 		emit_interval_ = 1.0f / rate_;
 	}
 
+	void BaseEmitter::Restart()
+	{
+		emit_remain_time_ = 0.0f;
+	}
+	
 	bool BaseEmitter::CheckIsTimeToEmit(float delta_time, int& out_emit_num)
 	{
 		emit_remain_time_ -= delta_time;
@@ -259,8 +264,8 @@ namespace ERI
 	
 	void ColorIntervalAffector::InitSetup(Particle* p)
 	{
-    if (intervals_.empty())
-      return;
+		if (intervals_.empty())
+			return;
 		
 		p->color = intervals_[0]->color;
 		p->color_interval = 0;
@@ -420,6 +425,7 @@ namespace ERI
 	void ParticleSystem::Play()
 	{
 		lived_time_ = 0.0f;
+		emitter_->Restart();
 	}
 	
 	bool ParticleSystem::IsPlaying()
@@ -564,6 +570,7 @@ namespace ERI
 			}
 			
 			p->lived_time = 0.0f;
+			p->lived_percent = 0.0f;
 			p->in_use = true;
 			
 			p->affector_timers.resize(affectors_.size());
