@@ -148,7 +148,8 @@ Framework::Framework(int window_width, int window_height, const char* title /*= 
   is_running_(false),
   is_visible_(false),
   is_fullscreen_(false),
-  fullscreen_type_(SDL_WINDOW_FULLSCREEN_DESKTOP)
+  fullscreen_type_(SDL_WINDOW_FULLSCREEN_DESKTOP),
+  log_fps_(false)
 {
   ASSERT(window_width_ > 0 && window_height_ > 0);
   ASSERT((flags & (FULL_SCREEN | FULL_SCREEN_DESKTOP)) != (FULL_SCREEN | FULL_SCREEN_DESKTOP));
@@ -353,15 +354,15 @@ float Framework::PreUpdate()
           switch (event.button.button)
           {
             case 1:
-              ERI::Root::Ins().input_mgr()->Release(e);
               if (ERI::Abs(e.x - mouse_down_x_[0]) < 10 && ERI::Abs(e.y - mouse_down_y_[0]) < 10)
                 ERI::Root::Ins().input_mgr()->Click(e);
+              ERI::Root::Ins().input_mgr()->Release(e);
               break;
               
             case 3:
-              ERI::Root::Ins().input_mgr()->RightRelease(e);
               if (ERI::Abs(e.x - mouse_down_x_[1]) < 10 && ERI::Abs(e.y - mouse_down_y_[1]) < 10)
                 ERI::Root::Ins().input_mgr()->RightClick(e);
+              ERI::Root::Ins().input_mgr()->RightRelease(e);
               break;
               
             default:
@@ -540,6 +541,18 @@ float Framework::PreUpdate()
   delta_time = (now_time - last_time) * 0.001f;
   last_time = now_time;
   
+  if (log_fps_)
+  {
+    ++frame_count_;
+    frame_pass_time_ += delta_time;
+    if (frame_pass_time_ >= 1.f)
+    {
+      LOGI("fps %g", frame_count_ / frame_pass_time_)
+      frame_pass_time_ = 0.f;
+      frame_count_ = 0;
+    }
+  }
+  
   return delta_time;
 }
 
@@ -554,6 +567,37 @@ void Framework::PostUpdate()
 void Framework::Stop()
 {
   is_running_ = false;
+}
+
+int Framework::GetTicksTime()
+{
+  return SDL_GetTicks();
+}
+
+void* Framework::CreateThread(int (*thread_func)(void*), const char* name, void* data)
+{
+  SDL_Thread* thread = SDL_CreateThread(thread_func, name, data);
+  if (NULL == thread)
+  {
+    LOGI("SDL_CreateThread failed: %s", SDL_GetError());
+  }
+  
+  return thread;
+}
+
+void Framework::Delay(int ms)
+{
+  SDL_Delay(ms);
+}
+
+void Framework::LogFPS(bool enable)
+{
+  log_fps_ = enable;
+  if (log_fps_)
+  {
+    frame_pass_time_ = 0.f;
+    frame_count_ = 0;
+  }
 }
 
 void Framework::ToggleFullscreen()

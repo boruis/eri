@@ -36,6 +36,12 @@ public:
   void PostUpdate();
   void Stop();
   
+  int GetTicksTime();
+  void* CreateThread(int (*thread_func)(void*), const char* name, void* data);
+  void Delay(int ms);
+  
+  void LogFPS(bool enable);
+  
   void ToggleFullscreen();
   
   inline bool is_running() { return is_running_; }
@@ -61,6 +67,10 @@ private:
   ERI::Vector2 axis_left_, axis_right_;
   
   SDL_GameController* game_controllers_[kGameControllerMax];
+  
+  bool log_fps_;
+  float frame_pass_time_;
+  float frame_count_;
 };
 
 #endif // ERI_DESKTOP
