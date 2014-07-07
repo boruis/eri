@@ -150,6 +150,7 @@ namespace ERI
 	BaseAffector* RotateAffector::Clone()
 	{
 		BaseAffector* affector = new RotateAffector(speed_, acceleration_);
+		affector->set_delay(delay());
 		affector->set_period(period());
 		return affector;
 	}
@@ -172,6 +173,7 @@ namespace ERI
 	BaseAffector* ForceAffector::Clone()
 	{
 		BaseAffector* affector = new ForceAffector(acceleration_);
+		affector->set_delay(delay());
 		affector->set_period(period());
 		return affector;
 	}
@@ -202,6 +204,7 @@ namespace ERI
 	BaseAffector* AccelerationAffector::Clone()
 	{
 		BaseAffector* affector = new AccelerationAffector(acceleration_);
+		affector->set_delay(delay());
 		affector->set_period(period());
 		return affector;
 	}
@@ -226,6 +229,7 @@ namespace ERI
 	BaseAffector* ScaleAffector::Clone()
 	{
 		BaseAffector* affector = new ScaleAffector(speed_);
+		affector->set_delay(delay());
 		affector->set_period(period());
 		return affector;
 	}
@@ -243,12 +247,14 @@ namespace ERI
 	
 	void ColorAffector::InitSetup(Particle* p)
 	{
-		p->color = start_;
+		if (p->life > 0.f)
+			p->color = start_;
 	}
 	
 	void ColorAffector::Update(float delta_time, Particle* p)
 	{
-		p->color = start_ * (1.0f - p->lived_percent) + end_ * p->lived_percent;
+		if (p->life > 0.f)
+			p->color = start_ * (1.0f - p->lived_percent) + end_ * p->lived_percent;
 	}
 	
 	ColorIntervalAffector::ColorIntervalAffector()
@@ -276,10 +282,12 @@ namespace ERI
 		if (p->color_interval >= (static_cast<int>(intervals_.size()) - 1))
 			return;
 		
-		if (p->lived_percent <= intervals_[p->color_interval]->lived_percent)
+		float lived = p->life > 0.f ? p->lived_percent : p->lived_time;
+		
+		if (lived <= intervals_[p->color_interval]->lived)
 			return;
-
-		if (p->lived_percent >= intervals_[p->color_interval + 1]->lived_percent)
+		
+		if (lived >= intervals_[p->color_interval + 1]->lived)
 		{
 			++p->color_interval;
 		}
@@ -290,8 +298,8 @@ namespace ERI
 		}
 		else
 		{
-			float total = intervals_[p->color_interval + 1]->lived_percent - intervals_[p->color_interval]->lived_percent;
-			float diff = p->lived_percent - intervals_[p->color_interval]->lived_percent;
+			float total = intervals_[p->color_interval + 1]->lived - intervals_[p->color_interval]->lived;
+			float diff = lived - intervals_[p->color_interval]->lived;
 			float diff_percent = diff / total;
 			p->color = intervals_[p->color_interval]->color * (1.0f - diff_percent) + intervals_[p->color_interval + 1]->color * diff_percent;
 		}
@@ -302,15 +310,15 @@ namespace ERI
 		ColorIntervalAffector* affector = new ColorIntervalAffector;
 		
 		for (int i = 0; i < intervals_.size(); ++i)
-			affector->AddInterval(intervals_[i]->lived_percent, intervals_[i]->color);
+			affector->AddInterval(intervals_[i]->lived, intervals_[i]->color);
 		
 		return affector;
 	}
 	
-	void ColorIntervalAffector::AddInterval(float lived_percent, const Color& color)
+	void ColorIntervalAffector::AddInterval(float lived, const Color& color)
 	{
 		ColorInterval* interval = new ColorInterval;
-		interval->lived_percent = lived_percent;
+		interval->lived = lived;
 		interval->color = color;
 		intervals_.push_back(interval);
 	}
@@ -327,7 +335,7 @@ namespace ERI
 
 	ParticleSystem::ParticleSystem(const ParticleSystemSetup* setup_ref) :
 		setup_ref_(setup_ref),
-		custom_life_(-1.0f),
+		life_(-1.0f),
 		emitter_(NULL),
 		vertices_(NULL),
 		indices_(NULL),
@@ -362,7 +370,16 @@ namespace ERI
 	{
 		ASSERT(setup_ref_);
 		
-		custom_life_ = setup_ref_->life;
+		life_ = setup_ref_->life;
+		
+		particle_life_max_ = Max(setup_ref_->particle_life_min, setup_ref_->particle_life_max);
+		if (setup_ref_->particle_life_min <= 0.f || setup_ref_->particle_life_max <= 0.f)
+		{
+			particle_life_max_ = -1.f;
+			life_ = -1.f;
+		}
+		
+		ASSERT(setup_ref_->life >= 0.f || particle_life_max_ > 0.f);
 
 		render_data_.apply_identity_model_matrix = !setup_ref_->is_coord_relative;
 	}
@@ -375,14 +392,21 @@ namespace ERI
 		
 		emitter_ = emitter;
 		
-		float life_max = Max(setup_ref_->particle_life_min, setup_ref_->particle_life_max);
-
-//		int need_particle_num = Ceil(emitter_->rate() * life_max) + 1;
-//		
-//		if (setup_ref_->life > 0.f)
-//			need_particle_num = Min(need_particle_num, Ceil(emitter_->rate() * setup_ref_->life) + 1);
+		int need_particle_num = 1;
 		
-		int need_particle_num = Max(static_cast<int>(emitter_->rate() * life_max * 1.25f), 1);
+		if (particle_life_max_ > 0.f)
+			need_particle_num = Max(need_particle_num, Ceil(emitter_->rate() * particle_life_max_));
+		
+		if (setup_ref_->life > 0.f)
+		{
+			need_particle_num = need_particle_num > 1 ?
+				Min(need_particle_num, Ceil(emitter_->rate() * setup_ref_->life)) :
+				Max(need_particle_num, Ceil(emitter_->rate() * setup_ref_->life));
+		}
+		
+//		float life_max = Max(setup_ref_->particle_life_min, setup_ref_->particle_life_max);
+//		int need_particle_num = Max(static_cast<int>(emitter_->rate() * life_max * 1.25f), 1);
+    
 		int original_particle_num = static_cast<int>(particles_.size());
 		
 		for (int i = 0; i < need_particle_num; ++i)
@@ -430,7 +454,7 @@ namespace ERI
 	
 	bool ParticleSystem::IsPlaying()
 	{
-		return (custom_life_ < 0.0f || lived_time_ >= 0.0f);
+		return (life_ < 0.0f || lived_time_ >= 0.0f);
 	}
 
 	void ParticleSystem::Update(float delta_time)
@@ -438,10 +462,10 @@ namespace ERI
 		if (!IsPlaying())
 			return;
 		
-		if (custom_life_ >= 0.0f)
+		if (life_ >= 0.0f)
 		{
 			lived_time_ += delta_time;
-			if (lived_time_ > (custom_life_ + setup_ref_->particle_life_max))
+			if (lived_time_ > (life_ + particle_life_max_))
 				lived_time_ = -1.0f;
 		}
 		
@@ -464,9 +488,9 @@ namespace ERI
 			if (p->in_use)
 			{
 				p->lived_time += delta_time;
-				if (p->lived_time < p->life)
+				if (p->lived_time < p->life || p->life <= 0.f)
 				{
-					p->lived_percent = p->lived_time / p->life;
+					p->lived_percent = p->life > 0.f ? p->lived_time / p->life : 0.f;
 					
 					delta_pos = p->velocity * system_scale_ * delta_time;
 					p->pos.x += delta_pos.x;
@@ -474,14 +498,18 @@ namespace ERI
 					
 					for (int affector_idx = 0; affector_idx < affector_num; ++affector_idx)
 					{
-						float& affector_timer = p->affector_timers[affector_idx];
+						Particle::AffectorVars& var = p->affector_vars[affector_idx];
 						
-						if (affector_timer == -1.f || affector_timer > 0.f)
+						if (var.delay_timer > 0.f)
+						{
+							var.delay_timer -= delta_time;
+						}
+						else if (var.period_timer != 0.f)
 						{
 							affectors_[affector_idx]->Update(delta_time, p);
 							
-							if (affector_timer > 0.f)
-								affector_timer = Max(affector_timer - delta_time, 0.f);
+							if (var.period_timer > 0.f)
+								var.period_timer = Max(var.period_timer - delta_time, 0.f);
 						}
 					}
 				}
@@ -496,7 +524,7 @@ namespace ERI
 		}
 		
 		int emit_num = 0;
-		if ((custom_life_ < 0.0f || (lived_time_ > 0.0f && lived_time_ < custom_life_))
+		if ((life_ < 0.0f || (lived_time_ > 0.0f && lived_time_ < life_))
 			&& emitter_->CheckIsTimeToEmit(delta_time, emit_num))
 		{
 			EmitParticle(emit_num);
@@ -573,9 +601,12 @@ namespace ERI
 			p->lived_percent = 0.0f;
 			p->in_use = true;
 			
-			p->affector_timers.resize(affectors_.size());
+			p->affector_vars.resize(affectors_.size());
 			for (int j = 0; j < affectors_.size(); ++j)
-				p->affector_timers[j] = affectors_[j]->period();
+			{
+				p->affector_vars[j].delay_timer = affectors_[j]->delay();
+				p->affector_vars[j].period_timer = affectors_[j]->period();
+			}
 		}
 	}
 
@@ -866,6 +897,9 @@ namespace ERI
 							if (speed != 0.0f || acceleration != 0.0f)
 							{
 								RotateAffector* affector = new RotateAffector(speed, acceleration);
+								float delay;
+								if (GetAttrFloat(node2, "delay", delay))
+									affector->set_delay(delay);
 								float period;
 								if (GetAttrFloat(node2, "period", period))
 									affector->set_period(period);
@@ -881,6 +915,9 @@ namespace ERI
 							if (acceleration.x != 0.0f || acceleration.y != 0.0f)
 							{
 								ForceAffector* affector = new ForceAffector(acceleration);
+								float delay;
+								if (GetAttrFloat(node2, "delay", delay))
+									affector->set_delay(delay);
 								float period;
 								if (GetAttrFloat(node2, "period", period))
 									affector->set_period(period);
@@ -895,6 +932,9 @@ namespace ERI
 							if (acceleration != 0.0f)
 							{
 								AccelerationAffector* affector = new AccelerationAffector(acceleration);
+								float delay;
+								if (GetAttrFloat(node2, "delay", delay))
+									affector->set_delay(delay);
 								float period;
 								if (GetAttrFloat(node2, "period", period))
 									affector->set_period(period);
@@ -910,6 +950,9 @@ namespace ERI
 							if (speed.x != 0.0f || speed.y != 0.0f)
 							{
 								ScaleAffector* affector = new ScaleAffector(speed);
+								float delay;
+								if (GetAttrFloat(node2, "delay", delay))
+									affector->set_delay(delay);
 								float period;
 								if (GetAttrFloat(node2, "period", period))
 									affector->set_period(period);
@@ -1223,6 +1266,8 @@ namespace ERI
 					affector_node = CreateNode(data.doc, "rotate_affector");
 					PutAttrFloat(data.doc, affector_node, "speed", rotate_affector->speed());
 					PutAttrFloat(data.doc, affector_node, "acceleration", rotate_affector->acceleration());
+					if (rotate_affector->delay() > 0.f)
+						PutAttrFloat(data.doc, affector_node, "delay", rotate_affector->delay());
 					if (rotate_affector->period() > 0.f)
 						PutAttrFloat(data.doc, affector_node, "period", rotate_affector->period());
 				}
@@ -1234,6 +1279,8 @@ namespace ERI
 					affector_node = CreateNode(data.doc, "force_affector");
 					PutAttrFloat(data.doc, affector_node, "acceleration_x", force_affector->acceleration().x);
 					PutAttrFloat(data.doc, affector_node, "acceleration_y", force_affector->acceleration().y);
+					if (force_affector->delay() > 0.f)
+						PutAttrFloat(data.doc, affector_node, "delay", force_affector->delay());
 					if (force_affector->period() > 0.f)
 						PutAttrFloat(data.doc, affector_node, "period", force_affector->period());
 				}
@@ -1244,6 +1291,8 @@ namespace ERI
 					
 					affector_node = CreateNode(data.doc, "acceleration_affector");
 					PutAttrFloat(data.doc, affector_node, "acceleration", acceleration_affector->acceleration());
+					if (acceleration_affector->delay() > 0.f)
+						PutAttrFloat(data.doc, affector_node, "delay", acceleration_affector->delay());
 					if (acceleration_affector->period() > 0.f)
 						PutAttrFloat(data.doc, affector_node, "period", acceleration_affector->period());
 				}
@@ -1255,6 +1304,8 @@ namespace ERI
 					affector_node = CreateNode(data.doc, "scale_affector");
 					PutAttrFloat(data.doc, affector_node, "speed_x", scale_affector->speed().x);
 					PutAttrFloat(data.doc, affector_node, "speed_y", scale_affector->speed().y);
+					if (scale_affector->delay() > 0.f)
+						PutAttrFloat(data.doc, affector_node, "delay", scale_affector->delay());
 					if (scale_affector->period() > 0.f)
 						PutAttrFloat(data.doc, affector_node, "period", scale_affector->period());
 				}
@@ -1279,7 +1330,7 @@ namespace ERI
 						for (int j = 0; j < intervals.size(); ++j)
 						{
 							node2 = CreateNode(data.doc, "interval");
-							PutAttrFloat(data.doc, node2, "lived_time", intervals[j]->lived_percent);
+							PutAttrFloat(data.doc, node2, "lived_time", intervals[j]->lived);
 							PutAttrColor(data.doc, node2, "color", intervals[j]->color);
 							affector_node->append_node(node2);
 						}

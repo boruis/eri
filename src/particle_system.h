@@ -44,7 +44,13 @@ namespace ERI
 		float	lived_percent;
 		bool	in_use;
 		
-		std::vector<float> affector_timers;
+		struct AffectorVars
+		{
+			AffectorVars() : delay_timer(0.f), period_timer(-1.f) {}
+			float delay_timer, period_timer;
+		};
+		
+		std::vector<AffectorVars> affector_vars;
 	};
 	
 #pragma mark Emitter
@@ -156,13 +162,16 @@ namespace ERI
 		virtual BaseAffector* Clone() = 0;
 		
 		inline AffectorType type() { return type_; }
-		
+
+		inline float delay() { return delay_; }
+		inline void set_delay(float delay) { delay_ = delay; }
+
 		inline float period() { return period_; }
 		inline void set_period(float period) { period_ = period; }
 		
 	private:
 		AffectorType type_;
-		float period_;
+		float delay_, period_;
 	};
 	
 	class RotateAffector : public BaseAffector
@@ -257,7 +266,7 @@ namespace ERI
 	public:
 		struct ColorInterval
 		{
-			float	lived_percent;
+			float	lived;
 			Color	color;
 		};
 
@@ -269,7 +278,7 @@ namespace ERI
 		
 		virtual BaseAffector* Clone();
 		
-		void AddInterval(float lived_percent, const Color& color);
+		void AddInterval(float lived, const Color& color);
 		void RemoveInterval(int idx);
 		
 		inline std::vector<ColorInterval*>& intervals() { return intervals_; }
@@ -329,8 +338,8 @@ namespace ERI
 		
 		inline const ParticleSystemSetup* setup_ref() { return setup_ref_; }
 		
-		inline void set_custom_life(float life) { custom_life_ = life; }
-		inline float custom_life() { return custom_life_; }
+		inline void set_life(float life) { life_ = life; }
+		inline float life() { return life_; }
 		
 	private:
 		void EmitParticle(int num);
@@ -340,7 +349,8 @@ namespace ERI
 		void UpdateBuffer();
 		
 		const ParticleSystemSetup*	setup_ref_;
-		float						custom_life_;
+		float life_;
+		float particle_life_max_;
 		
 		BaseEmitter*				emitter_;
 		std::vector<BaseAffector*>	affectors_;
