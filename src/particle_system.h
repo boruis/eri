@@ -153,7 +153,7 @@ namespace ERI
 	class BaseAffector
 	{
 	public:
-		BaseAffector(AffectorType type) : type_(type), period_(-1.f) {}
+		BaseAffector(AffectorType type) : type_(type), delay_(0.f), period_(-1.f) {}
 		virtual ~BaseAffector() {}
 		
 		virtual void InitSetup(Particle* p) {}
