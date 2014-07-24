@@ -10,6 +10,10 @@
 #ifndef ERI_TEXTURE_READER_LIBPNG_H
 #define ERI_TEXTURE_READER_LIBPNG_H
 
+#include "pch.h"
+
+#ifdef ERI_TEXTURE_READER_LIBPNG
+
 #include "texture_reader.h"
 
 #include <string>
@@ -33,5 +37,7 @@ namespace ERI {
 	};
 	
 }
+
+#endif // ERI_TEXTURE_READER_LIBPNG
 
 #endif // ERI_TEXTURE_READER_LIBPNG_H

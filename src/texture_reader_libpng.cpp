@@ -9,6 +9,8 @@
 
 #include "pch.h"
 
+#ifdef ERI_TEXTURE_READER_LIBPNG
+
 #include "texture_reader_libpng.h"
 
 #include "png.h"
@@ -274,3 +276,5 @@ namespace ERI {
 		texture_id_ = Root::Ins().renderer()->GenerateTexture(texture_data_, width_, height_, RGBA);
 	}
 }
+
+#endif // ERI_TEXTURE_READER_LIBPNG
