@@ -20,6 +20,7 @@ namespace ERI {
 
 	const char* GetResourcePath();
 	const char* GetHomePath();
+	const char* GetBundlePath();
 	std::string GetWritePath();
 	
 	const char* GetStringFileContent(const std::string& file_path);

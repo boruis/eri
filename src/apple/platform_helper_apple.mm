@@ -20,7 +20,12 @@ namespace ERI {
 	{
 		return [NSHomeDirectory() UTF8String];
 	}
-  
+	
+	const char* GetBundlePath()
+	{
+		return [[[NSBundle mainBundle] bundlePath] UTF8String];
+	}
+	
 	std::string GetWritePath()
 	{
 		return std::string(GetHomePath()) + "/Documents";
