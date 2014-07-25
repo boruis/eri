@@ -73,9 +73,8 @@ namespace ERI
 		void Restart();
 		bool CheckIsTimeToEmit(float delta_time, int& out_emit_num);
 		
-		float GetEmitAngle();
-		
 		virtual void GetEmitPos(Vector2& pos) const = 0;
+		virtual float GetEmitAngle() const;
 		
 		virtual BaseEmitter* Clone() = 0;
 		
@@ -88,17 +87,22 @@ namespace ERI
 		inline float angle_max() const { return angle_max_; }
 		inline void set_angle_max(float angle_max) { angle_max_ = angle_max; }
 		
+		inline const Vector2& offset() const { return offset_; }
+		inline void set_offset(const Vector2& offset) { offset_ = offset; }
+
 		inline bool align_angle() const { return align_angle_; }
 		inline void set_align_angle(bool align_angle) { align_angle_ = align_angle; }
 
 	private:
 		EmitterType type_;
-		
+    
 		float	rate_;
 		float	angle_min_, angle_max_;
 		
 		float	emit_interval_;
 		float	emit_remain_time_;
+		
+		Vector2 offset_;
 		
 		bool align_angle_;
 	};
@@ -113,11 +117,16 @@ namespace ERI
 		
 		inline const Vector2& half_size() { return half_size_; }
 		inline void set_half_size(const Vector2& half_size) { half_size_ = half_size; }
-		
+
+		inline float rotate() const { return rotate_; }
+		inline void set_rotate(float rotate) { rotate_ = rotate; }
+
 		virtual void GetEmitPos(Vector2& pos) const;
+		virtual float GetEmitAngle() const;
 		
 	private:
 		Vector2	half_size_;
+		float rotate_;
 	};
 	
 	class CircleEmitter : public BaseEmitter
@@ -321,6 +330,14 @@ namespace ERI
 		ParticleSystem(const ParticleSystemSetup* setup_ref);
 		~ParticleSystem();
 		
+		virtual void AddToScene(int layer_id = 0);
+		virtual void RemoveFromScene();
+		
+		virtual void RemoveChild(SceneActor* actor);
+		virtual void RemoveAllChilds();
+
+		void AddChildSystem(ParticleSystem* system);
+		
 		void RefreshSetup();
 		
 		void SetEmitter(BaseEmitter* emitter);
@@ -365,6 +382,8 @@ namespace ERI
 		Vector2		uv_start_, uv_size_;
 		
 		float		lived_time_;
+		
+		std::vector<ParticleSystem*> child_systems_;
 	};
 	
 #pragma mark ParticleSystemCreator
@@ -377,7 +396,7 @@ namespace ERI
 			v_start(0.0f),
 			u_width(1.0f),
 			v_height(1.0f),
-			depth_write(true),
+			depth_write(false),
 			blend_add(false)
 		{
 		}
@@ -407,6 +426,9 @@ namespace ERI
 	
 	ParticleSystemCreator* LoadParticleSystemCreatorByScriptFile(const std::string& path);
 	bool SaveParticleSystemToScriptByCreator(const ParticleSystemCreator* creator, const std::string& path);
+
+	void LoadParticleSystemCreatorByScriptFile(const std::string& path, std::vector<ParticleSystemCreator*>& out_creators);
+	bool SaveParticleSystemToScriptByCreator(const std::vector<ParticleSystemCreator*>& creators, const std::string& path);
 
 }
 

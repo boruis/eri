@@ -10,6 +10,7 @@
 #include "pch.h"
 
 #include "particle_system.h"
+#include "scene_mgr.h"
 #include "sys_helper.h"
 #include "xml_helper.h"
 
@@ -59,13 +60,14 @@ namespace ERI
 		return false;
 	}
 
-	float BaseEmitter::GetEmitAngle()
+	float BaseEmitter::GetEmitAngle() const
 	{
 		return RangeRandom(angle_min_, angle_max_);
 	}
 
 	BoxEmitter::BoxEmitter(const Vector2& half_size, float rate, float angle_min, float angle_max) :
 		half_size_(half_size),
+		rotate_(0.f),
 		BaseEmitter(EMITTER_BOX, rate, angle_min, angle_max)
 	{
 	}
@@ -76,7 +78,9 @@ namespace ERI
 	
 	BaseEmitter* BoxEmitter::Clone()
 	{
-		BaseEmitter* emitter = new BoxEmitter(half_size_, rate(), angle_min(), angle_max());
+		BoxEmitter* emitter = new BoxEmitter(half_size_, rate(), angle_min(), angle_max());
+		emitter->set_rotate(rotate());
+		emitter->set_offset(offset());
 		emitter->set_align_angle(align_angle());
 		return emitter;
 	}
@@ -85,6 +89,16 @@ namespace ERI
 	{
 		pos.x = RangeRandom(-half_size_.x, half_size_.x);
 		pos.y = RangeRandom(-half_size_.y, half_size_.y);
+		
+		if (rotate() != 0.f)
+			pos.Rotate(rotate());
+		
+		pos += offset();
+	}
+	
+	float BoxEmitter::GetEmitAngle() const
+	{
+		return rotate_ + BaseEmitter::GetEmitAngle();
 	}
 	
 	CircleEmitter::CircleEmitter(float radius, float rate, float angle_min, float angle_max) :
@@ -100,6 +114,7 @@ namespace ERI
 	BaseEmitter* CircleEmitter::Clone()
 	{
 		BaseEmitter* emitter = new CircleEmitter(radius_, rate(), angle_min(), angle_max());
+		emitter->set_offset(offset());
 		emitter->set_align_angle(align_angle());
 		return emitter;
 	}
@@ -121,6 +136,8 @@ namespace ERI
 //		r.Rotate(RangeRandom(0.0f, 360.0f));
 //		pos.x = r.x;
 //		pos.y = r.y;
+		
+		pos += offset();
 	}
 	
 #pragma mark Affector
@@ -366,6 +383,58 @@ namespace ERI
 		if (emitter_) delete emitter_;
 	}
 	
+	void ParticleSystem::AddToScene(int layer_id /*= 0*/)
+	{
+		SceneActor::AddToScene(layer_id);
+		
+		for (int i = 0; i < child_systems_.size(); ++i)
+			child_systems_[i]->AddToScene(layer_id);
+	}
+	
+	void ParticleSystem::RemoveFromScene()
+	{
+		SceneActor::RemoveFromScene();
+		
+		for (int i = 0; i < child_systems_.size(); ++i)
+			child_systems_[i]->RemoveFromScene();
+	}
+	
+	void ParticleSystem::RemoveChild(SceneActor* actor)
+	{
+		SceneActor::RemoveChild(actor);
+		
+		for (int i = child_systems_.size() - 1; i >= 0; --i)
+		{
+			if (child_systems_[i] == actor)
+				child_systems_.erase(child_systems_.begin() + i);
+		}
+	}
+	
+	void ParticleSystem::RemoveAllChilds()
+	{
+		SceneActor::RemoveAllChilds();
+		
+		child_systems_.clear();
+	}
+	
+	void ParticleSystem::AddChildSystem(ParticleSystem* system)
+	{
+		ASSERT(system);
+		
+		AddChild(system);
+		
+		child_systems_.push_back(system);
+		
+		if (layer() != system->layer())
+		{
+			if (system->layer())
+				system->RemoveFromScene();
+			
+			if (layer())
+				system->AddToScene(layer()->id());
+		}
+	}
+	
 	void ParticleSystem::RefreshSetup()
 	{
 		ASSERT(setup_ref_);
@@ -382,6 +451,9 @@ namespace ERI
 		ASSERT(setup_ref_->life >= 0.f || particle_life_max_ > 0.f);
 
 		render_data_.apply_identity_model_matrix = !setup_ref_->is_coord_relative;
+		
+		for (int i = 0; i < child_systems_.size(); ++i)
+			child_systems_[i]->ResetParticles();
 	}
 
 	void ParticleSystem::SetEmitter(BaseEmitter* emitter)
@@ -450,11 +522,23 @@ namespace ERI
 	{
 		lived_time_ = 0.0f;
 		emitter_->Restart();
+		
+		for (int i = 0; i < child_systems_.size(); ++i)
+			child_systems_[i]->Play();
 	}
 	
 	bool ParticleSystem::IsPlaying()
 	{
-		return (life_ < 0.0f || lived_time_ >= 0.0f);
+		if (life_ < 0.0f || lived_time_ >= 0.0f)
+			return true;
+
+		for (int i = 0; i < child_systems_.size(); ++i)
+		{
+			if (child_systems_[i]->IsPlaying())
+				return true;
+		}
+		
+		return false;
 	}
 
 	void ParticleSystem::Update(float delta_time)
@@ -531,17 +615,21 @@ namespace ERI
 		}
 		
 		UpdateBuffer();
+		
+		for (int i = 0; i < child_systems_.size(); ++i)
+			child_systems_[i]->Update(delta_time);
 	}
 	
 	void ParticleSystem::ResetParticles()
 	{
 		size_t num = particles_.size();
 		for (int i = 0; i < num; ++i)
-		{
 			particles_[i]->Reset();
-		}
 
 		UpdateBuffer();
+		
+		for (int i = 0; i < child_systems_.size(); ++i)
+			child_systems_[i]->ResetParticles();
 	}
 		
 	void ParticleSystem::EmitParticle(int num)
@@ -838,260 +926,255 @@ namespace ERI
 	
 #pragma mark script loader function
 	
-	ParticleSystemCreator* LoadParticleSystemCreatorByScriptFile(const std::string& path)
+	ParticleSystemCreator* LoadParticleSystemCreator(xml_node<>* node, const std::string& absolute_dir)
 	{
-		XmlParseData parse_data;
-		ParseFile(path, parse_data);
+		ASSERT(node);
 		
 		ParticleSystemCreator* creator = new ParticleSystemCreator;
 		creator->setup = new ParticleSystemSetup;
 		
-		xml_node<>* node;
-		std::string s;
+		GetAttrBool(node, "coord_related", creator->setup->is_coord_relative);
+		GetAttrFloat(node, "life", creator->setup->life);
 		
-		node = parse_data.doc.first_node("particle_system");
-		if (node)
+		std::string str;
+		
+		node = node->first_node();
+		while (node)
 		{
-			GetAttrBool(node, "coord_related", creator->setup->is_coord_relative);
-			GetAttrFloat(node, "life", creator->setup->life);
-			
-			node = node->first_node();
-			while (node)
+			if (strcmp(node->name(), "particle") == 0)
 			{
-				if (strcmp(node->name(), "particle") == 0)
+				xml_node<>* node2 = node->first_node();
+				while (node2)
 				{
-					xml_node<>* node2 = node->first_node();
-					while (node2)
+					if (strcmp(node2->name(), "size") == 0)
 					{
-						if (strcmp(node2->name(), "size") == 0)
-						{
-							GetAttrFloat(node2, "x", creator->setup->particle_size.x);
-							GetAttrFloat(node2, "y", creator->setup->particle_size.y);
-						}
-						else if (strcmp(node2->name(), "life") == 0)
-						{
-							GetAttrFloat(node2, "min", creator->setup->particle_life_min);
-							GetAttrFloat(node2, "max", creator->setup->particle_life_max);
-						}
-						else if (strcmp(node2->name(), "speed") == 0)
-						{
-							GetAttrFloat(node2, "min", creator->setup->particle_speed_min);
-							GetAttrFloat(node2, "max", creator->setup->particle_speed_max);
-						}
-						else if (strcmp(node2->name(), "rotate") == 0)
-						{
-							GetAttrFloat(node2, "min", creator->setup->particle_rotate_min);
-							GetAttrFloat(node2, "max", creator->setup->particle_rotate_max);
-						}
-						else if (strcmp(node2->name(), "scale") == 0)
-						{
-							GetAttrFloat(node2, "min", creator->setup->particle_scale_min);
-							GetAttrFloat(node2, "max", creator->setup->particle_scale_max);
-						}
-						else if (strcmp(node2->name(), "rotate_affector") == 0)
-						{
-							float speed, acceleration;
-							speed = acceleration = 0.0f;
-							GetAttrFloat(node2, "speed", speed);
-							GetAttrFloat(node2, "acceleration", acceleration);
-							if (speed != 0.0f || acceleration != 0.0f)
-							{
-								RotateAffector* affector = new RotateAffector(speed, acceleration);
-								float delay;
-								if (GetAttrFloat(node2, "delay", delay))
-									affector->set_delay(delay);
-								float period;
-								if (GetAttrFloat(node2, "period", period))
-									affector->set_period(period);
-								
-								creator->affectors.push_back(affector);
-							}
-						}
-						else if (strcmp(node2->name(), "force_affector") == 0)
-						{
-							Vector2 acceleration;
-							GetAttrFloat(node2, "acceleration_x", acceleration.x);
-							GetAttrFloat(node2, "acceleration_y", acceleration.y);
-							if (acceleration.x != 0.0f || acceleration.y != 0.0f)
-							{
-								ForceAffector* affector = new ForceAffector(acceleration);
-								float delay;
-								if (GetAttrFloat(node2, "delay", delay))
-									affector->set_delay(delay);
-								float period;
-								if (GetAttrFloat(node2, "period", period))
-									affector->set_period(period);
-								
-								creator->affectors.push_back(affector);
-							}					
-						}
-						else if (strcmp(node2->name(), "acceleration_affector") == 0)
-						{
-							float acceleration = 0.0f;
-							GetAttrFloat(node2, "acceleration", acceleration);
-							if (acceleration != 0.0f)
-							{
-								AccelerationAffector* affector = new AccelerationAffector(acceleration);
-								float delay;
-								if (GetAttrFloat(node2, "delay", delay))
-									affector->set_delay(delay);
-								float period;
-								if (GetAttrFloat(node2, "period", period))
-									affector->set_period(period);
-								
-								creator->affectors.push_back(affector);
-							}
-						}
-						else if (strcmp(node2->name(), "scale_affector") == 0)
-						{
-							Vector2 speed;
-							GetAttrFloat(node2, "speed_x", speed.x);
-							GetAttrFloat(node2, "speed_y", speed.y);
-							if (speed.x != 0.0f || speed.y != 0.0f)
-							{
-								ScaleAffector* affector = new ScaleAffector(speed);
-								float delay;
-								if (GetAttrFloat(node2, "delay", delay))
-									affector->set_delay(delay);
-								float period;
-								if (GetAttrFloat(node2, "period", period))
-									affector->set_period(period);
-								
-								creator->affectors.push_back(affector);
-							}
-						}
-						else if (strcmp(node2->name(), "color_affector") == 0)
-						{
-							Color start, end;
-							GetAttrColor(node2, "start", start);
-							GetAttrColor(node2, "end", end);
-							if (start != end)
-							{
-								creator->affectors.push_back(new ColorAffector(start, end));
-							}
-						}
-						else if (strcmp(node2->name(), "color_interval_affector") == 0)
-						{
-							ColorIntervalAffector* affector = new ColorIntervalAffector;
-							
-							bool is_got_interval = false;
-							
-							xml_node<>* node3 = node2->first_node("interval");
-							while (node3)
-							{
-								float lived_time = 0.0f;
-								Color color;
-								GetAttrFloat(node3, "lived_time", lived_time);
-								GetAttrColor(node3, "color", color);
-								affector->AddInterval(lived_time, color);
-								
-								is_got_interval = true;
-								
-								node3 = node3->next_sibling("interval");
-							}
-							
-							if (is_got_interval)
-								creator->affectors.push_back(affector);
-							else
-								delete affector;
-						}
-						
-						node2 = node2->next_sibling();
+						GetAttrFloat(node2, "x", creator->setup->particle_size.x);
+						GetAttrFloat(node2, "y", creator->setup->particle_size.y);
 					}
-				}
-				else if (strcmp(node->name(), "box_emitter") == 0)
-				{
-					Vector2 size;
-					float rate = 1.0f;
-					float angle_min = 0.0f;
-					float angle_max = 0.0f;
-					bool align_angle = false;
-					GetAttrFloat(node, "size_x", size.x);
-					GetAttrFloat(node, "size_y", size.y);
-					GetAttrFloat(node, "rate", rate);
-					GetAttrFloat(node, "angle_min", angle_min);
-					GetAttrFloat(node, "angle_max", angle_max);
-					GetAttrBool(node, "align_angle", align_angle);
-					
-					if (creator->emitter) delete creator->emitter;
-					creator->emitter = new BoxEmitter(size * 0.5f, rate, angle_min, angle_max);
-					creator->emitter->set_align_angle(align_angle);
-				}
-				else if (strcmp(node->name(), "circle_emitter") == 0)
-				{
-					float radius = 1.0f;
-					float rate = 1.0f;
-					float angle_min = 0.0f;
-					float angle_max = 0.0f;
-					bool align_angle = false;
-					GetAttrFloat(node, "radius", radius);
-					GetAttrFloat(node, "rate", rate);
-					GetAttrFloat(node, "angle_min", angle_min);
-					GetAttrFloat(node, "angle_max", angle_max);
-					GetAttrBool(node, "align_angle", align_angle);
-					
-					if (creator->emitter) delete creator->emitter;
-					creator->emitter = new CircleEmitter(radius, rate, angle_min, angle_max);
-					creator->emitter->set_align_angle(align_angle);
-				}
-				else if (strcmp(node->name(), "material") == 0)
-				{
-					std::string s;
-					xml_attribute<>* attr;
-					
-					attr = GetAttrStr(node, "tex", s);
-					if (attr && s.length() > 0)
+					else if (strcmp(node2->name(), "life") == 0)
 					{
-						std::string absolute_path;
-						
-						if (s[0] == '/' || (s.length() >= 2 && s[1] == ':')) // already absolute path
+						GetAttrFloat(node2, "min", creator->setup->particle_life_min);
+						GetAttrFloat(node2, "max", creator->setup->particle_life_max);
+					}
+					else if (strcmp(node2->name(), "speed") == 0)
+					{
+						GetAttrFloat(node2, "min", creator->setup->particle_speed_min);
+						GetAttrFloat(node2, "max", creator->setup->particle_speed_max);
+					}
+					else if (strcmp(node2->name(), "rotate") == 0)
+					{
+						GetAttrFloat(node2, "min", creator->setup->particle_rotate_min);
+						GetAttrFloat(node2, "max", creator->setup->particle_rotate_max);
+					}
+					else if (strcmp(node2->name(), "scale") == 0)
+					{
+						GetAttrFloat(node2, "min", creator->setup->particle_scale_min);
+						GetAttrFloat(node2, "max", creator->setup->particle_scale_max);
+					}
+					else if (strcmp(node2->name(), "rotate_affector") == 0)
+					{
+						float speed, acceleration;
+						speed = acceleration = 0.0f;
+						GetAttrFloat(node2, "speed", speed);
+						GetAttrFloat(node2, "acceleration", acceleration);
+						if (speed != 0.0f || acceleration != 0.0f)
 						{
-							absolute_path = s;
+							RotateAffector* affector = new RotateAffector(speed, acceleration);
+							float delay;
+							if (GetAttrFloat(node2, "delay", delay))
+								affector->set_delay(delay);
+							float period;
+							if (GetAttrFloat(node2, "period", period))
+								affector->set_period(period);
+							
+							creator->affectors.push_back(affector);
 						}
+					}
+					else if (strcmp(node2->name(), "force_affector") == 0)
+					{
+						Vector2 acceleration;
+						GetAttrFloat(node2, "acceleration_x", acceleration.x);
+						GetAttrFloat(node2, "acceleration_y", acceleration.y);
+						if (acceleration.x != 0.0f || acceleration.y != 0.0f)
+						{
+							ForceAffector* affector = new ForceAffector(acceleration);
+							float delay;
+							if (GetAttrFloat(node2, "delay", delay))
+								affector->set_delay(delay);
+							float period;
+							if (GetAttrFloat(node2, "period", period))
+								affector->set_period(period);
+							
+							creator->affectors.push_back(affector);
+						}
+					}
+					else if (strcmp(node2->name(), "acceleration_affector") == 0)
+					{
+						float acceleration = 0.0f;
+						GetAttrFloat(node2, "acceleration", acceleration);
+						if (acceleration != 0.0f)
+						{
+							AccelerationAffector* affector = new AccelerationAffector(acceleration);
+							float delay;
+							if (GetAttrFloat(node2, "delay", delay))
+								affector->set_delay(delay);
+							float period;
+							if (GetAttrFloat(node2, "period", period))
+								affector->set_period(period);
+							
+							creator->affectors.push_back(affector);
+						}
+					}
+					else if (strcmp(node2->name(), "scale_affector") == 0)
+					{
+						Vector2 speed;
+						GetAttrFloat(node2, "speed_x", speed.x);
+						GetAttrFloat(node2, "speed_y", speed.y);
+						if (speed.x != 0.0f || speed.y != 0.0f)
+						{
+							ScaleAffector* affector = new ScaleAffector(speed);
+							float delay;
+							if (GetAttrFloat(node2, "delay", delay))
+								affector->set_delay(delay);
+							float period;
+							if (GetAttrFloat(node2, "period", period))
+								affector->set_period(period);
+							
+							creator->affectors.push_back(affector);
+						}
+					}
+					else if (strcmp(node2->name(), "color_affector") == 0)
+					{
+						Color start, end;
+						GetAttrColor(node2, "start", start);
+						GetAttrColor(node2, "end", end);
+						if (start != end)
+						{
+							creator->affectors.push_back(new ColorAffector(start, end));
+						}
+					}
+					else if (strcmp(node2->name(), "color_interval_affector") == 0)
+					{
+						ColorIntervalAffector* affector = new ColorIntervalAffector;
+						
+						bool is_got_interval = false;
+						
+						xml_node<>* node3 = node2->first_node("interval");
+						while (node3)
+						{
+							float lived_time = 0.0f;
+							Color color;
+							GetAttrFloat(node3, "lived_time", lived_time);
+							GetAttrColor(node3, "color", color);
+							affector->AddInterval(lived_time, color);
+							
+							is_got_interval = true;
+							
+							node3 = node3->next_sibling("interval");
+						}
+						
+						if (is_got_interval)
+							creator->affectors.push_back(affector);
 						else
-						{
-							size_t pos = path.rfind('/');
-							if (pos == std::string::npos)
-								pos = path.rfind('\\');
-							if (pos != std::string::npos)
-								absolute_path = path.substr(0, pos);
-							
-							absolute_path += "/" + s;
-						}
-
-						creator->material_setup.tex_path = absolute_path;
-						
-						if (GetAttrStr(node, "tex_filter", s))
-						{
-							if (s.compare("nearest") == 0)
-								creator->material_setup.tex_filter = FILTER_NEAREST;
-						}
-						
-						GetAttrFloat(node, "tex_u", creator->material_setup.u_start);
-						GetAttrFloat(node, "tex_v", creator->material_setup.v_start);
-						GetAttrFloat(node, "tex_w", creator->material_setup.u_width);
-						GetAttrFloat(node, "tex_h", creator->material_setup.v_height);
+							delete affector;
 					}
 					
-					GetAttrBool(node, "depth_write", creator->material_setup.depth_write);
+					node2 = node2->next_sibling();
+				}
+			}
+			else if (strcmp(node->name(), "box_emitter") == 0)
+			{
+				Vector2 size;
+				Vector2 offset;
+				float rotate = 0.f;
+				float rate = 1.0f;
+				float angle_min = 0.0f;
+				float angle_max = 0.0f;
+				bool align_angle = false;
+				GetAttrFloat(node, "size_x", size.x);
+				GetAttrFloat(node, "size_y", size.y);
+				GetAttrFloat(node, "rotate", rotate);
+				GetAttrVector2(node, "offset", offset);
+				GetAttrFloat(node, "rate", rate);
+				GetAttrFloat(node, "angle_min", angle_min);
+				GetAttrFloat(node, "angle_max", angle_max);
+				GetAttrBool(node, "align_angle", align_angle);
+				
+				if (creator->emitter) delete creator->emitter;
+				
+				BoxEmitter* box_emitter = new BoxEmitter(size * 0.5f, rate, angle_min, angle_max);
+				box_emitter->set_rotate(rotate);
+				
+				creator->emitter = box_emitter;
+				creator->emitter->set_offset(offset);
+				creator->emitter->set_align_angle(align_angle);
+			}
+			else if (strcmp(node->name(), "circle_emitter") == 0)
+			{
+				float radius = 1.0f;
+				Vector2 offset;
+				float rate = 1.0f;
+				float angle_min = 0.0f;
+				float angle_max = 0.0f;
+				bool align_angle = false;
+				GetAttrFloat(node, "radius", radius);
+				GetAttrVector2(node, "offset", offset);
+				GetAttrFloat(node, "rate", rate);
+				GetAttrFloat(node, "angle_min", angle_min);
+				GetAttrFloat(node, "angle_max", angle_max);
+				GetAttrBool(node, "align_angle", align_angle);
+				
+				if (creator->emitter) delete creator->emitter;
+				
+				creator->emitter = new CircleEmitter(radius, rate, angle_min, angle_max);
+				creator->emitter->set_offset(offset);
+				creator->emitter->set_align_angle(align_angle);
+			}
+			else if (strcmp(node->name(), "material") == 0)
+			{
+				xml_attribute<>* attr;
+				
+				attr = GetAttrStr(node, "tex", str);
+				if (attr && str.length() > 0)
+				{
+					std::string absolute_path;
 					
-					if (GetAttrStr(node, "blend", s))
+					if (str[0] == '/' || (str.length() >= 2 && str[1] == ':')) // already absolute path
 					{
-						if (s.compare("add") == 0)
-							creator->material_setup.blend_add = true;
+						absolute_path = str;
 					}
+					else
+					{
+						absolute_path = absolute_dir + str;
+					}
+					
+					creator->material_setup.tex_path = absolute_path;
+					
+					if (GetAttrStr(node, "tex_filter", str))
+					{
+						if (str.compare("nearest") == 0)
+							creator->material_setup.tex_filter = FILTER_NEAREST;
+					}
+					
+					GetAttrFloat(node, "tex_u", creator->material_setup.u_start);
+					GetAttrFloat(node, "tex_v", creator->material_setup.v_start);
+					GetAttrFloat(node, "tex_w", creator->material_setup.u_width);
+					GetAttrFloat(node, "tex_h", creator->material_setup.v_height);
 				}
 				
-				node = node->next_sibling();
+				GetAttrBool(node, "depth_write", creator->material_setup.depth_write);
+				
+				if (GetAttrStr(node, "blend", str))
+				{
+					if (str.compare("add") == 0)
+						creator->material_setup.blend_add = true;
+				}
 			}
 			
-			if (!creator->emitter)
-			{
-				delete creator;
-				creator = NULL;
-			}
+			node = node->next_sibling();
 		}
-		else
+		
+		if (!creator->emitter)
 		{
 			delete creator;
 			creator = NULL;
@@ -1099,13 +1182,11 @@ namespace ERI
 
 		return creator;
 	}
-
-	bool SaveParticleSystemToScriptByCreator(const ParticleSystemCreator* creator, const std::string& path)
+	
+	void SaveParticleSystem(const ParticleSystemCreator* creator, XmlCreateData& data)
 	{
-		ASSERT(creator);
-		
-		XmlCreateData data;
-		
+    ASSERT(creator);
+    
 		// system
 		
 		ParticleSystemSetup default_setup;
@@ -1182,6 +1263,9 @@ namespace ERI
 			
 			PutAttrFloat(data.doc, emitter_node, "size_x", box_emitter->half_size().x * 2);
 			PutAttrFloat(data.doc, emitter_node, "size_y", box_emitter->half_size().y * 2);
+			
+			if (box_emitter->rotate() != 0.f)
+				PutAttrFloat(data.doc, emitter_node, "rotate", box_emitter->rotate());
 		}
 		else if (creator->emitter->type() == EMITTER_CIRCLE)
 		{
@@ -1196,6 +1280,10 @@ namespace ERI
 		PutAttrFloat(data.doc, emitter_node, "rate", creator->emitter->rate());
 		PutAttrFloat(data.doc, emitter_node, "angle_min", creator->emitter->angle_min());
 		PutAttrFloat(data.doc, emitter_node, "angle_max", creator->emitter->angle_max());
+		
+		if (creator->emitter->offset().LengthSquared() > 0.f)
+			PutAttrVector2(data.doc, emitter_node, "offset", creator->emitter->offset());
+		
 		PutAttrBool(data.doc, emitter_node, "align_angle", creator->emitter->align_angle());
 		
 		node->append_node(emitter_node);
@@ -1350,7 +1438,72 @@ namespace ERI
 		//
 		
 		data.doc.append_node(node);
+	}
+	
+	ParticleSystemCreator* LoadParticleSystemCreatorByScriptFile(const std::string& path)
+	{
+		std::string absolute_dir;
+		size_t pos = path.rfind('/');
+		if (pos == std::string::npos)
+			pos = path.rfind('\\');
+		if (pos != std::string::npos)
+			absolute_dir = path.substr(0, pos) + "/";
 		
+		XmlParseData parse_data;
+		ParseFile(path, parse_data);
+
+		xml_node<>* node = parse_data.doc.first_node("particle_system");
+		if (node)
+			return LoadParticleSystemCreator(node, absolute_dir);
+
+		return NULL;
+	}
+
+	bool SaveParticleSystemToScriptByCreator(const ParticleSystemCreator* creator, const std::string& path)
+	{
+		ASSERT(creator);
+		
+		XmlCreateData data;
+		SaveParticleSystem(creator, data);
+		
+		return SaveFile(path, data);
+	}
+	
+	void LoadParticleSystemCreatorByScriptFile(const std::string& path, std::vector<ParticleSystemCreator*>& out_creators)
+	{
+		ASSERT(out_creators.empty());
+		
+		std::string absolute_dir;
+		size_t pos = path.rfind('/');
+		if (pos == std::string::npos)
+			pos = path.rfind('\\');
+		if (pos != std::string::npos)
+			absolute_dir = path.substr(0, pos) + "/";
+		
+		XmlParseData parse_data;
+		ParseFile(path, parse_data);
+		
+		ParticleSystemCreator* creator;
+		
+		xml_node<>* node = parse_data.doc.first_node("particle_system");
+		while (node)
+		{
+			creator = LoadParticleSystemCreator(node, absolute_dir);
+			if (creator)
+				out_creators.push_back(creator);
+			
+			node = node->next_sibling("particle_system");
+		}
+	}
+	
+	bool SaveParticleSystemToScriptByCreator(const std::vector<ParticleSystemCreator*>& creators, const std::string& path)
+	{
+		ASSERT(!creators.empty());
+
+		XmlCreateData data;
+		for (int i = 0; i < creators.size(); ++i)
+		  SaveParticleSystem(creators[i], data);
+
 		return SaveFile(path, data);
 	}
 	
