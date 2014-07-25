@@ -95,7 +95,7 @@ namespace ERI {
 		width_ = w;
 		height_ = h;
 		
-		ASSERT(bit_depth == 8);
+//		ASSERT(bit_depth == 8);
 		
 		png_set_interlace_handling(png_ptr);
 		
