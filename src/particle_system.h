@@ -382,6 +382,7 @@ namespace ERI
 		Vector2		uv_start_, uv_size_;
 		
 		float		lived_time_;
+		bool	emit_before_;
 		
 		std::vector<ParticleSystem*> child_systems_;
 	};

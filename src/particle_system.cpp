@@ -358,7 +358,8 @@ namespace ERI
 		indices_(NULL),
 		uv_start_(Vector2(0.0f, 0.0f)),
 		uv_size_(Vector2(1.0f, 1.0f)),
-		lived_time_(-1.0f)
+		lived_time_(-1.0f),
+		emit_before_(false)
 	{
 		RefreshSetup();
 	}
@@ -521,6 +522,7 @@ namespace ERI
 	void ParticleSystem::Play()
 	{
 		lived_time_ = 0.0f;
+		emit_before_ = false;
 		emitter_->Restart();
 		
 		for (int i = 0; i < child_systems_.size(); ++i)
@@ -608,10 +610,18 @@ namespace ERI
 		}
 		
 		int emit_num = 0;
-		if ((life_ < 0.0f || (lived_time_ > 0.0f && lived_time_ < life_))
-			&& emitter_->CheckIsTimeToEmit(delta_time, emit_num))
+		if (life_ < 0.0f || (lived_time_ > 0.0f && (!emit_before_ || lived_time_ < life_)))
 		{
-			EmitParticle(emit_num);
+			float emit_delta_time = delta_time;
+			
+			if (life_ >= 0.0f && lived_time_ > life_)
+				emit_delta_time = Max(emit_delta_time - (lived_time_ - life_), 0.0f);
+			
+			if (emitter_->CheckIsTimeToEmit(emit_delta_time, emit_num))
+			{
+				EmitParticle(emit_num);
+				emit_before_ = true;
+			}
 		}
 		
 		UpdateBuffer();
