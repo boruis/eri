@@ -25,11 +25,12 @@ namespace ERI {
 	
 	struct TextureUnit
 	{
-		TextureUnit() : texture(NULL) {}
+		TextureUnit() : texture(NULL), coord_idx(0) {}
 		
 		const Texture*	texture;
 		TextureParams	params;
 		TextureEnvs		envs;
+		int coord_idx;
 	};
 	
 	struct ColorFlags

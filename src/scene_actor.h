@@ -117,17 +117,27 @@ namespace ERI {
 		inline void set_accept_light(bool accept) { material_data_.accept_light = accept; }
 		inline void set_accept_fog(bool accept) { material_data_.accept_fog = accept; }
 		
-		const Texture* SetMaterial(const std::string& texture_path, TextureFilter filter_min = FILTER_NEAREST, TextureFilter filter_mag = FILTER_NEAREST);
-		void SetMaterial(const Texture* tex, TextureFilter filter_min = FILTER_NEAREST, TextureFilter filter_mag = FILTER_NEAREST);
-		const Texture* AddMaterial(const std::string& texture_path, TextureFilter filter_min = FILTER_NEAREST, TextureFilter filter_mag = FILTER_NEAREST);
+		const Texture* SetMaterial(const std::string& texture_path,
+                               TextureFilter filter_min = FILTER_NEAREST,
+                               TextureFilter filter_mag = FILTER_NEAREST,
+                               int idx = 0);
+		void SetMaterial(const Texture* tex,
+                     TextureFilter filter_min = FILTER_NEAREST,
+                     TextureFilter filter_mag = FILTER_NEAREST,
+                     int idx = 0);
+		const Texture* AddMaterial(const std::string& texture_path,
+                               TextureFilter filter_min = FILTER_NEAREST,
+                               TextureFilter filter_mag = FILTER_NEAREST);
 		void AddMaterial();
 		
 		const Texture* GetTexture(int idx);
 		
-		void SetTextureFilter(TextureFilter filter_min, TextureFilter filter_mag);
-		void SetTextureWrap(TextureWrap wrap_s, TextureWrap wrap_t);
-		void SetTextureEnvs(int idx, const TextureEnvs& envs);
-	
+		void SetTextureFilter(TextureFilter filter_min, TextureFilter filter_mag, int idx = 0);
+		void SetTextureWrap(TextureWrap wrap_s, TextureWrap wrap_t, int idx = 0);
+		void SetTextureEnvs(const TextureEnvs& envs, int idx = 0);
+		
+		void SetTextureCoord(int idx, int coord_idx);
+		
 		void SetOpacityType(OpacityType type);
 		inline OpacityType opacity_type() { return material_data_.opacity_type; }
 		
@@ -328,12 +338,12 @@ namespace ERI {
 		
 		void SetSizeOffset(float width, float height, float offset_width = 0.0f, float offset_height = 0.0f);
 		
-		void SetTexScale(float u_scale, float v_scale, bool is_tex2 = false);
-		void SetTexScroll(float u_scroll, float v_scroll, bool is_tex2 = false);
-		void SetTexScaleScroll(const Vector2& scale, const Vector2& scroll, bool is_tex2 = false);
+		void SetTexScale(float u_scale, float v_scale, int coord_idx = 0);
+		void SetTexScroll(float u_scroll, float v_scroll, int coord_idx = 0);
+		void SetTexScaleScroll(const Vector2& scale, const Vector2& scroll, int coord_idx = 0);
 		
-		void SetTexArea(int start_x, int start_y, int width, int height, bool is_tex2 = false);
-		void SetTexAreaUV(float start_u, float start_v, float width, float height, bool is_tex2 = false);
+		void SetTexArea(int start_x, int start_y, int width, int height, int coord_idx = 0);
+		void SetTexAreaUV(float start_u, float start_v, float width, float height, int coord_idx = 0);
 		
 		void SetUseLine(bool use_line);
 
@@ -346,8 +356,8 @@ namespace ERI {
 		
 		inline const Vector2& size() const { return size_; }
 		inline const Vector2& offset() const { return offset_; }
-		inline const Vector2& tex_scale() const { return tex_scale_; }
-		inline const Vector2& tex_scroll() const { return tex_scroll_; }
+		inline const Vector2& tex_scale(int coord_idx = 0) const { ASSERT(coord_idx >= 0 && coord_idx < 2); return tex_scale_[coord_idx]; }
+		inline const Vector2& tex_scroll(int coord_idx = 0) const { ASSERT(coord_idx >= 0 && coord_idx < 2); return tex_scroll_[coord_idx]; }
 		
 		inline void set_is_dynamic_draw(bool is_dynamic_draw) { is_dynamic_draw_ = is_dynamic_draw; }
 
@@ -362,12 +372,8 @@ namespace ERI {
 		Vector2		size_;
 		Vector2		offset_;
 		
-		Vector2		tex_scale_;
-		Vector2		tex_scroll_;
-		Vector2		tex_scale2_;
-		Vector2		tex_scroll2_;
-		
-		bool		is_use_tex2_;
+		Vector2		tex_scale_[2];
+		Vector2		tex_scroll_[2];
 		
 		bool		is_dynamic_draw_;
 		bool		is_use_line_;

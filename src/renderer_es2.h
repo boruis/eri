@@ -158,7 +158,7 @@ namespace ERI {
 		ColorFlags color_write_enable_;
 		
 		bool texture_enable_;
-		bool texture_unit_enable_[MAX_TEXTURE_UNIT];
+		int texture_unit_coord_idx_[MAX_TEXTURE_UNIT];
 		
 		GLenum now_active_texture_unit_;
 		unsigned int now_texture_;

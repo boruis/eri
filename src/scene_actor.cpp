@@ -483,7 +483,10 @@ namespace ERI {
 		return render_data_.world_view_pos.z;
 	}
 	
-	const Texture* SceneActor::SetMaterial(const std::string& texture_path, TextureFilter filter_min /*= FILTER_NEAREST*/, TextureFilter filter_mag /*= FILTER_NEAREST*/)
+	const Texture* SceneActor::SetMaterial(const std::string& texture_path,
+                                         TextureFilter filter_min /*= FILTER_NEAREST*/,
+                                         TextureFilter filter_mag /*= FILTER_NEAREST*/,
+                                         int idx /*= 0*/)
 	{
 		const Texture* tex = NULL;
 
@@ -492,39 +495,37 @@ namespace ERI {
 			tex = Root::Ins().texture_mgr()->GetTexture(texture_path);
 		}
 
-		SetTexture(0, tex);
+		SetMaterial(tex, filter_min, filter_mag, idx);
 
-		if (tex)
-		{
-			if (material_data_.used_unit < 1)
-				material_data_.used_unit = 1;
+		if (tex && idx < material_data_.used_unit)
+			return tex;
 
-			material_data_.texture_units[0].params.filter_min = filter_min;
-			material_data_.texture_units[0].params.filter_mag = filter_mag;
-		}
-		else if (material_data_.used_unit == 1)
-		{
-			material_data_.used_unit = 0;
-		}
-		
-		return tex;
+		return NULL;
 	}
 	
-	void SceneActor::SetMaterial(const Texture* tex, TextureFilter filter_min /*= FILTER_NEAREST*/, TextureFilter filter_mag /*= FILTER_NEAREST*/)
+	void SceneActor::SetMaterial(const Texture* tex,
+                               TextureFilter filter_min /*= FILTER_NEAREST*/,
+                               TextureFilter filter_mag /*= FILTER_NEAREST*/,
+                               int idx /*= 0*/)
 	{
-		SetTexture(0, tex);
+		ASSERT(idx >= 0);
+
+		if (tex && idx == material_data_.used_unit)
+			AddMaterial();
+
+		if (idx >= material_data_.used_unit)
+			return;
+
+		SetTexture(idx, tex);
 
 		if (tex)
 		{
-			if (material_data_.used_unit < 1)
-				material_data_.used_unit = 1;
-
-			material_data_.texture_units[0].params.filter_min = filter_min;
-			material_data_.texture_units[0].params.filter_mag = filter_mag;
+			material_data_.texture_units[idx].params.filter_min = filter_min;
+			material_data_.texture_units[idx].params.filter_mag = filter_mag;
 		}
-		else if (material_data_.used_unit == 1)
+		else if (idx == (material_data_.used_unit - 1))
 		{
-			material_data_.used_unit = 0;
+			--material_data_.used_unit;
 		}
 	}
 	
@@ -532,26 +533,7 @@ namespace ERI {
 	{
 		ASSERT(material_data_.used_unit < MAX_TEXTURE_UNIT);
 		
-		const Texture* tex = NULL;
-		
-		if (texture_path.length() > 0)
-		{
-			tex = Root::Ins().texture_mgr()->GetTexture(texture_path);
-		}
-		
-		if (tex)
-		{
-			int idx = material_data_.used_unit;
-			
-			SetTexture(idx, tex);
-			
-			++material_data_.used_unit;
-			
-			material_data_.texture_units[idx].params.filter_min = filter_min;
-			material_data_.texture_units[idx].params.filter_mag = filter_mag;
-		}
-		
-		return tex;
+		return SetMaterial(texture_path, filter_min, filter_mag, material_data_.used_unit);
 	}
 	
 	void SceneActor::AddMaterial()
@@ -569,29 +551,37 @@ namespace ERI {
 		return material_data_.texture_units[idx].texture;
 	}
 	
-	void SceneActor::SetTextureFilter(TextureFilter filter_min, TextureFilter filter_mag)
+	void SceneActor::SetTextureFilter(TextureFilter filter_min, TextureFilter filter_mag, int idx /*= 0*/)
 	{
-		ASSERT(material_data_.used_unit > 0);
+		ASSERT(idx >= 0 && idx < material_data_.used_unit);
 		
-		material_data_.texture_units[0].params.filter_min = filter_min;
-		material_data_.texture_units[0].params.filter_mag = filter_mag;
+		material_data_.texture_units[idx].params.filter_min = filter_min;
+		material_data_.texture_units[idx].params.filter_mag = filter_mag;
 	}
 	
-	void SceneActor::SetTextureWrap(TextureWrap wrap_s, TextureWrap wrap_t)
+	void SceneActor::SetTextureWrap(TextureWrap wrap_s, TextureWrap wrap_t, int idx /*= 0*/)
 	{
-		ASSERT(material_data_.used_unit > 0);
+		ASSERT(idx >= 0 && idx < material_data_.used_unit);
 		
-		material_data_.texture_units[0].params.wrap_s = wrap_s;
-		material_data_.texture_units[0].params.wrap_t = wrap_t;
+		material_data_.texture_units[idx].params.wrap_s = wrap_s;
+		material_data_.texture_units[idx].params.wrap_t = wrap_t;
 	}
 	
-	void SceneActor::SetTextureEnvs(int idx, const TextureEnvs& envs)
+	void SceneActor::SetTextureEnvs(const TextureEnvs& envs, int idx /*= 0*/)
 	{
 		ASSERT(idx >= 0 && idx < material_data_.used_unit);
 		
 		material_data_.texture_units[idx].envs = envs;
 	}
 	
+	void SceneActor::SetTextureCoord(int idx, int coord_idx)
+	{
+		ASSERT(idx >= 0 && idx < material_data_.used_unit);
+		ASSERT(coord_idx >= 0 && coord_idx < 2);
+
+		material_data_.texture_units[idx].coord_idx = coord_idx;
+	}
+
 	void SceneActor::SetOpacityType(OpacityType type)
 	{
 		if (material_data_.opacity_type != type)
@@ -1199,12 +1189,11 @@ namespace ERI {
 #pragma mark SpriteActor
 
 	SpriteActor::SpriteActor(float width, float height, float offset_width, float offset_height) :
-		tex_scale_(Vector2(1.0f, 1.0f)),
-		tex_scale2_(Vector2(1.0f, 1.0f)),
-		is_use_tex2_(false),
 		is_dynamic_draw_(false),
 		is_use_line_(false)
 	{
+		tex_scale_[0] = tex_scale_[1] = Vector2::UNIT;
+
 		SetSizeOffset(width, height, offset_width, offset_height);
 	}
 	
@@ -1225,16 +1214,41 @@ namespace ERI {
 		
 		glBindBuffer(GL_ARRAY_BUFFER, render_data_.vertex_buffer);
 		
+		bool need_uv2 = false;
+		for (int i = 0; i < material_data_.used_unit; ++i)
+		{
+			if (material_data_.texture_units[i].coord_idx > 0)
+			{
+				need_uv2 = true;
+				break;
+			}
+		}
+		
 		if (is_use_line_)
 		{
-			if (is_use_tex2_)
+			// 3 - 2
+			// |   |
+			// 0 - 1
+
+			if (need_uv2)
 			{
 				vertex_2_pos_tex2 v[] =
 				{
-					{ offset_.x - 0.5f * size_.x, offset_.y - 0.5f * size_.y, tex_scroll_.x + 0.0f * tex_scale_.x, tex_scroll_.y + 1.0f * tex_scale_.y, tex_scroll2_.x + 0.0f * tex_scale2_.x, tex_scroll2_.y + 1.0f * tex_scale2_.y },
-					{ offset_.x + 0.5f * size_.x, offset_.y - 0.5f * size_.y, tex_scroll_.x + 1.0f * tex_scale_.x, tex_scroll_.y + 1.0f * tex_scale_.y, tex_scroll2_.x + 1.0f * tex_scale2_.x, tex_scroll2_.y + 1.0f * tex_scale2_.y },
-					{ offset_.x + 0.5f * size_.x, offset_.y + 0.5f * size_.y, tex_scroll_.x + 1.0f * tex_scale_.x, tex_scroll_.y + 0.0f * tex_scale_.y, tex_scroll2_.x + 1.0f * tex_scale2_.x, tex_scroll2_.y + 0.0f * tex_scale2_.y },
-					{ offset_.x - 0.5f * size_.x, offset_.y + 0.5f * size_.y, tex_scroll_.x + 0.0f * tex_scale_.x, tex_scroll_.y + 0.0f * tex_scale_.y, tex_scroll2_.x + 0.0f * tex_scale2_.x, tex_scroll2_.y + 0.0f * tex_scale2_.y }
+					{ offset_.x - 0.5f * size_.x, offset_.y - 0.5f * size_.y,
+						tex_scroll_[0].x, tex_scroll_[0].y + tex_scale_[0].y,
+						tex_scroll_[1].x, tex_scroll_[1].y + tex_scale_[1].y },
+
+					{ offset_.x + 0.5f * size_.x, offset_.y - 0.5f * size_.y,
+						tex_scroll_[0].x + tex_scale_[0].x, tex_scroll_[0].y + tex_scale_[0].y,
+						tex_scroll_[1].x + tex_scale_[1].x, tex_scroll_[1].y + tex_scale_[1].y },
+
+					{ offset_.x + 0.5f * size_.x, offset_.y + 0.5f * size_.y,
+						tex_scroll_[0].x + tex_scale_[0].x, tex_scroll_[0].y,
+						tex_scroll_[1].x + tex_scale_[1].x, tex_scroll_[1].y },
+
+					{ offset_.x - 0.5f * size_.x, offset_.y + 0.5f * size_.y,
+						tex_scroll_[0].x, tex_scroll_[0].y,
+						tex_scroll_[1].x, tex_scroll_[1].y }
 				};
 				
 				glBufferData(GL_ARRAY_BUFFER, sizeof(v), v, is_dynamic_draw_ ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
@@ -1243,10 +1257,17 @@ namespace ERI {
 			{
 				vertex_2_pos_tex v[] =
 				{
-					{ offset_.x - 0.5f * size_.x, offset_.y - 0.5f * size_.y, tex_scroll_.x + 0.0f * tex_scale_.x, tex_scroll_.y + 1.0f * tex_scale_.y },
-					{ offset_.x + 0.5f * size_.x, offset_.y - 0.5f * size_.y, tex_scroll_.x + 1.0f * tex_scale_.x, tex_scroll_.y + 1.0f * tex_scale_.y },
-					{ offset_.x + 0.5f * size_.x, offset_.y + 0.5f * size_.y, tex_scroll_.x + 1.0f * tex_scale_.x, tex_scroll_.y + 0.0f * tex_scale_.y },
-					{ offset_.x - 0.5f * size_.x, offset_.y + 0.5f * size_.y, tex_scroll_.x + 0.0f * tex_scale_.x, tex_scroll_.y + 0.0f * tex_scale_.y }
+					{ offset_.x - 0.5f * size_.x, offset_.y - 0.5f * size_.y,
+						tex_scroll_[0].x, tex_scroll_[0].y + tex_scale_[0].y },
+
+					{ offset_.x + 0.5f * size_.x, offset_.y - 0.5f * size_.y,
+						tex_scroll_[0].x + tex_scale_[0].x, tex_scroll_[0].y + tex_scale_[0].y },
+
+					{ offset_.x + 0.5f * size_.x, offset_.y + 0.5f * size_.y,
+						tex_scroll_[0].x + tex_scale_[0].x, tex_scroll_[0].y },
+
+					{ offset_.x - 0.5f * size_.x, offset_.y + 0.5f * size_.y,
+						tex_scroll_[0].x, tex_scroll_[0].y }
 				};
 				
 				glBufferData(GL_ARRAY_BUFFER, sizeof(v), v,  is_dynamic_draw_ ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
@@ -1256,13 +1277,28 @@ namespace ERI {
 		}
 		else
 		{
-			if (is_use_tex2_)
+			// 2 - 3
+			// | \ |
+			// 0 - 1
+
+			if (need_uv2)
 			{
 				vertex_2_pos_tex2 v[] = {
-					{ offset_.x - 0.5f * size_.x, offset_.y - 0.5f * size_.y, tex_scroll_.x + 0.0f * tex_scale_.x, tex_scroll_.y + 1.0f * tex_scale_.y, tex_scroll2_.x + 0.0f * tex_scale2_.x, tex_scroll2_.y + 1.0f * tex_scale2_.y },
-					{ offset_.x + 0.5f * size_.x, offset_.y - 0.5f * size_.y, tex_scroll_.x + 1.0f * tex_scale_.x, tex_scroll_.y + 1.0f * tex_scale_.y, tex_scroll2_.x + 1.0f * tex_scale2_.x, tex_scroll2_.y + 1.0f * tex_scale2_.y },
-					{ offset_.x - 0.5f * size_.x, offset_.y + 0.5f * size_.y, tex_scroll_.x + 0.0f * tex_scale_.x, tex_scroll_.y + 0.0f * tex_scale_.y, tex_scroll2_.x + 0.0f * tex_scale2_.x, tex_scroll2_.y + 0.0f * tex_scale2_.y },
-					{ offset_.x + 0.5f * size_.x, offset_.y + 0.5f * size_.y, tex_scroll_.x + 1.0f * tex_scale_.x, tex_scroll_.y + 0.0f * tex_scale_.y, tex_scroll2_.x + 1.0f * tex_scale2_.x, tex_scroll2_.y + 0.0f * tex_scale2_.y }
+					{ offset_.x - 0.5f * size_.x, offset_.y - 0.5f * size_.y,
+						tex_scroll_[0].x, tex_scroll_[0].y + tex_scale_[0].y,
+						tex_scroll_[1].x, tex_scroll_[1].y + tex_scale_[1].y },
+
+					{ offset_.x + 0.5f * size_.x, offset_.y - 0.5f * size_.y,
+						tex_scroll_[0].x + tex_scale_[0].x, tex_scroll_[0].y + tex_scale_[0].y,
+						tex_scroll_[1].x + tex_scale_[1].x, tex_scroll_[1].y + tex_scale_[1].y },
+
+					{ offset_.x - 0.5f * size_.x, offset_.y + 0.5f * size_.y,
+						tex_scroll_[0].x, tex_scroll_[0].y,
+						tex_scroll_[1].x, tex_scroll_[1].y },
+
+					{ offset_.x + 0.5f * size_.x, offset_.y + 0.5f * size_.y,
+						tex_scroll_[0].x + tex_scale_[0].x, tex_scroll_[0].y,
+						tex_scroll_[1].x + tex_scale_[1].x, tex_scroll_[1].y }
 				};
 				
 				glBufferData(GL_ARRAY_BUFFER, sizeof(v), v, is_dynamic_draw_ ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
@@ -1270,10 +1306,17 @@ namespace ERI {
 			else
 			{
 				vertex_2_pos_tex v[] = {
-					{ offset_.x - 0.5f * size_.x, offset_.y - 0.5f * size_.y, tex_scroll_.x + 0.0f * tex_scale_.x, tex_scroll_.y + 1.0f * tex_scale_.y },
-					{ offset_.x + 0.5f * size_.x, offset_.y - 0.5f * size_.y, tex_scroll_.x + 1.0f * tex_scale_.x, tex_scroll_.y + 1.0f * tex_scale_.y },
-					{ offset_.x - 0.5f * size_.x, offset_.y + 0.5f * size_.y, tex_scroll_.x + 0.0f * tex_scale_.x, tex_scroll_.y + 0.0f * tex_scale_.y },
-					{ offset_.x + 0.5f * size_.x, offset_.y + 0.5f * size_.y, tex_scroll_.x + 1.0f * tex_scale_.x, tex_scroll_.y + 0.0f * tex_scale_.y }
+					{ offset_.x - 0.5f * size_.x, offset_.y - 0.5f * size_.y,
+						tex_scroll_[0].x, tex_scroll_[0].y + tex_scale_[0].y },
+
+					{ offset_.x + 0.5f * size_.x, offset_.y - 0.5f * size_.y,
+						tex_scroll_[0].x + tex_scale_[0].x, tex_scroll_[0].y + tex_scale_[0].y },
+
+					{ offset_.x - 0.5f * size_.x, offset_.y + 0.5f * size_.y,
+						tex_scroll_[0].x, tex_scroll_[0].y },
+
+					{ offset_.x + 0.5f * size_.x, offset_.y + 0.5f * size_.y,
+						tex_scroll_[0].x + tex_scale_[0].x, tex_scroll_[0].y }
 				};
 				
 				glBufferData(GL_ARRAY_BUFFER, sizeof(v), v, is_dynamic_draw_ ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
@@ -1284,7 +1327,7 @@ namespace ERI {
 		
 		render_data_.vertex_count = 4;
 		
-		if (is_use_tex2_)
+		if (need_uv2)
 			render_data_.vertex_format = POS_TEX2_2;
 		else
 			render_data_.vertex_format = POS_TEX_2;
@@ -1300,104 +1343,60 @@ namespace ERI {
 		UpdateVertexBuffer();
 	}
 	
-	void SpriteActor::SetTexScale(float u_scale, float v_scale, bool is_tex2 /*= false*/)
+	void SpriteActor::SetTexScale(float u_scale, float v_scale, int coord_idx /*= 0*/)
 	{
-		if (is_tex2)
-		{
-			tex_scale2_.x = u_scale;
-			tex_scale2_.y = v_scale;
-			is_use_tex2_ = true;
-		}
-		else
-		{
-			tex_scale_.x = u_scale;
-			tex_scale_.y = v_scale;
-		}
+		ASSERT(coord_idx >= 0 && coord_idx < 2);
+
+		tex_scale_[coord_idx].x = u_scale;
+		tex_scale_[coord_idx].y = v_scale;
+
+		UpdateVertexBuffer();
+	}
+	
+	void SpriteActor::SetTexScroll(float u_scroll, float v_scroll, int coord_idx /*= 0*/)
+	{
+		ASSERT(coord_idx >= 0 && coord_idx < 2);
+
+		tex_scroll_[coord_idx].x = u_scroll;
+		tex_scroll_[coord_idx].y = v_scroll;
 		
 		UpdateVertexBuffer();
 	}
 	
-	void SpriteActor::SetTexScroll(float u_scroll, float v_scroll, bool is_tex2 /*= false*/)
+	void SpriteActor::SetTexScaleScroll(const Vector2& scale, const Vector2& scroll, int coord_idx /*= 0*/)
 	{
-		if (is_tex2)
-		{
-			tex_scroll2_.x = u_scroll;
-			tex_scroll2_.y = v_scroll;
-			is_use_tex2_ = true;
-		}
-		else
-		{
-			tex_scroll_.x = u_scroll;
-			tex_scroll_.y = v_scroll;
-		}
-		
-		UpdateVertexBuffer();
-	}
-	
-	void SpriteActor::SetTexScaleScroll(const Vector2& scale, const Vector2& scroll, bool is_tex2 /*= false*/)
-	{
-		if (is_tex2)
-		{
-			tex_scale2_ = scale;
-			tex_scroll2_ = scroll;
-			is_use_tex2_ = true;
-		}
-		else
-		{
-			tex_scale_ = scale;
-			tex_scroll_ = scroll;
-		}
+		ASSERT(coord_idx >= 0 && coord_idx < 2);
+
+		tex_scale_[coord_idx] = scale;
+		tex_scroll_[coord_idx] = scroll;
 		
 		UpdateVertexBuffer();
 	}
 
-	void SpriteActor::SetTexArea(int start_x, int start_y, int width, int height, bool is_tex2 /*= false*/)
+	void SpriteActor::SetTexArea(int start_x, int start_y, int width, int height, int coord_idx /*= 0*/)
 	{
-		const Texture* tex = is_tex2 ? material_data_.texture_units[1].texture : material_data_.texture_units[0].texture;
-		
+		ASSERT(coord_idx >= 0 && coord_idx < 2);
+
+		const Texture* tex = material_data_.texture_units[coord_idx].texture;
 		ASSERT(tex);
 		
-		float u_scale = static_cast<float>(width) / tex->width;
-		float v_scale = static_cast<float>(height) / tex->height;
-		float u_scroll = static_cast<float>(start_x) / tex->width;
-		float v_scroll = static_cast<float>(start_y) / tex->height;
-		
-		if (is_tex2)
-		{
-			tex_scale2_.x = u_scale;
-			tex_scale2_.y = v_scale;
-			tex_scroll2_.x = u_scroll;
-			tex_scroll2_.y = v_scroll;
-			is_use_tex2_ = true;
-		}
-		else
-		{
-			tex_scale_.x = u_scale;
-			tex_scale_.y = v_scale;
-			tex_scroll_.x = u_scroll;
-			tex_scroll_.y = v_scroll;
-		}
+		Vector2 scale(static_cast<float>(width) / tex->width, static_cast<float>(height) / tex->height);
+		Vector2 scroll(static_cast<float>(start_x) / tex->width, static_cast<float>(start_y) / tex->height);
+
+		tex_scale_[coord_idx] = scale;
+		tex_scroll_[coord_idx] = scroll;
 		
 		UpdateVertexBuffer();
 	}
 	
-	void SpriteActor::SetTexAreaUV(float start_u, float start_v, float width, float height, bool is_tex2 /*= false*/)
+	void SpriteActor::SetTexAreaUV(float start_u, float start_v, float width, float height, int coord_idx /*= 0*/)
 	{
-		if (is_tex2)
-		{
-			tex_scale2_.x = width;
-			tex_scale2_.y = height;
-			tex_scroll2_.x = start_u;
-			tex_scroll2_.y = start_v;
-			is_use_tex2_ = true;
-		}
-		else
-		{
-			tex_scale_.x = width;
-			tex_scale_.y = height;
-			tex_scroll_.x = start_u;
-			tex_scroll_.y = start_v;
-		}
+		ASSERT(coord_idx >= 0 && coord_idx < 2);
+
+		tex_scale_[coord_idx].x = width;
+		tex_scale_[coord_idx].y = height;
+		tex_scroll_[coord_idx].x = start_u;
+		tex_scroll_[coord_idx].y = start_v;
 		
 		UpdateVertexBuffer();
 	}

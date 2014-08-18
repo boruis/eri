@@ -120,10 +120,10 @@ namespace ERI {
 		fog_enable_(false)
 	{
 		memset(frame_buffers_, 0, sizeof(frame_buffers_));
-		memset(texture_unit_enable_, 0, sizeof(texture_unit_enable_));
 		
 		for (int i = 0; i < MAX_TEXTURE_UNIT; ++i)
 		{
+			texture_unit_coord_idx_[i] = -1;
 			texture_unit_env_mode_[i] = MODE_MODULATE;
 		}
 	}
@@ -514,11 +514,11 @@ namespace ERI {
 			
 			for (int i = 0; i < MAX_TEXTURE_UNIT; ++i)
 			{
-				if (texture_unit_enable_[i])
+				if (texture_unit_coord_idx_[i] >= 0)
 				{
 					ClientActiveTextureUnit(GL_TEXTURE0 + i);
 					
-					glTexCoordPointer(2, GL_FLOAT, vertex_stride, vertex_tex_coord_offset[i]);
+					glTexCoordPointer(2, GL_FLOAT, vertex_stride, vertex_tex_coord_offset[texture_unit_coord_idx_[i]]);
 				}
 			}
 		}
@@ -835,7 +835,7 @@ namespace ERI {
 			glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_ALPHA, kEnvOperands[unit.envs.operand2_alpha]);
 		}
 
-		if (!texture_unit_enable_[idx])
+		if (texture_unit_coord_idx_[idx] < 0)
 		{
 			glEnable(GL_TEXTURE_2D);
 			
@@ -843,13 +843,13 @@ namespace ERI {
 
 			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		}
-		
-		texture_unit_enable_[idx] = true;
+    
+		texture_unit_coord_idx_[idx] = unit.coord_idx;
 	}
 	
 	void RendererES1::DisableTextureUnit(int idx)
 	{
-		if (texture_unit_enable_[idx])
+		if (texture_unit_coord_idx_[idx] >= 0)
 		{
 			GLenum tex_enum = GL_TEXTURE0 + idx;
 			
@@ -862,7 +862,7 @@ namespace ERI {
 			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		}
 		
-		texture_unit_enable_[idx] = false;
+		texture_unit_coord_idx_[idx] = -1;
 	}
 	
 	void RendererES1::ObtainLight(int& idx)

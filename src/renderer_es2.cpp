@@ -71,7 +71,9 @@ namespace ERI {
 		current_program_(NULL)
 	{
 		memset(frame_buffers_, 0, sizeof(frame_buffers_));
-		memset(texture_unit_enable_, 0, sizeof(texture_unit_enable_));
+		
+		for (int i = 0; i < MAX_TEXTURE_UNIT; ++i)
+			texture_unit_coord_idx_[i] = -1;
 	}
 	
 	RendererES2::~RendererES2()
@@ -453,10 +455,10 @@ namespace ERI {
 		{
 			// TODO: more than 2 texture unit usage
 
-			GLint tex_enable[2] = { texture_unit_enable_[0], texture_unit_enable_[1] };
+			GLint tex_enable[2] = { texture_unit_coord_idx_[0] >= 0, texture_unit_coord_idx_[1] >= 0 };
 			glUniform1iv(current_program_->uniforms()[UNIFORM_TEX_ENABLE], 2, tex_enable);
 			
-			if (texture_unit_enable_[0] || texture_unit_enable_[1])
+			if (tex_enable[0] || tex_enable[1])
 			{
 				if (data->is_tex_transform)
 				{
@@ -469,7 +471,7 @@ namespace ERI {
 					
 					for (int i = 0; i < 2; ++i)
 					{
-						if (texture_unit_enable_[i])
+						if (tex_enable[i])
 							glUniformMatrix4fv(current_program_->uniforms()[UNIFORM_TEX_MATRIX0 + i], 1, GL_FALSE, tmp_matrix_[2].m);
 					}
 				}
@@ -482,9 +484,9 @@ namespace ERI {
 						
 			for (int i = 0; i < 2; ++i)
 			{
-				if (texture_unit_enable_[i])
+				if (tex_enable[i])
 				{
-					glVertexAttribPointer(ATTRIB_TEXCOORD0 + i, 2, GL_FLOAT, GL_FALSE, vertex_stride, vertex_tex_coord_offset[i]);
+					glVertexAttribPointer(ATTRIB_TEXCOORD0 + i, 2, GL_FLOAT, GL_FALSE, vertex_stride, vertex_tex_coord_offset[texture_unit_coord_idx_[i]]);
 					glEnableVertexAttribArray(ATTRIB_TEXCOORD0 + i);
 				}
 				else
@@ -725,12 +727,12 @@ namespace ERI {
 			}
 		}
 		
-		texture_unit_enable_[idx] = true;
+		texture_unit_coord_idx_[idx] = unit.coord_idx;
 	}
 	
 	void RendererES2::DisableTextureUnit(int idx)
 	{
-		texture_unit_enable_[idx] = false;
+		texture_unit_coord_idx_[idx] = -1;
 	}
 	
 	unsigned int RendererES2::GenerateTexture(const void* buffer, int width, int height, PixelFormat format, int buffer_size /*= 0*/)
