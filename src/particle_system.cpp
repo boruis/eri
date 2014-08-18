@@ -23,6 +23,7 @@ namespace ERI
 		: type_(type),
 		angle_min_(angle_min),
 		angle_max_(angle_max),
+		angle_base_from_center_(false),
 		align_angle_(false),
 		emit_remain_time_(0.0f)
 	{
@@ -60,11 +61,6 @@ namespace ERI
 		return false;
 	}
 
-	float BaseEmitter::GetEmitAngle() const
-	{
-		return RangeRandom(angle_min_, angle_max_);
-	}
-
 	BoxEmitter::BoxEmitter(const Vector2& half_size, float rate, float angle_min, float angle_max) :
 		half_size_(half_size),
 		rotate_(0.f),
@@ -81,24 +77,23 @@ namespace ERI
 		BoxEmitter* emitter = new BoxEmitter(half_size_, rate(), angle_min(), angle_max());
 		emitter->set_rotate(rotate());
 		emitter->set_offset(offset());
+		emitter->set_angle_base_from_center(angle_base_from_center());
 		emitter->set_align_angle(align_angle());
 		return emitter;
 	}
 
-	void BoxEmitter::GetEmitPos(Vector2& pos) const
+	void BoxEmitter::GetEmitPosAngle(ERI::Vector2 &out_pos, float &out_angle) const
 	{
-		pos.x = RangeRandom(-half_size_.x, half_size_.x);
-		pos.y = RangeRandom(-half_size_.y, half_size_.y);
+		out_pos.x = RangeRandom(-half_size_.x, half_size_.x);
+		out_pos.y = RangeRandom(-half_size_.y, half_size_.y);
 		
 		if (rotate() != 0.f)
-			pos.Rotate(rotate());
+			out_pos.Rotate(rotate());
 		
-		pos += offset();
-	}
-	
-	float BoxEmitter::GetEmitAngle() const
-	{
-		return rotate_ + BaseEmitter::GetEmitAngle();
+		out_angle = angle_base_from_center() ? Vector2::UNIT_Y.GetRotateToDegree(out_pos) : rotate();
+		out_angle += RangeRandom(angle_min(), angle_max());
+		
+		out_pos += offset();
 	}
 	
 	CircleEmitter::CircleEmitter(float radius, float rate, float angle_min, float angle_max) :
@@ -115,29 +110,33 @@ namespace ERI
 	{
 		BaseEmitter* emitter = new CircleEmitter(radius_, rate(), angle_min(), angle_max());
 		emitter->set_offset(offset());
+		emitter->set_angle_base_from_center(angle_base_from_center());
 		emitter->set_align_angle(align_angle());
 		return emitter;
 	}
 	
-	void CircleEmitter::GetEmitPos(Vector2& pos) const
+	void CircleEmitter::GetEmitPosAngle(ERI::Vector2 &out_pos, float &out_angle) const
 	{
-		pos.x = RangeRandom(-radius_, radius_);
-		pos.y = RangeRandom(-radius_, radius_);
+		out_pos.x = RangeRandom(-radius_, radius_);
+		out_pos.y = RangeRandom(-radius_, radius_);
 		
 		float radius_squared = radius_ * radius_;
-		while (pos.LengthSquared() > radius_squared)
+		while (out_pos.LengthSquared() > radius_squared)
 		{
-			pos.x = RangeRandom(-radius_, radius_);
-			pos.y = RangeRandom(-radius_, radius_);
+			out_pos.x = RangeRandom(-radius_, radius_);
+			out_pos.y = RangeRandom(-radius_, radius_);
 		}
 		
 //		Vector2 r;
 //		r.y = RangeRandom(0.0f, radius_);
 //		r.Rotate(RangeRandom(0.0f, 360.0f));
-//		pos.x = r.x;
-//		pos.y = r.y;
+//		out_pos.x = r.x;
+//		out_pos.y = r.y;
 		
-		pos += offset();
+		out_angle = angle_base_from_center() ? Vector2::UNIT_Y.GetRotateToDegree(out_pos) : 0.f;
+		out_angle += RangeRandom(angle_min(), angle_max());
+		
+		out_pos += offset();
 	}
 	
 #pragma mark Affector
@@ -693,8 +692,7 @@ namespace ERI
 			
 			if (!p) return;
 			
-			emitter_->GetEmitPos(pos);
-			rotate = emitter_->GetEmitAngle();
+			emitter_->GetEmitPosAngle(pos, rotate);
 			
 			if (!setup_ref_->is_coord_relative)
 			{

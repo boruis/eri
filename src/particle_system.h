@@ -74,8 +74,7 @@ namespace ERI
 		void Restart();
 		bool CheckIsTimeToEmit(float delta_time, int& out_emit_num);
 		
-		virtual void GetEmitPos(Vector2& pos) const = 0;
-		virtual float GetEmitAngle() const;
+		virtual void GetEmitPosAngle(Vector2& out_pos, float& out_angle) const = 0;
 		
 		virtual BaseEmitter* Clone() = 0;
 		
@@ -91,6 +90,9 @@ namespace ERI
 		inline const Vector2& offset() const { return offset_; }
 		inline void set_offset(const Vector2& offset) { offset_ = offset; }
 
+		inline bool angle_base_from_center() const { return angle_base_from_center_; }
+		inline void set_angle_base_from_center(bool base_from_center) { angle_base_from_center_ = base_from_center; }
+
 		inline bool align_angle() const { return align_angle_; }
 		inline void set_align_angle(bool align_angle) { align_angle_ = align_angle; }
 
@@ -105,6 +107,7 @@ namespace ERI
 		
 		Vector2 offset_;
 		
+		bool angle_base_from_center_;
 		bool align_angle_;
 	};
 	
@@ -115,15 +118,14 @@ namespace ERI
 		virtual ~BoxEmitter();
 		
 		virtual BaseEmitter* Clone();
-		
+
+		virtual void GetEmitPosAngle(Vector2& out_pos, float& out_angle) const;
+
 		inline const Vector2& half_size() { return half_size_; }
 		inline void set_half_size(const Vector2& half_size) { half_size_ = half_size; }
 
 		inline float rotate() const { return rotate_; }
 		inline void set_rotate(float rotate) { rotate_ = rotate; }
-
-		virtual void GetEmitPos(Vector2& pos) const;
-		virtual float GetEmitAngle() const;
 		
 	private:
 		Vector2	half_size_;
@@ -137,11 +139,11 @@ namespace ERI
 		virtual ~CircleEmitter();
 		
 		virtual BaseEmitter* Clone();
+
+		virtual void GetEmitPosAngle(Vector2& out_pos, float& out_angle) const;
 		
 		inline const float radius() { return radius_; }
 		inline void set_radius(float radius) { radius_ = radius; }
-		
-		virtual void GetEmitPos(Vector2& pos) const;
 		
 	private:
 		float	radius_;
