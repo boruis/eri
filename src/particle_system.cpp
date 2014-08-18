@@ -347,6 +347,33 @@ namespace ERI
 		delete intervals_[idx];
 		intervals_.erase(intervals_.begin() + idx);
 	}
+	
+	TextureUvAffector::TextureUvAffector(float u_speed, float v_speed, int coord_idx)
+		: BaseAffector(AFFECTOR_TEXTURE_UV),
+		u_speed_(u_speed),
+		v_speed_(v_speed),
+		coord_idx_(coord_idx)
+	{
+		ASSERT(coord_idx_ >= 0 && coord_idx_ < 2);
+	}
+	
+    TextureUvAffector::~TextureUvAffector()
+	{
+	}
+    
+	void TextureUvAffector::Update(float delta_time, Particle* p)
+	{
+		p->uv_start[coord_idx_].x += u_speed_ * delta_time;
+		p->uv_start[coord_idx_].y += v_speed_ * delta_time;
+	}
+	
+	BaseAffector* TextureUvAffector::Clone()
+	{
+		BaseAffector* affector = new TextureUvAffector(u_speed_, v_speed_, coord_idx_);
+		affector->set_delay(delay());
+		affector->set_period(period());
+		return affector;
+	}
 
 #pragma mark ParticleSystem
 
@@ -356,11 +383,12 @@ namespace ERI
 		emitter_(NULL),
 		vertices_(NULL),
 		indices_(NULL),
-		uv_start_(Vector2(0.0f, 0.0f)),
-		uv_size_(Vector2(1.0f, 1.0f)),
 		lived_time_(-1.0f),
+		delay_timer_(0.0f),
 		emit_before_(false)
 	{
+		uv_size_[0] = uv_size_[1] = Vector2::UNIT;
+		
 		RefreshSetup();
 	}
 
@@ -404,7 +432,7 @@ namespace ERI
 	{
 		SceneActor::RemoveChild(actor);
 		
-		for (int i = child_systems_.size() - 1; i >= 0; --i)
+		for (int i = static_cast<int>(child_systems_.size()) - 1; i >= 0; --i)
 		{
 			if (child_systems_[i] == actor)
 				child_systems_.erase(child_systems_.begin() + i);
@@ -522,6 +550,7 @@ namespace ERI
 	void ParticleSystem::Play()
 	{
 		lived_time_ = 0.0f;
+		delay_timer_ = setup_ref_->delay;
 		emit_before_ = false;
 		emitter_->Restart();
 		
@@ -547,6 +576,16 @@ namespace ERI
 	{
 		if (!IsPlaying())
 			return;
+		
+		for (int i = 0; i < child_systems_.size(); ++i)
+			child_systems_[i]->Update(delta_time);
+		
+		if (delay_timer_ > 0.0f)
+		{
+			delay_timer_ -= delta_time;
+			if (delay_timer_ > 0.0f)
+				return;
+		}
 		
 		if (life_ >= 0.0f)
 		{
@@ -625,9 +664,6 @@ namespace ERI
 		}
 		
 		UpdateBuffer();
-		
-		for (int i = 0; i < child_systems_.size(); ++i)
-			child_systems_[i]->Update(delta_time);
 	}
 	
 	void ParticleSystem::ResetParticles()
@@ -690,18 +726,18 @@ namespace ERI
 			v.Rotate(rotate);
 			p->velocity = v * RangeRandom(setup_ref_->particle_speed_min, setup_ref_->particle_speed_max);
 			
-			for (int j = 0; j < affector_num; ++j)
-			{
-				affectors_[j]->InitSetup(p);
-			}
+			p->uv_start[0] = uv_start_[0];
+			p->uv_start[1] = uv_start_[1];
 			
 			p->lived_time = 0.0f;
 			p->lived_percent = 0.0f;
 			p->in_use = true;
 			
-			p->affector_vars.resize(affectors_.size());
-			for (int j = 0; j < affectors_.size(); ++j)
+			p->affector_vars.resize(affector_num);
+			for (int j = 0; j < affector_num; ++j)
 			{
+				affectors_[j]->InitSetup(p);
+
 				p->affector_vars[j].delay_timer = affectors_[j]->delay();
 				p->affector_vars[j].period_timer = affectors_[j]->period();
 			}
@@ -759,11 +795,11 @@ namespace ERI
 		int vertex_num = particle_num * 4;
 		
 		if (vertices_) delete [] vertices_;
-		vertices_ = new vertex_2_pos_tex_color[vertex_num];
-		memset(vertices_, 0, sizeof(vertex_2_pos_tex_color) * vertex_num);
+		vertices_ = new vertex_2_pos_tex2_color[vertex_num];
+		memset(vertices_, 0, sizeof(vertex_2_pos_tex2_color) * vertex_num);
 		
 		glBindBuffer(GL_ARRAY_BUFFER, render_data_.vertex_buffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_2_pos_tex_color) * vertex_num, vertices_, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_2_pos_tex2_color) * vertex_num, vertices_, GL_DYNAMIC_DRAW);
 		
 		if (render_data_.index_buffer == 0)
 		{
@@ -793,7 +829,7 @@ namespace ERI
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned short) * index_num, indices_, GL_STATIC_DRAW);
 		
 		render_data_.vertex_type = GL_TRIANGLES;
-		render_data_.vertex_format = POS_TEX_COLOR_2;
+		render_data_.vertex_format = POS_TEX2_COLOR_2;
 		render_data_.vertex_count = 0;
 		render_data_.index_count = 0;
 	}
@@ -812,7 +848,9 @@ namespace ERI
 		Vector2 up, right;
 		Color color;
 		
-		vertex_2_pos_tex_color* vertex = vertices_;
+		// TODO: divide with / without uv2 version?
+		
+		vertex_2_pos_tex2_color* vertex = vertices_;
 		
 		for (int i = 0; i < num; ++i)
 		{
@@ -835,8 +873,10 @@ namespace ERI
 				vertex->color[1] = static_cast<unsigned char>(color.g * 255.0f);
 				vertex->color[2] = static_cast<unsigned char>(color.b * 255.0f);
 				vertex->color[3] = static_cast<unsigned char>(color.a * 255.0f);
-				vertex->tex_coord[0] = uv_start_.x;
-				vertex->tex_coord[1] = uv_start_.y;
+				vertex->tex_coord[0] = p->uv_start[0].x;
+				vertex->tex_coord[1] = p->uv_start[0].y;
+				vertex->tex_coord2[0] = p->uv_start[1].x;
+				vertex->tex_coord2[1] = p->uv_start[1].y;
 
 				++vertex;
 				
@@ -846,8 +886,10 @@ namespace ERI
 				vertex->color[1] = static_cast<unsigned char>(color.g * 255.0f);
 				vertex->color[2] = static_cast<unsigned char>(color.b * 255.0f);
 				vertex->color[3] = static_cast<unsigned char>(color.a * 255.0f);
-				vertex->tex_coord[0] = uv_start_.x + uv_size_.x;
-				vertex->tex_coord[1] = uv_start_.y;
+				vertex->tex_coord[0] = p->uv_start[0].x + uv_size_[0].x;
+				vertex->tex_coord[1] = p->uv_start[0].y;
+				vertex->tex_coord2[0] = p->uv_start[1].x + uv_size_[1].x;
+				vertex->tex_coord2[1] = p->uv_start[1].y;
 
 				++vertex;
 				
@@ -857,8 +899,10 @@ namespace ERI
 				vertex->color[1] = static_cast<unsigned char>(color.g * 255.0f);
 				vertex->color[2] = static_cast<unsigned char>(color.b * 255.0f);
 				vertex->color[3] = static_cast<unsigned char>(color.a * 255.0f);
-				vertex->tex_coord[0] = uv_start_.x;
-				vertex->tex_coord[1] = uv_start_.y + uv_size_.y;
+				vertex->tex_coord[0] = p->uv_start[0].x;
+				vertex->tex_coord[1] = p->uv_start[0].y + uv_size_[0].y;
+				vertex->tex_coord2[0] = p->uv_start[1].x;
+				vertex->tex_coord2[1] = p->uv_start[1].y + uv_size_[1].y;
 
 				++vertex;
 				
@@ -868,8 +912,10 @@ namespace ERI
 				vertex->color[1] = static_cast<unsigned char>(color.g * 255.0f);
 				vertex->color[2] = static_cast<unsigned char>(color.b * 255.0f);
 				vertex->color[3] = static_cast<unsigned char>(color.a * 255.0f);
-				vertex->tex_coord[0] = uv_start_.x + uv_size_.x;
-				vertex->tex_coord[1] = uv_start_.y + uv_size_.y;
+				vertex->tex_coord[0] = p->uv_start[0].x + uv_size_[0].x;
+				vertex->tex_coord[1] = p->uv_start[0].y + uv_size_[0].y;
+				vertex->tex_coord2[0] = p->uv_start[1].x + uv_size_[1].x;
+				vertex->tex_coord2[1] = p->uv_start[1].y + uv_size_[1].y;
 				
 				++vertex;
 				
@@ -878,18 +924,20 @@ namespace ERI
 		}
 		
 		glBindBuffer(GL_ARRAY_BUFFER, render_data_.vertex_buffer);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex_2_pos_tex_color) * in_use_num * 4, vertices_);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex_2_pos_tex2_color) * in_use_num * 4, vertices_);
 		
 		render_data_.vertex_count = in_use_num * 4;
 		render_data_.index_count = in_use_num * 6;
 	}
 
-	void ParticleSystem::SetTexAreaUV(float start_u, float start_v, float width, float height)
+	void ParticleSystem::SetTexAreaUV(float start_u, float start_v, float width, float height, int coord_idx /*= 0*/)
 	{
-		uv_start_.x = start_u;
-		uv_start_.y = start_v;
-		uv_size_.x = width;
-		uv_size_.y = height;
+		ASSERT(coord_idx >= 0 && coord_idx < 2);
+		
+		uv_start_[coord_idx].x = start_u;
+		uv_start_[coord_idx].y = start_v;
+		uv_size_[coord_idx].x = width;
+		uv_size_[coord_idx].y = height;
 	}
 	
 #pragma mark ParticleSystemCreator
@@ -907,18 +955,41 @@ namespace ERI
 	ParticleSystem*	ParticleSystemCreator::Create()
 	{
 		ParticleSystem* ps = new ParticleSystem(setup);
-		if (material_setup.tex_path.length() > 0)
+		
+		const Texture* tex;
+		TextureEnvs envs;
+		for (int i = 0; i < material_setup.units.size(); ++i)
 		{
-			ps->SetMaterial(material_setup.tex_path, material_setup.tex_filter, material_setup.tex_filter);
-			ps->SetTexAreaUV(material_setup.u_start,
-							 material_setup.v_start,
-							 material_setup.u_width,
-							 material_setup.v_height);
+			ParticleMaterialUnit* unit = material_setup.units[i];
+			tex = NULL;
+			
+			if (i == 0)
+				tex = ps->SetMaterial(unit->path, unit->filter, unit->filter);
+			else
+				tex = ps->AddMaterial(unit->path, unit->filter, unit->filter);
+			
+			if (tex)
+			{
+				ps->SetTextureWrap(unit->wrap, unit->wrap, i);
+				
+				envs.mode = unit->env_mode;
+				ps->SetTextureEnvs(envs, i);
+				
+				ps->SetTextureCoord(i, unit->coord_idx);
+			}
+		}
+		
+		for (int i = 0; i < 2; ++i)
+		{
+			ps->SetTexAreaUV(material_setup.uv_start[i].x,
+							 material_setup.uv_start[i].y,
+							 material_setup.uv_size[i].x,
+							 material_setup.uv_size[i].y,
+							 i);
 		}
 		
 		ps->SetDepthWrite(material_setup.depth_write);
-		if (material_setup.blend_add)
-			ps->BlendAdd();
+		ps->Blend(material_setup.blend_type);
 		
 		ASSERT(emitter);
 		
@@ -945,6 +1016,7 @@ namespace ERI
 		
 		GetAttrBool(node, "coord_related", creator->setup->is_coord_relative);
 		GetAttrFloat(node, "life", creator->setup->life);
+		GetAttrFloat(node, "delay", creator->setup->delay);
 		
 		std::string str;
 		
@@ -1088,6 +1160,27 @@ namespace ERI
 						else
 							delete affector;
 					}
+					else if (strcmp(node2->name(), "texture_uv_affector") == 0)
+					{
+						Vector2 speed;
+						GetAttrFloat(node2, "speed_u", speed.x);
+						GetAttrFloat(node2, "speed_v", speed.y);
+						int coord_idx = 0;
+						GetAttrInt(node2, "coord_idx", coord_idx);
+						if (speed.x != 0.0f || speed.y != 0.0f)
+						{
+							TextureUvAffector* affector = new TextureUvAffector(speed.x, speed.y, coord_idx);
+							
+							float delay;
+							if (GetAttrFloat(node2, "delay", delay))
+								affector->set_delay(delay);
+							float period;
+							if (GetAttrFloat(node2, "period", period))
+								affector->set_period(period);
+							
+							creator->affectors.push_back(affector);
+						}
+					}
 					
 					node2 = node2->next_sibling();
 				}
@@ -1140,10 +1233,16 @@ namespace ERI
 				creator->emitter->set_offset(offset);
 				creator->emitter->set_align_angle(align_angle);
 			}
-			else if (strcmp(node->name(), "material") == 0)
+			else if (strcmp(node->name(), "material") == 0 &&
+					 creator->material_setup.units.size() < MAX_TEXTURE_UNIT)
 			{
 				xml_attribute<>* attr;
 				
+				ParticleMaterialSetup& material = creator->material_setup;
+				material.units.push_back(new ParticleMaterialUnit);
+				
+				ParticleMaterialUnit* unit = material.units.back();
+
 				attr = GetAttrStr(node, "tex", str);
 				if (attr && str.length() > 0)
 				{
@@ -1158,26 +1257,57 @@ namespace ERI
 						absolute_path = absolute_dir + str;
 					}
 					
-					creator->material_setup.tex_path = absolute_path;
+					unit->path = absolute_path;
 					
 					if (GetAttrStr(node, "tex_filter", str))
 					{
 						if (str.compare("nearest") == 0)
-							creator->material_setup.tex_filter = FILTER_NEAREST;
+							unit->filter = FILTER_NEAREST;
 					}
 					
-					GetAttrFloat(node, "tex_u", creator->material_setup.u_start);
-					GetAttrFloat(node, "tex_v", creator->material_setup.v_start);
-					GetAttrFloat(node, "tex_w", creator->material_setup.u_width);
-					GetAttrFloat(node, "tex_h", creator->material_setup.v_height);
+					if (GetAttrStr(node, "tex_wrap", str))
+					{
+						if (str.compare("clamp") == 0)
+							unit->wrap = WRAP_CLAMP_TO_EDGE;
+					}
+					
+					if (GetAttrStr(node, "tex_env_mode", str))
+					{
+						if (str.compare("replace") == 0)
+							unit->env_mode = MODE_REPLACE;
+						else if (str.compare("decal") == 0)
+							unit->env_mode = MODE_DECAL;
+						else if (str.compare("blend") == 0)
+							unit->env_mode = MODE_BLEND;
+						else if (str.compare("add") == 0)
+							unit->env_mode = MODE_ADD;
+					}
+					
+					GetAttrInt(node, "coord_idx", unit->coord_idx);
 				}
 				
-				GetAttrBool(node, "depth_write", creator->material_setup.depth_write);
+				ASSERT(unit->coord_idx < 2);
 				
-				if (GetAttrStr(node, "blend", str))
+				GetAttrFloat(node, "tex_u", material.uv_start[unit->coord_idx].x);
+				GetAttrFloat(node, "tex_v", material.uv_start[unit->coord_idx].y);
+				GetAttrFloat(node, "tex_w", material.uv_size[unit->coord_idx].x);
+				GetAttrFloat(node, "tex_h", material.uv_size[unit->coord_idx].y);
+
+				if (creator->material_setup.units.size() == 1) // first material
 				{
-					if (str.compare("add") == 0)
-						creator->material_setup.blend_add = true;
+					GetAttrBool(node, "depth_write", material.depth_write);
+					
+					if (GetAttrStr(node, "blend", str))
+					{
+						if (str.compare("add") == 0)
+							material.blend_type = BLEND_ADD;
+						else if (str.compare("multiply") == 0)
+							material.blend_type = BLEND_MULTIPLY;
+						else if (str.compare("multiply2x") == 0)
+							material.blend_type = BLEND_MULTIPLY2X;
+						else if (str.compare("replace") == 0)
+							material.blend_type = BLEND_REPLACE;
+					}
 				}
 			}
 			
@@ -1195,70 +1325,92 @@ namespace ERI
 	
 	void SaveParticleSystem(const ParticleSystemCreator* creator, XmlCreateData& data)
 	{
-    ASSERT(creator);
+		ASSERT(creator);
     
 		// system
 		
 		ParticleSystemSetup default_setup;
 		
 		xml_node<>* node = CreateNode(data.doc, "particle_system");
+		
 		if (creator->setup->is_coord_relative != default_setup.is_coord_relative)
 			PutAttrBool(data.doc, node, "coord_related", creator->setup->is_coord_relative);
 		if (creator->setup->life != default_setup.life)
 			PutAttrFloat(data.doc, node, "life", creator->setup->life);
+		if (creator->setup->delay != default_setup.delay)
+			PutAttrFloat(data.doc, node, "delay", creator->setup->delay);
 		
 		// material
 		
 		ParticleMaterialSetup default_material;
+		ParticleMaterialUnit default_material_unit;
 		
-		bool modified = false;
-		
-		xml_node<>* material_node = CreateNode(data.doc, "material");
-		
-		if (!creator->material_setup.tex_path.empty())
+		const ParticleMaterialSetup& material = creator->material_setup;
+		for (int i = 0; i < material.units.size(); ++i)
 		{
-			std::string name = GetFileName(creator->material_setup.tex_path);
-			PutAttrStr(data.doc, material_node, "tex", name);
-			modified = true;
-		}
-		if (creator->material_setup.tex_filter == FILTER_NEAREST)
-		{
-			PutAttrStr(data.doc, material_node, "tex_filter", "nearest");
-			modified = true;
-		}
-		if (creator->material_setup.u_start != default_material.u_start)
-		{
-			PutAttrFloat(data.doc, material_node, "tex_u", creator->material_setup.u_start);
-			modified = true;
-		}
-		if (creator->material_setup.v_start != default_material.v_start)
-		{
-			PutAttrFloat(data.doc, material_node, "tex_v", creator->material_setup.v_start);
-			modified = true;
-		}
-		if (creator->material_setup.u_width != default_material.u_width)
-		{
-			PutAttrFloat(data.doc, material_node, "tex_w", creator->material_setup.u_width);
-			modified = true;
-		}
-		if (creator->material_setup.v_height != default_material.v_height)
-		{
-			PutAttrFloat(data.doc, material_node, "tex_h", creator->material_setup.v_height);
-			modified = true;
-		}
-		if (creator->material_setup.depth_write != default_material.depth_write)
-		{
-			PutAttrBool(data.doc, material_node, "depth_write", creator->material_setup.depth_write);
-			modified = true;
-		}
-		if (creator->material_setup.blend_add)
-		{
-			PutAttrStr(data.doc, material_node, "blend", "add");
-			modified = true;
-		}
-		
-		if (modified)
+			const ParticleMaterialUnit* unit = material.units[i];
+			
+			xml_node<>* material_node = CreateNode(data.doc, "material");
+			
+			if (!unit->path.empty())
+			{
+				std::string name = GetFileName(unit->path);
+				PutAttrStr(data.doc, material_node, "tex", name);
+			}
+			
+			if (unit->filter == FILTER_NEAREST)
+				PutAttrStr(data.doc, material_node, "tex_filter", "nearest");
+			
+			if (unit->wrap == WRAP_CLAMP_TO_EDGE)
+				PutAttrStr(data.doc, material_node, "tex_wrap", "clamp");
+			
+			if (unit->env_mode == MODE_REPLACE)
+				PutAttrStr(data.doc, material_node, "tex_env_mode", "replace");
+			else if (unit->env_mode == MODE_DECAL)
+				PutAttrStr(data.doc, material_node, "tex_env_mode", "decal");
+			else if (unit->env_mode == MODE_BLEND)
+				PutAttrStr(data.doc, material_node, "tex_env_mode", "blend");
+			else if (unit->env_mode == MODE_ADD)
+				PutAttrStr(data.doc, material_node, "tex_env_mode", "add");
+			
+			Vector2 uv_start = material.uv_start[unit->coord_idx];
+			Vector2 uv_size = material.uv_size[unit->coord_idx];
+			
+			if (uv_start.x != default_material.uv_start[unit->coord_idx].x)
+				PutAttrFloat(data.doc, material_node, "tex_u", uv_start.x);
+			
+			if (uv_start.y != default_material.uv_start[unit->coord_idx].y)
+				PutAttrFloat(data.doc, material_node, "tex_v", uv_start.y);
+			
+			if (uv_size.x != default_material.uv_size[unit->coord_idx].x)
+				PutAttrFloat(data.doc, material_node, "tex_w", uv_size.x);
+			
+			if (uv_size.y != default_material.uv_size[unit->coord_idx].y)
+				PutAttrFloat(data.doc, material_node, "tex_h", uv_size.y);
+			
+			if (unit->coord_idx != default_material_unit.coord_idx)
+				PutAttrInt(data.doc, material_node, "coord_idx", unit->coord_idx);
+			
+			if (i == 0)
+			{
+				if (material.depth_write != default_material.depth_write)
+					PutAttrBool(data.doc, material_node, "depth_write", material.depth_write);
+				
+				if (material.blend_type != default_material.blend_type)
+				{
+					switch (material.blend_type)
+					{
+						case BLEND_ADD: PutAttrStr(data.doc, material_node, "blend", "add"); break;
+						case BLEND_MULTIPLY: PutAttrStr(data.doc, material_node, "blend", "multiply"); break;
+						case BLEND_MULTIPLY2X: PutAttrStr(data.doc, material_node, "blend", "multiply2x"); break;
+						case BLEND_REPLACE: PutAttrStr(data.doc, material_node, "blend", "replace"); break;
+						default: ASSERT(0); break;
+					}
+				}
+			}
+
 			node->append_node(material_node);
+		}
 		
 		// emitter
 		
@@ -1433,6 +1585,20 @@ namespace ERI
 							affector_node->append_node(node2);
 						}
 					}
+				}
+					break;
+				case AFFECTOR_TEXTURE_UV:
+				{
+					TextureUvAffector* texture_uv_affector = static_cast<TextureUvAffector*>(creator->affectors[i]);
+					
+					affector_node = CreateNode(data.doc, "texture_uv_affector");
+					PutAttrFloat(data.doc, affector_node, "speed_u", texture_uv_affector->u_speed());
+					PutAttrFloat(data.doc, affector_node, "speed_v", texture_uv_affector->v_speed());
+					PutAttrInt(data.doc, affector_node, "coord_idx", texture_uv_affector->coord_idx());
+					if (texture_uv_affector->delay() > 0.f)
+						PutAttrFloat(data.doc, affector_node, "delay", texture_uv_affector->delay());
+					if (texture_uv_affector->period() > 0.f)
+						PutAttrFloat(data.doc, affector_node, "period", texture_uv_affector->period());
 				}
 					break;
 					

@@ -36,6 +36,7 @@ namespace ERI
 		float	rotate_speed;
 		Color	color;
 		int		color_interval;
+		Vector2 uv_start[2];
 		
 		// life
 		
@@ -156,6 +157,7 @@ namespace ERI
 		AFFECTOR_SCALE,
 		AFFECTOR_COLOR,
 		AFFECTOR_COLOR_INTERVAL,
+		AFFECTOR_TEXTURE_UV,
 		AFFECTOR_END
 	};
 	
@@ -296,6 +298,27 @@ namespace ERI
 		std::vector<ColorInterval*>	intervals_;
 	};
 	
+	class TextureUvAffector : public BaseAffector
+	{
+	public:
+		TextureUvAffector(float u_speed, float v_speed, int coord_idx);
+		virtual ~TextureUvAffector();
+		
+		virtual void Update(float delta_time, Particle* p);
+		
+		virtual BaseAffector* Clone();
+		
+		inline float u_speed() { return u_speed_; }
+		inline void set_u_speed(float speed) { u_speed_ = speed; }
+		inline float v_speed() { return v_speed_; }
+		inline void set_v_speed(float speed) { v_speed_ = speed; }
+		inline int coord_idx() { return coord_idx_; }
+		inline void set_coord_idx(int coord_idx) { coord_idx_ = coord_idx; }
+		
+	private:
+		float u_speed_, v_speed_;
+		int coord_idx_;
+	};
 	
 #pragma mark ParticleSystem
 	
@@ -304,6 +327,7 @@ namespace ERI
 		ParticleSystemSetup() :
 			is_coord_relative(false),
 			life(-1.0f),
+			delay(0.0f),
 			particle_size(Vector2(1.0f, 1.0f)),
 			particle_life_min(1.0f), particle_life_max(1.0f),
 			particle_speed_min(0.0f), particle_speed_max(0.0f),
@@ -314,7 +338,7 @@ namespace ERI
 		
 		bool		is_coord_relative;
 		
-		float		life;
+		float		life, delay;
 		
 		Vector2		particle_size;
 		
@@ -351,7 +375,7 @@ namespace ERI
 		
 		void ResetParticles();
 		
-		void SetTexAreaUV(float start_u, float start_v, float width, float height);
+		void SetTexAreaUV(float start_u, float start_v, float width, float height, int coord_idx = 0);
 		
 		inline const ParticleSystemSetup* setup_ref() { return setup_ref_; }
 		
@@ -375,38 +399,60 @@ namespace ERI
 		std::vector<Particle*>		particles_;
 		int							first_available_particle_idx_;
 		
-		vertex_2_pos_tex_color*		vertices_;
+		vertex_2_pos_tex2_color*		vertices_;
 		unsigned short*				indices_;
 		
 		Vector2		system_scale_;
-		Vector2		uv_start_, uv_size_;
+    
+		Vector2		uv_start_[2], uv_size_[2];
 		
 		float		lived_time_;
+		float		delay_timer_;
 		bool	emit_before_;
 		
 		std::vector<ParticleSystem*> child_systems_;
 	};
 	
 #pragma mark ParticleSystemCreator
-	
+
+	struct ParticleMaterialUnit
+	{
+		ParticleMaterialUnit() :
+			filter(FILTER_LINEAR),
+			wrap(WRAP_REPEAT),
+			env_mode(MODE_MODULATE),
+			coord_idx(0)
+		{
+		}
+
+		std::string     path;
+		TextureFilter   filter;
+		TextureWrap     wrap;
+		TextureEnvMode  env_mode;
+		int coord_idx;
+	};
+
 	struct ParticleMaterialSetup
 	{
 		ParticleMaterialSetup() :
-			tex_filter(FILTER_LINEAR),
-			u_start(0.0f),
-			v_start(0.0f),
-			u_width(1.0f),
-			v_height(1.0f),
 			depth_write(false),
-			blend_add(false)
+			blend_type(BLEND_NORMAL)
 		{
+			uv_size[0] = uv_size[1] = Vector2::UNIT;
+		}
+
+		~ParticleMaterialSetup()
+		{
+			for (int i = 0; i < units.size(); ++i)
+				delete units[i];
 		}
 		
-		std::string					tex_path;
-		TextureFilter				tex_filter;
-		float						u_start, v_start, u_width, v_height;
-		bool						depth_write;
-		bool						blend_add;
+		std::vector<ParticleMaterialUnit*> units;
+
+		Vector2 uv_start[2], uv_size[2];
+
+		bool              depth_write;
+		ActorBlendType blend_type;
 	};
 	
 	struct ParticleSystemCreator

@@ -16,6 +16,8 @@
 #include <vector>
 #include <map>
 
+struct CallbackInfoColor;
+
 namespace ERI {
 
 	const char* GetResourcePath();
@@ -42,6 +44,22 @@ namespace ERI {
 	int GetUnicodeFromUTF8(const std::string& str, int max_buff_length, uint32_t* buff);
 	
 	const char* GetLocale();
+	
+	enum InfoType
+	{
+		INFO_NORMAL = 0,
+		INFO_WARNING,
+		INFO_CRITICAL
+	};
+	
+	void ShowMessageBox(const char* msg, const char* additional_msg = NULL, InfoType info_type = INFO_NORMAL);
+	bool ShowConfirmMessageBox(const char* msg, const char* additional_msg = NULL, const char* action_txt = NULL, InfoType info_type = INFO_NORMAL);
+	
+	bool GetOpenFilePath(std::string& out_path, const char* filter = NULL, const char* title_msg = NULL);
+	bool GetSaveFilePath(std::string& out_path, const char* filter = NULL, const char* title_msg = NULL);
+	
+	void ShowColorPicker(const Color& color, const CallbackInfoColor& callback);
+
 }
 
 #endif // ERI_PLATFORM_HELPER_H
