@@ -11,6 +11,7 @@
 #define ERI_OBSERVER_H
 
 #include <cstddef>
+#include <vector>
 
 namespace ERI
 {
