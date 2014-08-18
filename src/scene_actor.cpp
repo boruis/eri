@@ -238,6 +238,18 @@ namespace ERI {
 		render_data_.blend_src_factor = GL_ONE;
 		render_data_.blend_dst_factor = GL_ZERO;
 	}
+	
+	void SceneActor::Blend(ActorBlendType blend_type)
+	{
+		switch (blend_type)
+		{
+			case BLEND_ADD: BlendAdd(); break;
+			case BLEND_MULTIPLY: BlendAdd(); break;
+			case BLEND_MULTIPLY2X: BlendAdd(); break;
+			case BLEND_REPLACE: BlendAdd(); break;
+			default: BlendNormal(); break;
+		}
+	}
 
 	void SceneActor::AlphaTestGreater(int alpha_value)
 	{

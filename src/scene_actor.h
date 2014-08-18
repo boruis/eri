@@ -32,6 +32,16 @@ namespace ERI {
 	
 #pragma mark SceneActor
 	
+	enum ActorBlendType
+	{
+		BLEND_NORMAL = 0,
+		BLEND_ADD,
+		BLEND_MULTIPLY,
+		BLEND_MULTIPLY2X,
+		BLEND_REPLACE,
+		BLEND_MAX
+	};
+	
 	class SceneActor
 	{
 	public:
@@ -66,6 +76,8 @@ namespace ERI {
 		void BlendMultiply();
 		void BlendMultiply2x();
 		void BlendReplace();
+		void Blend(ActorBlendType blend_type);
+
 		void AlphaTestGreater(int alpha_value);
 		void DepthTestLess();
 		void DepthTestGreater();
