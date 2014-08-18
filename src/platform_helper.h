@@ -30,6 +30,7 @@ namespace ERI {
 	struct TextureAtlasUnit
 	{
 		int x, y, width, height;
+		float offset_x, offset_y;
 	};
 	
 	typedef std::vector<TextureAtlasUnit> TextureAtlasArray;

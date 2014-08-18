@@ -78,6 +78,8 @@ namespace ERI {
 			data.y = [[unit objectForKey:@"y"] intValue];
 			data.width = [[unit objectForKey:@"width"] intValue];
 			data.height = [[unit objectForKey:@"height"] intValue];
+			data.offset_x = [[unit objectForKey:@"offsetX"] floatValue];
+			data.offset_y = [[unit objectForKey:@"offsetY"] floatValue];
 			
 			out_array.push_back(data);
 		}
@@ -128,6 +130,8 @@ namespace ERI {
 			data.y = [[unit objectForKey:@"y"] intValue];
 			data.width = [[unit objectForKey:@"width"] intValue];
 			data.height = [[unit objectForKey:@"height"] intValue];
+			data.offset_x = [[unit objectForKey:@"offsetX"] floatValue];
+			data.offset_y = [[unit objectForKey:@"offsetY"] floatValue];
 			
 			out_map.insert(std::make_pair(std::string([key UTF8String]), data));
 		}
