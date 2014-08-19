@@ -11,11 +11,14 @@
 #define ERI_PARTICLE_SYSTEM_H
 
 #include "scene_actor.h"
+#include "texture_atlas_mgr.h"
 
 namespace ERI
 {
+  
+// -----------------------------------------------------------------------------
 	
-#pragma mark Particle
+#pragma mark - Particle
 	
 	struct Particle
 	{
@@ -24,7 +27,7 @@ namespace ERI
 		void Reset()
 		{
 			in_use = false;
-			scale = Vector2(1.0f, 1.0f);
+			scale = Vector2::UNIT;
 			color = Color::WHITE;
 		}
 		
@@ -33,10 +36,9 @@ namespace ERI
 		Vector2	size;
 		Vector2 scale;
 		float	rotate_angle;
-		float	rotate_speed;
 		Color	color;
-		int		color_interval;
-		Vector2 uv_start[2];
+    
+		Vector2 uv_start[2], uv_size[2];
 		
 		// life
 		
@@ -45,6 +47,8 @@ namespace ERI
 		float	lived_percent;
 		bool	in_use;
 		
+		//
+		
 		struct AffectorVars
 		{
 			AffectorVars() : delay_timer(0.f), period_timer(-1.f) {}
@@ -52,9 +56,23 @@ namespace ERI
 		};
 		
 		std::vector<AffectorVars> affector_vars;
+		
+		// rotate affector
+		
+		float	rotate_speed;
+		
+		// color interval affector
+		
+		int color_interval;
+
+		// atlas anim affector
+		
+		int atlas_idx;
 	};
+  
+// -----------------------------------------------------------------------------
 	
-#pragma mark Emitter
+#pragma mark - Emitters
 	
 	enum EmitterType
 	{
@@ -110,6 +128,8 @@ namespace ERI
 		bool angle_base_from_center_;
 		bool align_angle_;
 	};
+  
+// -----------------------------------------------------------------------------
 	
 	class BoxEmitter : public BaseEmitter
 	{
@@ -131,6 +151,8 @@ namespace ERI
 		Vector2	half_size_;
 		float rotate_;
 	};
+  
+// -----------------------------------------------------------------------------
 	
 	class CircleEmitter : public BaseEmitter
 	{
@@ -151,8 +173,12 @@ namespace ERI
 	private:
 		float	radius_, radius_min_;
 	};
+
+// -----------------------------------------------------------------------------
+
+	class ParticleSystem;
 	
-#pragma mark Affector
+#pragma mark - Affectors
 	
 	enum AffectorType
 	{
@@ -163,6 +189,7 @@ namespace ERI
 		AFFECTOR_COLOR,
 		AFFECTOR_COLOR_INTERVAL,
 		AFFECTOR_TEXTURE_UV,
+		AFFECTOR_ATLAS_ANIM,
 		AFFECTOR_END
 	};
 	
@@ -172,7 +199,7 @@ namespace ERI
 		BaseAffector(AffectorType type) : type_(type), delay_(0.f), period_(-1.f) {}
 		virtual ~BaseAffector() {}
 		
-		virtual void InitSetup(Particle* p) {}
+		virtual void InitSetup(ParticleSystem* owner, Particle* p) {}
 		virtual void Update(float delta_time, Particle* p) = 0;
 		
 		virtual BaseAffector* Clone() = 0;
@@ -189,6 +216,8 @@ namespace ERI
 		AffectorType type_;
 		float delay_, period_;
 	};
+  
+// -----------------------------------------------------------------------------
 	
 	class RotateAffector : public BaseAffector
 	{
@@ -196,7 +225,7 @@ namespace ERI
 		RotateAffector(float speed, float acceleration = 0.0f);
 		virtual ~RotateAffector();
 
-		virtual void InitSetup(Particle* p);
+		virtual void InitSetup(ParticleSystem* owner, Particle* p);
 		virtual void Update(float delta_time, Particle* p);
 		virtual BaseAffector* Clone();
 		
@@ -208,6 +237,8 @@ namespace ERI
 	private:
 		float	speed_, acceleration_;
 	};
+  
+// -----------------------------------------------------------------------------
 	
 	class ForceAffector : public BaseAffector
 	{
@@ -224,6 +255,8 @@ namespace ERI
 	private:
 		Vector2	acceleration_;
 	};
+  
+// -----------------------------------------------------------------------------
 	
 	class AccelerationAffector : public BaseAffector
 	{
@@ -240,6 +273,8 @@ namespace ERI
 	private:
 		float	acceleration_;
 	};
+  
+// -----------------------------------------------------------------------------
 	
 	class ScaleAffector : public BaseAffector
 	{
@@ -256,6 +291,8 @@ namespace ERI
 	private:
 		Vector2	speed_;
 	};
+  
+// -----------------------------------------------------------------------------
 	
 	class ColorAffector : public BaseAffector
 	{
@@ -263,7 +300,7 @@ namespace ERI
 		ColorAffector(const Color& start, const Color& end);
 		virtual ~ColorAffector();
 		
-		virtual void InitSetup(Particle* p);
+		virtual void InitSetup(ParticleSystem* owner, Particle* p);
 		virtual void Update(float delta_time, Particle* p);
 		
 		virtual BaseAffector* Clone() { return new ColorAffector(start_, end_); }
@@ -276,6 +313,8 @@ namespace ERI
 	private:
 		Color	start_, end_;
 	};
+  
+// -----------------------------------------------------------------------------
 	
 	class ColorIntervalAffector : public BaseAffector
 	{
@@ -289,7 +328,7 @@ namespace ERI
 		ColorIntervalAffector();
 		virtual ~ColorIntervalAffector();
 		
-		virtual void InitSetup(Particle* p);
+		virtual void InitSetup(ParticleSystem* owner, Particle* p);
 		virtual void Update(float delta_time, Particle* p);
 		
 		virtual BaseAffector* Clone();
@@ -302,6 +341,8 @@ namespace ERI
 	private:
 		std::vector<ColorInterval*>	intervals_;
 	};
+  
+// -----------------------------------------------------------------------------
 	
 	class TextureUvAffector : public BaseAffector
 	{
@@ -324,8 +365,49 @@ namespace ERI
 		float u_speed_, v_speed_;
 		int coord_idx_;
 	};
+
+// -----------------------------------------------------------------------------
+  
+	class AtlasAnimAffector : public BaseAffector
+	{
+	public:
+		AtlasAnimAffector(float interval, bool loop, int coord_idx);
+		virtual ~AtlasAnimAffector();
+
+		virtual void InitSetup(ParticleSystem* owner, Particle* p);
+		virtual void Update(float delta_time, Particle* p);
+
+		virtual BaseAffector* Clone();
+
+		void SetAtlas(const std::string& res, const std::string& prefix = "");
+		inline const std::string& atlas_res() { return atlas_res_; }
+		inline const std::string& atlas_prefix() { return atlas_prefix_; }
+
+		inline float interval() { return interval_; }
+		inline void set_interval(float interval) { interval_ = interval; }
+
+		inline bool loop() { return loop_; }
+		inline void set_loop(bool loop) { loop_ = loop; }
+
+		inline int coord_idx() { return coord_idx_; }
+		inline void set_coord_idx(int coord_idx) { coord_idx_ = coord_idx; }
+
+	private:
+		void ApplyIdx(Particle* p, int idx);
+
+		std::string atlas_res_, atlas_prefix_;
+		const TextureAtlasArray*	atlas_ref_;
+
+		float interval_;
+		bool loop_;
+		int coord_idx_;
+
+		int tex_width_, tex_height_;
+	};
+
+// -----------------------------------------------------------------------------
 	
-#pragma mark ParticleSystem
+#pragma mark - ParticleSystem
 	
 	struct ParticleSystemSetup
 	{
@@ -417,8 +499,10 @@ namespace ERI
 		
 		std::vector<ParticleSystem*> child_systems_;
 	};
+  
+// -----------------------------------------------------------------------------
 	
-#pragma mark ParticleSystemCreator
+#pragma mark - ParticleSystemCreator
 
 	struct ParticleMaterialUnit
 	{
@@ -473,8 +557,10 @@ namespace ERI
 		
 		ParticleSystem*	Create();
 	};
+  
+// -----------------------------------------------------------------------------
 	
-#pragma mark script loader function
+#pragma mark - script loader function
 	
 	ParticleSystemCreator* LoadParticleSystemCreatorByScriptFile(const std::string& path);
 	bool SaveParticleSystemToScriptByCreator(const ParticleSystemCreator* creator, const std::string& path);

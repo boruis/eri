@@ -19,6 +19,10 @@ using namespace rapidxml;
 namespace ERI
 {
 
+// -----------------------------------------------------------------------------
+	
+#pragma mark - Emitters
+
 	BaseEmitter::BaseEmitter(EmitterType type, float rate, float angle_min, float angle_max)
 		: type_(type),
 		angle_min_(angle_min),
@@ -60,6 +64,8 @@ namespace ERI
 		
 		return false;
 	}
+	
+// -----------------------------------------------------------------------------
 
 	BoxEmitter::BoxEmitter(const Vector2& half_size, float rate, float angle_min, float angle_max) :
 		half_size_(half_size),
@@ -95,6 +101,8 @@ namespace ERI
 		
 		out_pos += offset();
 	}
+	
+// -----------------------------------------------------------------------------
 	
 	CircleEmitter::CircleEmitter(float radius, float rate, float angle_min, float angle_max) :
 		radius_(radius),
@@ -145,7 +153,9 @@ namespace ERI
 		out_pos += offset();
 	}
 	
-#pragma mark Affector
+// -----------------------------------------------------------------------------
+	
+#pragma mark - Affectors
 	
 	RotateAffector::RotateAffector(float speed, float acceleration /*＝ 0.0f*/)
 		: BaseAffector(AFFECTOR_ROTATE),
@@ -158,7 +168,7 @@ namespace ERI
 	{
 	}
 	
-	void RotateAffector::InitSetup(Particle* p)
+	void RotateAffector::InitSetup(ParticleSystem* owner, Particle* p)
 	{
 		p->rotate_speed = speed_;
 	}
@@ -176,6 +186,8 @@ namespace ERI
 		affector->set_period(period());
 		return affector;
 	}
+	
+// -----------------------------------------------------------------------------
 	
 	ForceAffector::ForceAffector(const Vector2& acceleration)
 		: BaseAffector(AFFECTOR_FORCE),
@@ -199,6 +211,8 @@ namespace ERI
 		affector->set_period(period());
 		return affector;
 	}
+	
+// -----------------------------------------------------------------------------
 	
 	AccelerationAffector::AccelerationAffector(float acceleration)
 		: BaseAffector(AFFECTOR_ACCELERATION),
@@ -231,6 +245,8 @@ namespace ERI
 		return affector;
 	}
 	
+// -----------------------------------------------------------------------------
+	
 	ScaleAffector::ScaleAffector(const Vector2& speed)
 		: BaseAffector(AFFECTOR_SCALE),
 		speed_(speed)
@@ -256,6 +272,8 @@ namespace ERI
 		return affector;
 	}
 	
+// -----------------------------------------------------------------------------
+	
 	ColorAffector::ColorAffector(const Color& start, const Color& end)
 		: BaseAffector(AFFECTOR_COLOR),
 		start_(start),
@@ -267,7 +285,7 @@ namespace ERI
 	{
 	}
 	
-	void ColorAffector::InitSetup(Particle* p)
+	void ColorAffector::InitSetup(ParticleSystem* owner, Particle* p)
 	{
 		if (p->life > 0.f)
 			p->color = start_;
@@ -278,6 +296,8 @@ namespace ERI
 		if (p->life > 0.f)
 			p->color = start_ * (1.0f - p->lived_percent) + end_ * p->lived_percent;
 	}
+	
+// -----------------------------------------------------------------------------
 	
 	ColorIntervalAffector::ColorIntervalAffector()
 		: BaseAffector(AFFECTOR_COLOR_INTERVAL)
@@ -290,7 +310,7 @@ namespace ERI
 			delete intervals_[i];
 	}
 	
-	void ColorIntervalAffector::InitSetup(Particle* p)
+	void ColorIntervalAffector::InitSetup(ParticleSystem* owner, Particle* p)
 	{
 		if (intervals_.empty())
 			return;
@@ -353,6 +373,8 @@ namespace ERI
 		intervals_.erase(intervals_.begin() + idx);
 	}
 	
+// -----------------------------------------------------------------------------
+	
 	TextureUvAffector::TextureUvAffector(float u_speed, float v_speed, int coord_idx)
 		: BaseAffector(AFFECTOR_TEXTURE_UV),
 		u_speed_(u_speed),
@@ -379,8 +401,93 @@ namespace ERI
 		affector->set_period(period());
 		return affector;
 	}
+	
+// -----------------------------------------------------------------------------
+	
+	AtlasAnimAffector::AtlasAnimAffector(float interval, bool loop, int coord_idx)
+		: BaseAffector(AFFECTOR_ATLAS_ANIM),
+		atlas_ref_(NULL),
+		interval_(interval),
+		loop_(loop),
+		coord_idx_(coord_idx),
+		tex_width_(0),
+		tex_height_(0)
+	{
+	}
+	
+	AtlasAnimAffector::~AtlasAnimAffector()
+	{
+	}
+	
+	void AtlasAnimAffector::InitSetup(ParticleSystem* owner, Particle* p)
+	{
+		ASSERT(owner && p);
+		
+		const Texture* tex = owner->GetTexture(coord_idx_);
+		if (tex)
+		{
+			tex_width_ = tex->width;
+			tex_height_ = tex->height;
+		}
+		
+		ApplyIdx(p, 0);
+	}
+    
+    void AtlasAnimAffector::Update(float delta_time, Particle* p)
+	{
+		if (NULL == atlas_ref_ || interval_ <= 0.f)
+			return;
+		
+		int idx = static_cast<int>((p->lived_time - delay()) / interval_);
+		
+		if (loop_)
+			idx %= atlas_ref_->size();
+		else
+			idx = Min(idx, static_cast<int>(atlas_ref_->size()) - 1);
+		
+		if (idx != p->atlas_idx)
+			ApplyIdx(p, idx);
+	}
+    
+    BaseAffector* AtlasAnimAffector::Clone()
+	{
+		AtlasAnimAffector* affector = new AtlasAnimAffector(interval_, loop_, coord_idx_);
+		affector->SetAtlas(atlas_res_, atlas_prefix_);
+		affector->set_delay(delay());
+		return affector;
+	}
+    
+    void AtlasAnimAffector::SetAtlas(const std::string& res,
+									 const std::string& prefix /*= ""*/)
+	{
+		atlas_res_ = res;
+		atlas_prefix_ = prefix;
+		atlas_ref_ = TextureAtlasMgr::Ins().GetArray(GetFileNameBase(res), prefix);
+	}
+	
+	void AtlasAnimAffector::ApplyIdx(Particle* p, int idx)
+	{
+		p->atlas_idx = idx;
 
-#pragma mark ParticleSystem
+		if (NULL == atlas_ref_)
+			return;
+		
+		ASSERT(idx >= 0 && idx < atlas_ref_->size());
+		
+		const TextureAtlasUnit& unit = (*atlas_ref_)[idx];
+		
+		if (tex_width_ > 0 && tex_height_ > 0)
+		{
+			p->uv_start[coord_idx_].x = static_cast<float>(unit.x) / tex_width_;
+			p->uv_start[coord_idx_].y = static_cast<float>(unit.y) / tex_height_;
+			p->uv_size[coord_idx_].x = static_cast<float>(unit.width) / tex_width_;
+			p->uv_size[coord_idx_].y = static_cast<float>(unit.height) / tex_height_;
+		}
+	}
+	
+// -----------------------------------------------------------------------------
+
+#pragma mark - ParticleSystem
 
 	ParticleSystem::ParticleSystem(const ParticleSystemSetup* setup_ref) :
 		setup_ref_(setup_ref),
@@ -518,11 +625,9 @@ namespace ERI
 		for (int i = 0; i < need_particle_num; ++i)
 		{
 			if (i >= original_particle_num)
-			{
 				particles_.push_back(new Particle);
-			}
-			
-			particles_[i]->Reset();
+			else
+				particles_[i]->Reset();
 		}
 		
 		if (original_particle_num > need_particle_num)
@@ -732,6 +837,8 @@ namespace ERI
 			
 			p->uv_start[0] = uv_start_[0];
 			p->uv_start[1] = uv_start_[1];
+			p->uv_size[0] = uv_size_[0];
+			p->uv_size[1] = uv_size_[1];
 			
 			p->lived_time = 0.0f;
 			p->lived_percent = 0.0f;
@@ -740,7 +847,7 @@ namespace ERI
 			p->affector_vars.resize(affector_num);
 			for (int j = 0; j < affector_num; ++j)
 			{
-				affectors_[j]->InitSetup(p);
+				affectors_[j]->InitSetup(this, p);
 
 				p->affector_vars[j].delay_timer = affectors_[j]->delay();
 				p->affector_vars[j].period_timer = affectors_[j]->period();
@@ -890,9 +997,9 @@ namespace ERI
 				vertex->color[1] = static_cast<unsigned char>(color.g * 255.0f);
 				vertex->color[2] = static_cast<unsigned char>(color.b * 255.0f);
 				vertex->color[3] = static_cast<unsigned char>(color.a * 255.0f);
-				vertex->tex_coord[0] = p->uv_start[0].x + uv_size_[0].x;
+				vertex->tex_coord[0] = p->uv_start[0].x + p->uv_size[0].x;
 				vertex->tex_coord[1] = p->uv_start[0].y;
-				vertex->tex_coord2[0] = p->uv_start[1].x + uv_size_[1].x;
+				vertex->tex_coord2[0] = p->uv_start[1].x + p->uv_size[1].x;
 				vertex->tex_coord2[1] = p->uv_start[1].y;
 
 				++vertex;
@@ -904,9 +1011,9 @@ namespace ERI
 				vertex->color[2] = static_cast<unsigned char>(color.b * 255.0f);
 				vertex->color[3] = static_cast<unsigned char>(color.a * 255.0f);
 				vertex->tex_coord[0] = p->uv_start[0].x;
-				vertex->tex_coord[1] = p->uv_start[0].y + uv_size_[0].y;
+				vertex->tex_coord[1] = p->uv_start[0].y + p->uv_size[0].y;
 				vertex->tex_coord2[0] = p->uv_start[1].x;
-				vertex->tex_coord2[1] = p->uv_start[1].y + uv_size_[1].y;
+				vertex->tex_coord2[1] = p->uv_start[1].y + p->uv_size[1].y;
 
 				++vertex;
 				
@@ -916,10 +1023,10 @@ namespace ERI
 				vertex->color[1] = static_cast<unsigned char>(color.g * 255.0f);
 				vertex->color[2] = static_cast<unsigned char>(color.b * 255.0f);
 				vertex->color[3] = static_cast<unsigned char>(color.a * 255.0f);
-				vertex->tex_coord[0] = p->uv_start[0].x + uv_size_[0].x;
-				vertex->tex_coord[1] = p->uv_start[0].y + uv_size_[0].y;
-				vertex->tex_coord2[0] = p->uv_start[1].x + uv_size_[1].x;
-				vertex->tex_coord2[1] = p->uv_start[1].y + uv_size_[1].y;
+				vertex->tex_coord[0] = p->uv_start[0].x + p->uv_size[0].x;
+				vertex->tex_coord[1] = p->uv_start[0].y + p->uv_size[0].y;
+				vertex->tex_coord2[0] = p->uv_start[1].x + p->uv_size[1].x;
+				vertex->tex_coord2[1] = p->uv_start[1].y + p->uv_size[1].y;
 				
 				++vertex;
 				
@@ -944,7 +1051,9 @@ namespace ERI
 		uv_size_[coord_idx].y = height;
 	}
 	
-#pragma mark ParticleSystemCreator
+// -----------------------------------------------------------------------------
+	
+#pragma mark - ParticleSystemCreator
 	
 	ParticleSystemCreator::~ParticleSystemCreator()
 	{
@@ -1009,7 +1118,9 @@ namespace ERI
 		return ps;
 	}
 	
-#pragma mark script loader function
+// -----------------------------------------------------------------------------
+	
+#pragma mark - script loader function
 	
 	ParticleSystemCreator* LoadParticleSystemCreator(xml_node<>* node, const std::string& absolute_dir)
 	{
@@ -1185,6 +1296,36 @@ namespace ERI
 							creator->affectors.push_back(affector);
 						}
 					}
+					else if (strcmp(node2->name(), "atlas_anim_affector") == 0)
+					{
+						std::string res, prefix;
+						GetAttrStr(node2, "atlas", res);
+						GetAttrStr(node2, "prefix", prefix);
+						int coord_idx = 0;
+						GetAttrInt(node2, "coord_idx", coord_idx);
+						float interval = 0.1f;
+						GetAttrFloat(node2, "interval", interval);
+						bool loop = false;
+						GetAttrBool(node2, "loop", loop);
+						if (!res.empty())
+						{
+							AtlasAnimAffector* affector = new AtlasAnimAffector(interval, loop, coord_idx);
+							
+							std::string absolute_path;
+							if (res[0] == '/' || (res.length() >= 2 && res[1] == ':')) // already absolute path
+								absolute_path = res;
+							else
+								absolute_path = absolute_dir + res;
+							
+							affector->SetAtlas(absolute_path, prefix);
+							
+							float delay;
+							if (GetAttrFloat(node2, "delay", delay))
+								affector->set_delay(delay);
+
+							creator->affectors.push_back(affector);
+						}
+					}
 					
 					node2 = node2->next_sibling();
 				}
@@ -1253,13 +1394,9 @@ namespace ERI
 					std::string absolute_path;
 					
 					if (str[0] == '/' || (str.length() >= 2 && str[1] == ':')) // already absolute path
-					{
 						absolute_path = str;
-					}
 					else
-					{
 						absolute_path = absolute_dir + str;
-					}
 					
 					unit->path = absolute_path;
 					
@@ -1514,96 +1651,116 @@ namespace ERI
 			switch (creator->affectors[i]->type())
 			{
 				case AFFECTOR_ROTATE:
-				{
-					RotateAffector* rotate_affector = static_cast<RotateAffector*>(creator->affectors[i]);
-					
-					affector_node = CreateNode(data.doc, "rotate_affector");
-					PutAttrFloat(data.doc, affector_node, "speed", rotate_affector->speed());
-					PutAttrFloat(data.doc, affector_node, "acceleration", rotate_affector->acceleration());
-					if (rotate_affector->delay() > 0.f)
-						PutAttrFloat(data.doc, affector_node, "delay", rotate_affector->delay());
-					if (rotate_affector->period() > 0.f)
-						PutAttrFloat(data.doc, affector_node, "period", rotate_affector->period());
-				}
-					break;
-				case AFFECTOR_FORCE:
-				{
-					ForceAffector* force_affector = static_cast<ForceAffector*>(creator->affectors[i]);
-					
-					affector_node = CreateNode(data.doc, "force_affector");
-					PutAttrFloat(data.doc, affector_node, "acceleration_x", force_affector->acceleration().x);
-					PutAttrFloat(data.doc, affector_node, "acceleration_y", force_affector->acceleration().y);
-					if (force_affector->delay() > 0.f)
-						PutAttrFloat(data.doc, affector_node, "delay", force_affector->delay());
-					if (force_affector->period() > 0.f)
-						PutAttrFloat(data.doc, affector_node, "period", force_affector->period());
-				}
-					break;
-				case AFFECTOR_ACCELERATION:
-				{
-					AccelerationAffector* acceleration_affector = static_cast<AccelerationAffector*>(creator->affectors[i]);
-					
-					affector_node = CreateNode(data.doc, "acceleration_affector");
-					PutAttrFloat(data.doc, affector_node, "acceleration", acceleration_affector->acceleration());
-					if (acceleration_affector->delay() > 0.f)
-						PutAttrFloat(data.doc, affector_node, "delay", acceleration_affector->delay());
-					if (acceleration_affector->period() > 0.f)
-						PutAttrFloat(data.doc, affector_node, "period", acceleration_affector->period());
-				}
-					break;
-				case AFFECTOR_SCALE:
-				{
-					ScaleAffector* scale_affector = static_cast<ScaleAffector*>(creator->affectors[i]);
-					
-					affector_node = CreateNode(data.doc, "scale_affector");
-					PutAttrFloat(data.doc, affector_node, "speed_x", scale_affector->speed().x);
-					PutAttrFloat(data.doc, affector_node, "speed_y", scale_affector->speed().y);
-					if (scale_affector->delay() > 0.f)
-						PutAttrFloat(data.doc, affector_node, "delay", scale_affector->delay());
-					if (scale_affector->period() > 0.f)
-						PutAttrFloat(data.doc, affector_node, "period", scale_affector->period());
-				}
-					break;
-				case AFFECTOR_COLOR:
-				{
-					ColorAffector* color_affector = static_cast<ColorAffector*>(creator->affectors[i]);
-					
-					affector_node = CreateNode(data.doc, "color_affector");
-					PutAttrColor(data.doc, affector_node, "start", color_affector->start());
-					PutAttrColor(data.doc, affector_node, "end", color_affector->end());
-				}
-					break;
-				case AFFECTOR_COLOR_INTERVAL:
-				{
-					std::vector<ColorIntervalAffector::ColorInterval*>& intervals = static_cast<ColorIntervalAffector*>(creator->affectors[i])->intervals();
-					
-					if (!intervals.empty())
 					{
-						affector_node = CreateNode(data.doc, "color_interval_affector");
+						RotateAffector* rotate_affector = static_cast<RotateAffector*>(creator->affectors[i]);
 						
-						for (int j = 0; j < intervals.size(); ++j)
+						affector_node = CreateNode(data.doc, "rotate_affector");
+						PutAttrFloat(data.doc, affector_node, "speed", rotate_affector->speed());
+						PutAttrFloat(data.doc, affector_node, "acceleration", rotate_affector->acceleration());
+						if (rotate_affector->delay() > 0.f)
+							PutAttrFloat(data.doc, affector_node, "delay", rotate_affector->delay());
+						if (rotate_affector->period() > 0.f)
+							PutAttrFloat(data.doc, affector_node, "period", rotate_affector->period());
+					}
+					break;
+					
+				case AFFECTOR_FORCE:
+					{
+						ForceAffector* force_affector = static_cast<ForceAffector*>(creator->affectors[i]);
+						
+						affector_node = CreateNode(data.doc, "force_affector");
+						PutAttrFloat(data.doc, affector_node, "acceleration_x", force_affector->acceleration().x);
+						PutAttrFloat(data.doc, affector_node, "acceleration_y", force_affector->acceleration().y);
+						if (force_affector->delay() > 0.f)
+							PutAttrFloat(data.doc, affector_node, "delay", force_affector->delay());
+						if (force_affector->period() > 0.f)
+							PutAttrFloat(data.doc, affector_node, "period", force_affector->period());
+					}
+					break;
+					
+				case AFFECTOR_ACCELERATION:
+					{
+						AccelerationAffector* acceleration_affector = static_cast<AccelerationAffector*>(creator->affectors[i]);
+						
+						affector_node = CreateNode(data.doc, "acceleration_affector");
+						PutAttrFloat(data.doc, affector_node, "acceleration", acceleration_affector->acceleration());
+						if (acceleration_affector->delay() > 0.f)
+							PutAttrFloat(data.doc, affector_node, "delay", acceleration_affector->delay());
+						if (acceleration_affector->period() > 0.f)
+							PutAttrFloat(data.doc, affector_node, "period", acceleration_affector->period());
+					}
+					break;
+					
+				case AFFECTOR_SCALE:
+					{
+						ScaleAffector* scale_affector = static_cast<ScaleAffector*>(creator->affectors[i]);
+						
+						affector_node = CreateNode(data.doc, "scale_affector");
+						PutAttrFloat(data.doc, affector_node, "speed_x", scale_affector->speed().x);
+						PutAttrFloat(data.doc, affector_node, "speed_y", scale_affector->speed().y);
+						if (scale_affector->delay() > 0.f)
+							PutAttrFloat(data.doc, affector_node, "delay", scale_affector->delay());
+						if (scale_affector->period() > 0.f)
+							PutAttrFloat(data.doc, affector_node, "period", scale_affector->period());
+					}
+					break;
+					
+				case AFFECTOR_COLOR:
+					{
+						ColorAffector* color_affector = static_cast<ColorAffector*>(creator->affectors[i]);
+						
+						affector_node = CreateNode(data.doc, "color_affector");
+						PutAttrColor(data.doc, affector_node, "start", color_affector->start());
+						PutAttrColor(data.doc, affector_node, "end", color_affector->end());
+					}
+					break;
+					
+				case AFFECTOR_COLOR_INTERVAL:
+					{
+						std::vector<ColorIntervalAffector::ColorInterval*>& intervals = static_cast<ColorIntervalAffector*>(creator->affectors[i])->intervals();
+						
+						if (!intervals.empty())
 						{
-							node2 = CreateNode(data.doc, "interval");
-							PutAttrFloat(data.doc, node2, "lived_time", intervals[j]->lived);
-							PutAttrColor(data.doc, node2, "color", intervals[j]->color);
-							affector_node->append_node(node2);
+							affector_node = CreateNode(data.doc, "color_interval_affector");
+							
+							for (int j = 0; j < intervals.size(); ++j)
+							{
+								node2 = CreateNode(data.doc, "interval");
+								PutAttrFloat(data.doc, node2, "lived_time", intervals[j]->lived);
+								PutAttrColor(data.doc, node2, "color", intervals[j]->color);
+								affector_node->append_node(node2);
+							}
 						}
 					}
-				}
 					break;
-				case AFFECTOR_TEXTURE_UV:
-				{
-					TextureUvAffector* texture_uv_affector = static_cast<TextureUvAffector*>(creator->affectors[i]);
 					
-					affector_node = CreateNode(data.doc, "texture_uv_affector");
-					PutAttrFloat(data.doc, affector_node, "speed_u", texture_uv_affector->u_speed());
-					PutAttrFloat(data.doc, affector_node, "speed_v", texture_uv_affector->v_speed());
-					PutAttrInt(data.doc, affector_node, "coord_idx", texture_uv_affector->coord_idx());
-					if (texture_uv_affector->delay() > 0.f)
-						PutAttrFloat(data.doc, affector_node, "delay", texture_uv_affector->delay());
-					if (texture_uv_affector->period() > 0.f)
-						PutAttrFloat(data.doc, affector_node, "period", texture_uv_affector->period());
-				}
+				case AFFECTOR_TEXTURE_UV:
+					{
+						TextureUvAffector* texture_uv_affector = static_cast<TextureUvAffector*>(creator->affectors[i]);
+						
+						affector_node = CreateNode(data.doc, "texture_uv_affector");
+						PutAttrFloat(data.doc, affector_node, "speed_u", texture_uv_affector->u_speed());
+						PutAttrFloat(data.doc, affector_node, "speed_v", texture_uv_affector->v_speed());
+						PutAttrInt(data.doc, affector_node, "coord_idx", texture_uv_affector->coord_idx());
+						if (texture_uv_affector->delay() > 0.f)
+							PutAttrFloat(data.doc, affector_node, "delay", texture_uv_affector->delay());
+						if (texture_uv_affector->period() > 0.f)
+							PutAttrFloat(data.doc, affector_node, "period", texture_uv_affector->period());
+					}
+					break;
+					
+				case AFFECTOR_ATLAS_ANIM:
+					{
+						AtlasAnimAffector* atlas_affector = static_cast<AtlasAnimAffector*>(creator->affectors[i]);
+						affector_node = CreateNode(data.doc, "atlas_anim_affector");
+						PutAttrStr(data.doc, affector_node, "atlas", GetFileName(atlas_affector->atlas_res()));
+						PutAttrStr(data.doc, affector_node, "prefix", atlas_affector->atlas_prefix());
+						PutAttrInt(data.doc, affector_node, "coord_idx", atlas_affector->coord_idx());
+						PutAttrFloat(data.doc, affector_node, "interval", atlas_affector->interval());
+						PutAttrBool(data.doc, affector_node, "loop", atlas_affector->loop());
+						if (atlas_affector->delay() > 0.f)
+							PutAttrFloat(data.doc, affector_node, "delay", atlas_affector->delay());
+					}
 					break;
 					
 				default:

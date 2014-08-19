@@ -10,11 +10,10 @@
 #ifndef ERI_PLATFORM_HELPER_H
 #define ERI_PLATFORM_HELPER_H
 
-#include "renderer.h"
-
 #include <string>
-#include <vector>
-#include <map>
+
+#include "renderer.h"
+#include "texture_atlas_mgr.h"
 
 struct CallbackInfoColor;
 
@@ -29,15 +28,6 @@ namespace ERI {
 	
 	void SetDeviceOrientation(ViewOrientation orientation);
 	
-	struct TextureAtlasUnit
-	{
-		int x, y, width, height;
-		float offset_x, offset_y;
-	};
-	
-	typedef std::vector<TextureAtlasUnit> TextureAtlasArray;
-	typedef std::map<std::string, TextureAtlasUnit> TextureAtlasMap;
-
 	bool GetTextureAtlasArray(const std::string& name, TextureAtlasArray& out_array);
 	bool GetTextureAtlasMap(const std::string& name, TextureAtlasMap& out_map);
 	
