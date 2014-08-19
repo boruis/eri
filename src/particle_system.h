@@ -144,9 +144,12 @@ namespace ERI
 		
 		inline const float radius() { return radius_; }
 		inline void set_radius(float radius) { radius_ = radius; }
-		
+
+		inline const float radius_min() { return radius_min_; }
+		inline void set_radius_min(float radius_min) { radius_min_ = radius_min; }
+
 	private:
-		float	radius_;
+		float	radius_, radius_min_;
 	};
 	
 #pragma mark Affector

@@ -98,6 +98,7 @@ namespace ERI
 	
 	CircleEmitter::CircleEmitter(float radius, float rate, float angle_min, float angle_max) :
 		radius_(radius),
+		radius_min_(0.f),
 		BaseEmitter(EMITTER_CIRCLE, rate, angle_min, angle_max)
 	{
 	}
@@ -108,7 +109,8 @@ namespace ERI
 	
 	BaseEmitter* CircleEmitter::Clone()
 	{
-		BaseEmitter* emitter = new CircleEmitter(radius_, rate(), angle_min(), angle_max());
+		CircleEmitter* emitter = new CircleEmitter(radius_, rate(), angle_min(), angle_max());
+		emitter->set_radius_min(radius_min());
 		emitter->set_offset(offset());
 		emitter->set_angle_base_from_center(angle_base_from_center());
 		emitter->set_align_angle(align_angle());
@@ -117,21 +119,25 @@ namespace ERI
 	
 	void CircleEmitter::GetEmitPosAngle(ERI::Vector2 &out_pos, float &out_angle) const
 	{
-		out_pos.x = RangeRandom(-radius_, radius_);
-		out_pos.y = RangeRandom(-radius_, radius_);
-		
-		float radius_squared = radius_ * radius_;
-		while (out_pos.LengthSquared() > radius_squared)
+		if (radius_min_ <= 0.f)
 		{
 			out_pos.x = RangeRandom(-radius_, radius_);
 			out_pos.y = RangeRandom(-radius_, radius_);
+			
+			float radius_squared = radius_ * radius_;
+			while (out_pos.LengthSquared() > radius_squared)
+			{
+				out_pos.x = RangeRandom(-radius_, radius_);
+				out_pos.y = RangeRandom(-radius_, radius_);
+			}
 		}
-		
-//		Vector2 r;
-//		r.y = RangeRandom(0.0f, radius_);
-//		r.Rotate(RangeRandom(0.0f, 360.0f));
-//		out_pos.x = r.x;
-//		out_pos.y = r.y;
+		else
+		{
+			Vector2 r(0.f, RangeRandom(radius_min_, radius_));
+			r.Rotate(RangeRandom(0.0f, 360.0f));
+			out_pos.x = r.x;
+			out_pos.y = r.y;
+		}
 		
 		out_angle = angle_base_from_center() ? Vector2::UNIT_Y.GetRotateToDegree(out_pos) : 0.f;
 		out_angle += RangeRandom(angle_min(), angle_max());
