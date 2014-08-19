@@ -1338,6 +1338,7 @@ namespace ERI
 				float rate = 1.0f;
 				float angle_min = 0.0f;
 				float angle_max = 0.0f;
+				bool from_center = false;
 				bool align_angle = false;
 				GetAttrFloat(node, "size_x", size.x);
 				GetAttrFloat(node, "size_y", size.y);
@@ -1346,6 +1347,7 @@ namespace ERI
 				GetAttrFloat(node, "rate", rate);
 				GetAttrFloat(node, "angle_min", angle_min);
 				GetAttrFloat(node, "angle_max", angle_max);
+				GetAttrBool(node, "from_center", from_center);
 				GetAttrBool(node, "align_angle", align_angle);
 				
 				if (creator->emitter) delete creator->emitter;
@@ -1355,27 +1357,36 @@ namespace ERI
 				
 				creator->emitter = box_emitter;
 				creator->emitter->set_offset(offset);
+				creator->emitter->set_angle_base_from_center(from_center);
 				creator->emitter->set_align_angle(align_angle);
 			}
 			else if (strcmp(node->name(), "circle_emitter") == 0)
 			{
 				float radius = 1.0f;
+				float radius_min = 0.0f;
 				Vector2 offset;
 				float rate = 1.0f;
 				float angle_min = 0.0f;
 				float angle_max = 0.0f;
+				bool from_center = false;
 				bool align_angle = false;
 				GetAttrFloat(node, "radius", radius);
+				GetAttrFloat(node, "radius_min", radius_min);
 				GetAttrVector2(node, "offset", offset);
 				GetAttrFloat(node, "rate", rate);
 				GetAttrFloat(node, "angle_min", angle_min);
 				GetAttrFloat(node, "angle_max", angle_max);
+				GetAttrBool(node, "from_center", from_center);
 				GetAttrBool(node, "align_angle", align_angle);
 				
 				if (creator->emitter) delete creator->emitter;
 				
-				creator->emitter = new CircleEmitter(radius, rate, angle_min, angle_max);
+				CircleEmitter* circle_emitter = new CircleEmitter(radius, rate, angle_min, angle_max);
+				circle_emitter->set_radius_min(radius_min);
+				
+				creator->emitter = circle_emitter;
 				creator->emitter->set_offset(offset);
+				creator->emitter->set_angle_base_from_center(from_center);
 				creator->emitter->set_align_angle(align_angle);
 			}
 			else if (strcmp(node->name(), "material") == 0 &&
@@ -1576,6 +1587,9 @@ namespace ERI
 			CircleEmitter* circle_emitter = static_cast<CircleEmitter*>(creator->emitter);
 			
 			PutAttrFloat(data.doc, emitter_node, "radius", circle_emitter->radius());
+			
+			if (circle_emitter->radius_min() > 0.f)
+				PutAttrFloat(data.doc, emitter_node, "radius_min", circle_emitter->radius_min());
 		}
 		
 		ASSERT(emitter_node)
@@ -1587,7 +1601,11 @@ namespace ERI
 		if (creator->emitter->offset().LengthSquared() > 0.f)
 			PutAttrVector2(data.doc, emitter_node, "offset", creator->emitter->offset());
 		
-		PutAttrBool(data.doc, emitter_node, "align_angle", creator->emitter->align_angle());
+		if (creator->emitter->angle_base_from_center())
+			PutAttrBool(data.doc, emitter_node, "from_center", creator->emitter->angle_base_from_center());
+		
+		if (creator->emitter->align_angle())
+			PutAttrBool(data.doc, emitter_node, "align_angle", creator->emitter->align_angle());
 		
 		node->append_node(emitter_node);
 		
