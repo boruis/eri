@@ -205,7 +205,7 @@ bool FileReader::Close()
 	return false;
 }
 	
-int FileReader::Read(void* buf, int byte_count)
+size_t FileReader::Read(void* buf, size_t byte_count)
 {
 	ASSERT(buf && byte_count > 0 && info_);
 
