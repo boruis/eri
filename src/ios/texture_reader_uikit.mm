@@ -165,7 +165,7 @@ namespace ERI {
 			CGContextScaleCTM(context, 1.0, -1.0); // NOTE: NSString draws in UIKit referential i.e. renders upside-down compared to CGBitmapContext referential
 			UIGraphicsPushContext(context);
       
-      if ([txt_str respondsToSelector:@selector(drawInRect:withAttributes:)])
+      if ([txt_str respondsToSelector:@selector(drawWithRect:options:attributes:context:)])
       {
         NSMutableParagraphStyle* style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
         style.alignment = data.is_pos_center ? NSTextAlignmentCenter : NSTextAlignmentLeft;
