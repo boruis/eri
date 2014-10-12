@@ -164,28 +164,31 @@ namespace ERI {
 			CGContextTranslateCTM(context, 0.0, height_);
 			CGContextScaleCTM(context, 1.0, -1.0); // NOTE: NSString draws in UIKit referential i.e. renders upside-down compared to CGBitmapContext referential
 			UIGraphicsPushContext(context);
-			
-			[txt_str drawInRect:CGRectMake(0, 0, actual_size.width, actual_size.height)
-					   withFont:font
-				  lineBreakMode:break_mode
-					  alignment:data.is_pos_center ? NSTextAlignmentCenter : NSTextAlignmentLeft];
-
-/*
-			NSMutableParagraphStyle* style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
-			style.alignment = data.is_pos_center ? NSTextAlignmentCenter : NSTextAlignmentLeft;
-			style.lineBreakMode = break_mode;
-			
-			[txt_str drawInRect:CGRectMake(0, 0, actual_size.width, actual_size.height)
-           withAttributes:@{
-                            NSFontAttributeName: font,
-                            NSParagraphStyleAttributeName: style,
-                            NSForegroundColorAttributeName: [UIColor whiteColor]
-                            }];
-			
+      
+      if ([txt_str respondsToSelector:@selector(drawInRect:withAttributes:)])
+      {
+        NSMutableParagraphStyle* style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+        style.alignment = data.is_pos_center ? NSTextAlignmentCenter : NSTextAlignmentLeft;
+        style.lineBreakMode = break_mode;
+        
+        [txt_str drawInRect:CGRectMake(0, 0, actual_size.width, actual_size.height)
+             withAttributes:@{
+                              NSFontAttributeName: font,
+                              NSParagraphStyleAttributeName: style,
+                              NSForegroundColorAttributeName: [UIColor whiteColor]
+                              }];
+        
 #if !__has_feature(objc_arc)
-			[style release];
+        [style release];
 #endif
- */
+      }
+      else
+      {
+        [txt_str drawInRect:CGRectMake(0, 0, actual_size.width, actual_size.height)
+               withFont:font
+            lineBreakMode:break_mode
+              alignment:data.is_pos_center ? NSTextAlignmentCenter : NSTextAlignmentLeft];
+      }
 			
 			UIGraphicsPopContext();
 			CGContextRelease(context);
