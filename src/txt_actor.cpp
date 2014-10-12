@@ -164,6 +164,12 @@ class AtlasTxtMeshConstructor : public TxtMeshConstructor
     
     const Font* font = owner_->font_ref_;
     const TxtData& data = owner_->data_;
+    
+    if (data.str.empty())
+    {
+      owner_->render_data_.vertex_count = 0;
+      return;
+    }
 
     uint32_t* chars;
     now_len_ = CreateUnicodeArray(data, chars);
