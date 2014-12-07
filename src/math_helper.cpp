@@ -1656,6 +1656,23 @@ namespace ERI {
 		
 		return (f1 + f2 * t + f3 * (t * t) + f4 * (t * t * t)) * 0.5f;
 	}
+  
+#pragma mark QuadraticBezierSpline
+	
+	void QuadraticBezierSpline::SetControlPoints(const Vector2& p0,
+											 const Vector2& p1,
+											 const Vector2& p2)
+	{
+		f1 = p0;
+		f2 = p1;
+		f3 = p2;
+	}
+	
+	Vector2 QuadraticBezierSpline::GetPoint(float t)
+	{
+		float invert_t = 1.f - t;
+		return f1 * (invert_t * invert_t) + f2 * (2 * invert_t * t) + f3 * (t * t);
+	}
 	
 #pragma mark CubicBezierSpline
 	

@@ -560,6 +560,21 @@ namespace ERI {
 		Vector2	f1, f2, f3, f4;
 	};
 	
+#pragma mark QuadraticBezierSpline
+	
+	class QuadraticBezierSpline
+	{
+	public:
+		void SetControlPoints(const Vector2& p0,
+							  const Vector2& p1,
+							  const Vector2& p2);
+    
+		Vector2 GetPoint(float t);
+		
+	private:
+		Vector2	f1, f2, f3;
+	};
+	
 #pragma mark CubicBezierSpline
 	
 	class CubicBezierSpline
