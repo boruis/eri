@@ -108,6 +108,10 @@ namespace ERI {
 		{
 			png_set_add_alpha(png_ptr, 0xFF, PNG_FILLER_AFTER);
 		}
+		else if (color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+		{
+			png_set_gray_to_rgb(png_ptr);
+		}
 		
 		png_read_update_info(png_ptr, info_ptr);
 		png_get_IHDR(png_ptr, info_ptr, &w, &h, &bit_depth, &color_type,
