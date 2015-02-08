@@ -639,7 +639,7 @@ void FontFreeType::ChangeFaceSize(int want_size) const
 	}
 	
 	size_ = want_size;
-	common_line_height_ = static_cast<int>(convert_fix26(face_->size->metrics.height));
+	common_line_height_ = static_cast<int>(convert_fix26(face_->size->metrics.height) * 1.1f);
 	common_base_ = static_cast<int>(convert_fix26(face_->size->metrics.ascender));
 }
 
