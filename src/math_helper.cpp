@@ -90,7 +90,7 @@ namespace ERI {
 
 		start.Normalize();
 		end.Normalize();
-		float cos_value = start.DotProduct(end);
+		float cos_value = Clamp(start.DotProduct(end), -1.f, 1.f);
 		
 		if (Abs(cos_value) > Math::ZERO_TOLERANCE)
 		{
