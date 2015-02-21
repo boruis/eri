@@ -579,7 +579,9 @@ namespace ERI {
 		
 		glViewport(x, y, backing_width_, backing_height_);
 
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		glBindFramebufferOES(GL_FRAMEBUFFER_OES, frame_buffer);
+#endif
 	}
 
 	void RendererES1::CopyTexture(unsigned int texture, PixelFormat format)
@@ -630,7 +632,9 @@ namespace ERI {
 		
 		glViewport(0, 0, backing_width_, backing_height_);
 
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		glBindFramebufferOES(GL_FRAMEBUFFER_OES, frame_buffers_[kDefaultFrameBufferIdx]);
+#endif
 	}
 	
 	void RendererES1::EnableBlend(bool enable)
@@ -1114,6 +1118,7 @@ namespace ERI {
   
   int RendererES1::GenerateFrameBuffer()
 	{
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		if (context_) context_->SetAsCurrent();
     
 		for (int i = kDefaultFrameBufferIdx + 1; i < kMaxFrameBuffer; ++i)
@@ -1124,12 +1129,14 @@ namespace ERI {
 				return frame_buffers_[i];
 			}
 		}
+#endif
 		
 		return 0;
 	}
   
   void RendererES1::BindTextureToFrameBuffer(unsigned int texture_id, int frame_buffer)
 	{
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
     ASSERT(texture_id > 0 && frame_buffer > 0);
     
     if (context_) context_->SetAsCurrent();
@@ -1153,10 +1160,12 @@ namespace ERI {
     
 		GLenum status = glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) ;
 		ASSERT2(status == GL_FRAMEBUFFER_COMPLETE_OES, "Failed to make complete framebuffer object %x", status);
+#endif
 	}
   
 	void RendererES1::ReleaseFrameBuffer(int frame_buffer)
 	{
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		ASSERT(frame_buffer > 0);
 		
 		if (context_) context_->SetAsCurrent();
@@ -1170,6 +1179,7 @@ namespace ERI {
 				return;
 			}
 		}
+#endif
 	}
 
 	void RendererES1::SetBgColor(const Color& color)

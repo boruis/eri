@@ -395,8 +395,10 @@ namespace ERI {
 	
 	void RenderToTexture::PostProcess()
 	{
-//		ASSERT(texture_);
-//		Root::Ins().renderer()->CopyTexture(texture_->id, pixel_format_);
+#ifdef ERI_RENDERER_ES1
+		ASSERT(texture_);
+		Root::Ins().renderer()->CopyTexture(texture_->id, pixel_format_);
+#endif
 		
 		if (out_copy_pixels_)
 		{
