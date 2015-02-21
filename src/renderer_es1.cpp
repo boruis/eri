@@ -283,6 +283,15 @@ namespace ERI {
 		Root::Ins().scene_mgr()->OnViewportResize();
 	}
 
+	bool RendererES1::IsReadyToRender()
+	{
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
+		return frame_buffers_[kDefaultFrameBufferIdx];
+#else
+		return true;
+#endif
+	}
+	
 	void RendererES1::RenderStart()
 	{
 		// This application only creates a single context which is already set current at this point.
@@ -570,14 +579,11 @@ namespace ERI {
 		
 		glViewport(x, y, backing_width_, backing_height_);
 
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		glBindFramebufferOES(GL_FRAMEBUFFER_OES, frame_buffer);
-#endif
 	}
 
 	void RendererES1::CopyTexture(unsigned int texture, PixelFormat format)
 	{
-#if ERI_PLATFORM != ERI_PLATFORM_IOS
 		glBindTexture(GL_TEXTURE_2D, texture);
 		now_texture_ = texture;
 
@@ -596,7 +602,6 @@ namespace ERI {
 				ASSERT2(0, "invalid pixel format!");
 				break;
 		}
-#endif
 	}
 	
 	void RendererES1::CopyPixels(void* buffer, int x, int y, int width, int height, PixelFormat format)
@@ -625,9 +630,7 @@ namespace ERI {
 		
 		glViewport(0, 0, backing_width_, backing_height_);
 
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		glBindFramebufferOES(GL_FRAMEBUFFER_OES, frame_buffers_[kDefaultFrameBufferIdx]);
-#endif
 	}
 	
 	void RendererES1::EnableBlend(bool enable)
@@ -1066,70 +1069,7 @@ namespace ERI {
 
 		return texture;
 	}
-	
-	unsigned int RendererES1::GenerateRenderToTexture(int width, int height, int& out_frame_buffer, PixelFormat format)
-	{
-		if (context_) context_->SetAsCurrent();
 
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
-		// create the framebuffer object
-		int frame_buffer = GenerateFrameBuffer();
-
-		if (!frame_buffer)
-			return 0;
-		
-		glBindFramebufferOES(GL_FRAMEBUFFER_OES, frame_buffer);
-#endif
-		
-		// create the texture
-		GLuint texture;
-		glGenTextures(1, &texture);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		now_texture_ = texture;
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		
-		switch (format)
-		{
-			case RGBA:
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-				break;
-			case RGB:
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, NULL);
-				break;
-			case ALPHA:
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, NULL);
-				break;
-			default:
-				ASSERT2(0, "invalid pixel format!");
-				break;
-		}
-		
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
-		// attach the texture to the framebuffer
-		glFramebufferTexture2DOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_TEXTURE_2D, texture, 0);
-		
-		// TODO: use depth buffer?
-
-		//// allocate and attach a depth buffer
-		//GLuint depth_render_buffer;
-		//glGenRenderbuffersOES(1, &depth_render_buffer);
-		//glBindRenderbufferOES(GL_RENDERBUFFER_OES, depth_render_buffer);
-		//glRenderbufferStorageOES(GL_RENDERBUFFER_OES, GL_DEPTH_COMPONENT16_OES, width, height);
-		//glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_DEPTH_ATTACHMENT_OES, GL_RENDERBUFFER_OES, depth_render_buffer);
-
-		GLenum status = glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) ;
-		ASSERT2(status == GL_FRAMEBUFFER_COMPLETE_OES, "Failed to make complete framebuffer object %x", status);
-		
-		out_frame_buffer = frame_buffer;
-#endif
-		
-		return texture;
-	}
-	
 	void RendererES1::UpdateTexture(unsigned int texture_id, const void* buffer, int width, int height, PixelFormat format)
 	{
 		ASSERT(texture_id > 0);
@@ -1171,11 +1111,65 @@ namespace ERI {
 		GLuint id = texture_id;
 		glDeleteTextures(1, &id);
 	}
-
-	void RendererES1::ReleaseRenderToTexture(int texture_id, int frame_buffer)
+  
+  int RendererES1::GenerateFrameBuffer()
 	{
-		ReleaseTexture(texture_id);
-		ReleaseFrameBuffer(frame_buffer);
+		if (context_) context_->SetAsCurrent();
+    
+		for (int i = kDefaultFrameBufferIdx + 1; i < kMaxFrameBuffer; ++i)
+		{
+			if (!frame_buffers_[i])
+			{
+				glGenFramebuffersOES(1, &frame_buffers_[i]);
+				return frame_buffers_[i];
+			}
+		}
+		
+		return 0;
+	}
+  
+  void RendererES1::BindTextureToFrameBuffer(unsigned int texture_id, int frame_buffer)
+	{
+    ASSERT(texture_id > 0 && frame_buffer > 0);
+    
+    if (context_) context_->SetAsCurrent();
+    
+		glBindFramebufferOES(GL_FRAMEBUFFER_OES, frame_buffer);
+		
+		glBindTexture(GL_TEXTURE_2D, texture_id);
+		now_texture_ = texture_id;
+    
+		// attach the texture to the framebuffer
+		glFramebufferTexture2DOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_TEXTURE_2D, texture_id, 0);
+		
+		// TODO: use depth buffer?
+    
+		//// allocate and attach a depth buffer
+		//GLuint depth_render_buffer;
+		//glGenRenderbuffersOES(1, &depth_render_buffer);
+		//glBindRenderbufferOES(GL_RENDERBUFFER_OES, depth_render_buffer);
+		//glRenderbufferStorageOES(GL_RENDERBUFFER_OES, GL_DEPTH_COMPONENT16_OES, width, height);
+		//glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_DEPTH_ATTACHMENT_OES, GL_RENDERBUFFER_OES, depth_render_buffer);
+    
+		GLenum status = glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES) ;
+		ASSERT2(status == GL_FRAMEBUFFER_COMPLETE_OES, "Failed to make complete framebuffer object %x", status);
+	}
+  
+	void RendererES1::ReleaseFrameBuffer(int frame_buffer)
+	{
+		ASSERT(frame_buffer > 0);
+		
+		if (context_) context_->SetAsCurrent();
+    
+		for (int i = 0; i < kMaxFrameBuffer; ++i)
+		{
+			if (frame_buffers_[i] == frame_buffer)
+			{
+				glDeleteFramebuffersOES(1, &frame_buffers_[i]);
+				frame_buffers_[i] = 0;
+				return;
+			}
+		}
 	}
 
 	void RendererES1::SetBgColor(const Color& color)
@@ -1307,43 +1301,6 @@ namespace ERI {
 				ASSERT(0);
 				break;
 		}
-	}
-	
-	int RendererES1::GenerateFrameBuffer()
-	{
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
-		if (context_) context_->SetAsCurrent();
-
-		for (int i = kDefaultFrameBufferIdx + 1; i < kMaxFrameBuffer; ++i)
-		{
-			if (!frame_buffers_[i])
-			{
-				glGenFramebuffersOES(1, &frame_buffers_[i]);
-				return frame_buffers_[i];
-			}
-		}
-#endif
-		
-		return 0;
-	}
-
-	void RendererES1::ReleaseFrameBuffer(int frame_buffer)
-	{
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
-		ASSERT(frame_buffer > 0);
-		
-		if (context_) context_->SetAsCurrent();
-
-		for (int i = 0; i < kMaxFrameBuffer; ++i)
-		{
-			if (frame_buffers_[i] == frame_buffer)
-			{
-				glDeleteFramebuffersOES(1, &frame_buffers_[i]);
-				frame_buffers_[i] = 0;
-				return;
-			}
-		}
-#endif
 	}
 	
 	void RendererES1::ActiveTextureUnit(GLenum idx)

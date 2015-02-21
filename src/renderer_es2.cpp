@@ -68,7 +68,10 @@ namespace ERI {
 		now_active_texture_unit_(0),
 		now_texture_(0),
 		is_view_proj_dirty_(true),
-		current_program_(NULL)
+		fog_mode_(FOG_LINEAR),
+		fog_density_(1.f),
+		fog_start_(0.f),
+		fog_end_(1000.f)
 	{
 		memset(frame_buffers_, 0, sizeof(frame_buffers_));
 		
@@ -223,6 +226,15 @@ namespace ERI {
 
 		Root::Ins().scene_mgr()->OnViewportResize();
 	}
+  
+	bool RendererES2::IsReadyToRender()
+	{
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
+		return frame_buffers_[kDefaultFrameBufferIdx];
+#else
+		return true;
+#endif
+	}
 	
 	void RendererES2::RenderStart()
 	{
@@ -290,29 +302,60 @@ namespace ERI {
 		}
 		
 		//
-		
-		ShaderProgram* use_program = data->program ? data->program : Root::Ins().shader_mgr()->default_program();
-				
-		if (current_program_ != use_program)
-		{
-			glUseProgram(use_program->program());
-			current_program_ = use_program;
-		}
-		
-		ASSERT(current_program_);
-		
+
 		if (is_view_proj_dirty_)
 		{
 			Matrix4::Multiply(current_view_proj_matrix_, current_proj_matrix_, current_view_matrix_);
 			is_view_proj_dirty_ = false;
 		}
 		
+		//
+		
+		const std::vector<int>& uniforms = Root::Ins().shader_mgr()->current_program()->uniforms();
+		
 		if (data->apply_identity_model_matrix)
 			tmp_matrix_[0] = current_view_proj_matrix_;
 		else
 			Matrix4::Multiply(tmp_matrix_[0], current_view_proj_matrix_, data->world_model_matrix);
 		
-		glUniformMatrix4fv(current_program_->uniforms()[UNIFORM_MODEL_VIEW_PROJ_MATRIX], 1, GL_FALSE, tmp_matrix_[0].m);
+		glUniformMatrix4fv(uniforms[UNIFORM_MODEL_VIEW_PROJ_MATRIX], 1, GL_FALSE, tmp_matrix_[0].m);
+		
+		//
+		
+		if (data->material_ref->accept_fog)
+		{
+			if (data->apply_identity_model_matrix)
+				tmp_matrix_[0] = current_view_matrix_;
+			else
+				Matrix4::Multiply(tmp_matrix_[0], current_view_matrix_, data->world_model_matrix);
+			
+			glUniformMatrix4fv(uniforms[UNIFORM_MODEL_VIEW_MATRIX], 1, GL_FALSE, tmp_matrix_[0].m);
+			
+			glUniform1i(uniforms[UNIFORM_FOG_ENABLE], 1);
+			glUniform1i(uniforms[UNIFORM_FOG_MODE], fog_mode_);
+			glUniform4f(uniforms[UNIFORM_FOG_COLOR], fog_color_.r, fog_color_.g, fog_color_.b, fog_color_.a);
+
+			switch (fog_mode_)
+			{
+				case FOG_LINEAR:
+					glUniform1f(uniforms[UNIFORM_FOG_START], fog_start_);
+					glUniform1f(uniforms[UNIFORM_FOG_END], fog_end_);
+					break;
+
+				case FOG_EXP:
+				case FOG_EXP2:
+					glUniform1f(uniforms[UNIFORM_FOG_DENSITY], fog_density_);
+					break;
+
+				default:
+					ASSERT(0);
+					break;
+			}
+		}
+		else
+		{
+			glUniform1i(uniforms[UNIFORM_FOG_ENABLE], 0);
+		}
 		
 		//
 		
@@ -456,14 +499,14 @@ namespace ERI {
 			// TODO: more than 2 texture unit usage
 
 			GLint tex_enable[2] = { texture_unit_coord_idx_[0] >= 0, texture_unit_coord_idx_[1] >= 0 };
-			glUniform1iv(current_program_->uniforms()[UNIFORM_TEX_ENABLE], 2, tex_enable);
+			glUniform1iv(uniforms[UNIFORM_TEX_ENABLE], 2, tex_enable);
 			
 			if (tex_enable[0] || tex_enable[1])
 			{
 				if (data->is_tex_transform)
 				{
 					GLint tex_mat_enable[2] = { 1, 1 };
-					glUniform1iv(current_program_->uniforms()[UNIFORM_TEX_MATRIX_ENABLE], 2, tex_mat_enable);
+					glUniform1iv(uniforms[UNIFORM_TEX_MATRIX_ENABLE], 2, tex_mat_enable);
 					
 					Matrix4::Translate(tmp_matrix_[0], Vector3(data->tex_translate.x, data->tex_translate.y, 0.0f));
 					Matrix4::Scale(tmp_matrix_[1], Vector3(data->tex_scale.x, data->tex_scale.y, 1.0f));
@@ -472,13 +515,13 @@ namespace ERI {
 					for (int i = 0; i < 2; ++i)
 					{
 						if (tex_enable[i])
-							glUniformMatrix4fv(current_program_->uniforms()[UNIFORM_TEX_MATRIX0 + i], 1, GL_FALSE, tmp_matrix_[2].m);
+							glUniformMatrix4fv(uniforms[UNIFORM_TEX_MATRIX0 + i], 1, GL_FALSE, tmp_matrix_[2].m);
 					}
 				}
 				else
 				{
 					GLint tex_mat_enable[2] = { 0, 0 };
-					glUniform1iv(current_program_->uniforms()[UNIFORM_TEX_MATRIX_ENABLE], 2, tex_mat_enable);
+					glUniform1iv(uniforms[UNIFORM_TEX_MATRIX_ENABLE], 2, tex_mat_enable);
 				}
 			}
 						
@@ -498,14 +541,14 @@ namespace ERI {
 		else
 		{
 			GLint tex_enable[2] = { 0, 0 };
-			glUniform1iv(current_program_->uniforms()[UNIFORM_TEX_ENABLE], 2, tex_enable);
+			glUniform1iv(uniforms[UNIFORM_TEX_ENABLE], 2, tex_enable);
 
 			glDisableVertexAttribArray(ATTRIB_TEXCOORD0);
 			glDisableVertexAttribArray(ATTRIB_TEXCOORD1);
 		}
 		
 #if defined(DEBUG)
-		if (!current_program_->Validate())
+		if (!Root::Ins().shader_mgr()->current_program()->Validate())
 			return;
 #endif
 		
@@ -531,21 +574,18 @@ namespace ERI {
 	
 	void RendererES2::EnableRenderToBuffer(int x, int y, int width, int height, int frame_buffer)
 	{
-		backing_width_backup_ = backing_width_;
-		backing_height_backup_ = backing_height_;
-		backing_width_ = width;
-		backing_height_ = height;
+//		backing_width_backup_ = backing_width_;
+//		backing_height_backup_ = backing_height_;
+//		backing_width_ = width;
+//		backing_height_ = height;
+//		
+//		glViewport(x, y, backing_width_, backing_height_);
 		
-		glViewport(x, y, backing_width_, backing_height_);
-		
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
-#endif
 	}
 	
 	void RendererES2::CopyTexture(unsigned int texture, PixelFormat format)
 	{
-#if ERI_PLATFORM != ERI_PLATFORM_IOS
 		glBindTexture(GL_TEXTURE_2D, texture);
 		now_texture_ = texture;
 		
@@ -564,7 +604,6 @@ namespace ERI {
 				ASSERT2(0, "invalid pixel format!");
 				break;
 		}
-#endif
 	}
 	
 	void RendererES2::CopyPixels(void* buffer, int x, int y, int width, int height, PixelFormat format)
@@ -588,14 +627,12 @@ namespace ERI {
 	
 	void RendererES2::RestoreRenderToBuffer()
 	{
-		backing_width_ = backing_width_backup_;
-		backing_height_ = backing_height_backup_;
+//		backing_width_ = backing_width_backup_;
+//		backing_height_ = backing_height_backup_;
+//		
+//		glViewport(0, 0, backing_width_, backing_height_);
 		
-		glViewport(0, 0, backing_width_, backing_height_);
-		
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
 		glBindFramebuffer(GL_FRAMEBUFFER, frame_buffers_[kDefaultFrameBufferIdx]);
-#endif
 	}
 	
 	void RendererES2::EnableBlend(bool enable)
@@ -702,7 +739,7 @@ namespace ERI {
 				now_texture_ = unit.texture->id;
 				glBindTexture(GL_TEXTURE_2D, now_texture_);
 				
-				glUniform1i(UNIFORM_TEX0 + idx, idx);
+				glUniform1i(Root::Ins().shader_mgr()->current_program()->uniforms()[UNIFORM_TEX0 + idx], idx);
 			}
 			
 			if (unit.texture->current_params.filter_min != unit.params.filter_min)
@@ -733,6 +770,23 @@ namespace ERI {
 	void RendererES2::DisableTextureUnit(int idx)
 	{
 		texture_unit_coord_idx_[idx] = -1;
+	}
+	
+	void RendererES2::SetFog(FogMode mode, float density /*= 1.f*/)
+	{
+		fog_mode_ = mode;
+		fog_density_ = density;
+	}
+	
+	void RendererES2::SetFogDistance(float start, float end /*= 1.f*/)
+	{
+		fog_start_ = start;
+		fog_end_ = end;
+	}
+	
+	void RendererES2::SetFogColor(const Color& color)
+	{
+		fog_color_ = color;
 	}
 	
 	unsigned int RendererES2::GenerateTexture(const void* buffer, int width, int height, PixelFormat format, int buffer_size /*= 0*/)
@@ -800,69 +854,6 @@ namespace ERI {
 		return texture;
 	}
 	
-	unsigned int RendererES2::GenerateRenderToTexture(int width, int height, int& out_frame_buffer, PixelFormat format)
-	{
-		if (context_) context_->SetAsCurrent();
-
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
-		// create the framebuffer object
-		int frame_buffer = GenerateFrameBuffer();
-
-		if (!frame_buffer)
-			return 0;
-
-		glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
-#endif
-		
-		// create the texture
-		GLuint texture;
-		glGenTextures(1, &texture);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		now_texture_ = texture;
-		
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		
-    switch (format)
-		{
-			case RGBA:
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-				break;
-			case RGB:
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, NULL);
-				break;
-			case ALPHA:
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, NULL);
-				break;
-			default:
-				ASSERT2(0, "invalid pixel format!");
-				break;
-		}
-		
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
-		// attach the texture to the framebuffer
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
-		
-		// TODO: use depth buffer?
-		
-		//// allocate and attach a depth buffer
-		//GLuint depth_render_buffer;
-		//glGenRenderbuffersOES(1, &depth_render_buffer);
-		//glBindRenderbufferOES(GL_RENDERBUFFER_OES, depth_render_buffer);
-		//glRenderbufferStorageOES(GL_RENDERBUFFER_OES, GL_DEPTH_COMPONENT16_OES, width, height);
-		//glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_DEPTH_ATTACHMENT_OES, GL_RENDERBUFFER_OES, depth_render_buffer);
-		
-		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-		ASSERT2(status == GL_FRAMEBUFFER_COMPLETE, "Failed to make complete framebuffer object %x", status);
-
-		out_frame_buffer = frame_buffer;
-#endif
-		
-		return texture;
-	}
-	
 	void RendererES2::UpdateTexture(unsigned int texture_id, const void* buffer, int width, int height, PixelFormat format)
 	{
 		ASSERT(texture_id > 0);
@@ -905,12 +896,66 @@ namespace ERI {
 		glDeleteTextures(1, &id);
 	}
 	
-	void RendererES2::ReleaseRenderToTexture(int texture_id, int frame_buffer)
+	int RendererES2::GenerateFrameBuffer()
 	{
-		ReleaseTexture(texture_id);
-		ReleaseFrameBuffer(frame_buffer);
+		if (context_) context_->SetAsCurrent();
+		
+		for (int i = kDefaultFrameBufferIdx + 1; i < kMaxFrameBuffer; ++i)
+		{
+			if (!frame_buffers_[i])
+			{
+				glGenFramebuffers(1, &frame_buffers_[i]);
+				return frame_buffers_[i];
+			}
+		}
+		
+		return 0;
 	}
 	
+	void RendererES2::BindTextureToFrameBuffer(unsigned int texture_id, int frame_buffer)
+	{
+		ASSERT(texture_id > 0 && frame_buffer > 0);
+		
+		if (context_) context_->SetAsCurrent();
+		
+		glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+		
+		glBindTexture(GL_TEXTURE_2D, texture_id);
+		now_texture_ = texture_id;
+		
+		// attach the texture to the framebuffer
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_id, 0);
+		
+		// TODO: use depth buffer?
+		
+		//// allocate and attach a depth buffer
+		//GLuint depth_render_buffer;
+		//glGenRenderbuffersOES(1, &depth_render_buffer);
+		//glBindRenderbufferOES(GL_RENDERBUFFER_OES, depth_render_buffer);
+		//glRenderbufferStorageOES(GL_RENDERBUFFER_OES, GL_DEPTH_COMPONENT16_OES, width, height);
+		//glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_DEPTH_ATTACHMENT_OES, GL_RENDERBUFFER_OES, depth_render_buffer);
+		
+		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		ASSERT2(status == GL_FRAMEBUFFER_COMPLETE, "Failed to make complete framebuffer object %x", status);
+	}
+	
+	void RendererES2::ReleaseFrameBuffer(int frame_buffer)
+	{
+		ASSERT(frame_buffer > 0);
+		
+		if (context_) context_->SetAsCurrent();
+		
+		for (int i = 0; i < kMaxFrameBuffer; ++i)
+		{
+			if (frame_buffers_[i] == frame_buffer)
+			{
+				glDeleteFramebuffers(1, &frame_buffers_[i]);
+				frame_buffers_[i] = 0;
+				return;
+			}
+		}
+	}
+	 
 	void RendererES2::SetBgColor(const Color& color)
 	{
 		bg_color_ = color;
@@ -1002,43 +1047,6 @@ namespace ERI {
 				ASSERT(0);
 				break;
 		}
-	}
-	
-	int RendererES2::GenerateFrameBuffer()
-	{
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
-		if (context_) context_->SetAsCurrent();
-
-		for (int i = kDefaultFrameBufferIdx + 1; i < kMaxFrameBuffer; ++i)
-		{
-			if (!frame_buffers_[i])
-			{
-				glGenFramebuffers(1, &frame_buffers_[i]);
-				return frame_buffers_[i];
-			}
-		}
-#endif
-		
-		return 0;
-	}
-	
-	void RendererES2::ReleaseFrameBuffer(int frame_buffer)
-	{
-#if ERI_PLATFORM == ERI_PLATFORM_IOS
-		ASSERT(frame_buffer > 0);
-
-		if (context_) context_->SetAsCurrent();
-		
-		for (int i = 0; i < kMaxFrameBuffer; ++i)
-		{
-			if (frame_buffers_[i] == frame_buffer)
-			{
-				glDeleteFramebuffers(1, &frame_buffers_[i]);
-				frame_buffers_[i] = 0;
-				return;
-			}
-		}
-#endif
 	}
 	
 	void RendererES2::ActiveTextureUnit(GLenum idx)

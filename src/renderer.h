@@ -75,6 +75,7 @@ namespace ERI {
 		virtual int backing_width() = 0;
 		virtual int backing_height() = 0;
 		
+		virtual bool IsReadyToRender() = 0;
 		virtual void RenderStart() = 0;
 		virtual void RenderEnd() = 0;
 		virtual void Render(const RenderData* data) = 0;
@@ -110,10 +111,12 @@ namespace ERI {
 
 		virtual unsigned int GenerateTexture(const void* buffer, int width, int height, PixelFormat format, int buffer_size = 0) = 0;
 		virtual unsigned int GenerateTexture() = 0;
-		virtual unsigned int GenerateRenderToTexture(int width, int height, int& out_frame_buffer, PixelFormat format) = 0;
 		virtual void UpdateTexture(unsigned int texture_id, const void* buffer, int width, int height, PixelFormat format) = 0;
 		virtual void ReleaseTexture(int texture_id) = 0;
-		virtual void ReleaseRenderToTexture(int texture_id, int frame_buffer) = 0;
+		
+		virtual int GenerateFrameBuffer() = 0;
+		virtual void BindTextureToFrameBuffer(unsigned int texture_id, int frame_buffer) = 0;
+		virtual void ReleaseFrameBuffer(int frame_buffer) = 0;
 		
 		virtual void SetBgColor(const Color& color) = 0;
 		virtual const Color& GetBgColor() = 0;

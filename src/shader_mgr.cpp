@@ -164,12 +164,19 @@ bool ShaderProgram::Construct(const std::string& vertex_shader_path,
 	
 	// get uniform locations
 	uniforms_[UNIFORM_MODEL_VIEW_PROJ_MATRIX] = glGetUniformLocation(program_, "model_view_proj_matrix");
+	uniforms_[UNIFORM_MODEL_VIEW_MATRIX] = glGetUniformLocation(program_, "model_view_matrix");
 	uniforms_[UNIFORM_TEX_ENABLE] = glGetUniformLocation(program_, "tex_enable");
 	uniforms_[UNIFORM_TEX0] = glGetUniformLocation(program_, "tex[0]");
 	uniforms_[UNIFORM_TEX1] = glGetUniformLocation(program_, "tex[1]");
 	uniforms_[UNIFORM_TEX_MATRIX_ENABLE] = glGetUniformLocation(program_, "tex_matrix_enable");
 	uniforms_[UNIFORM_TEX_MATRIX0] = glGetUniformLocation(program_, "tex_matrix[0]");
 	uniforms_[UNIFORM_TEX_MATRIX1] = glGetUniformLocation(program_, "tex_matrix[1]");
+	uniforms_[UNIFORM_FOG_ENABLE] = glGetUniformLocation(program_, "fog_enable");
+	uniforms_[UNIFORM_FOG_MODE] = glGetUniformLocation(program_, "fog_mode");
+	uniforms_[UNIFORM_FOG_START] = glGetUniformLocation(program_, "fog_start");
+	uniforms_[UNIFORM_FOG_END] = glGetUniformLocation(program_, "fog_end");
+	uniforms_[UNIFORM_FOG_DENSITY] = glGetUniformLocation(program_, "fog_density");
+	uniforms_[UNIFORM_FOG_COLOR] = glGetUniformLocation(program_, "fog_color");
 	
 	// release vertex and fragment shaders
 	if (vertex_shader)
@@ -178,6 +185,18 @@ bool ShaderProgram::Construct(const std::string& vertex_shader_path,
 		glDeleteShader(fragment_shader);
 	
 	return true;
+}
+  
+void ShaderProgram::SetCustomUniform(const std::string& name, float value)
+{
+	int loc = glGetUniformLocation(program_, name.c_str());
+	glUniform1f(loc, value);
+}
+  
+void ShaderProgram::SetCustomUniform(const std::string& name, const Vector2& value)
+{
+	int loc = glGetUniformLocation(program_, name.c_str());
+	glUniform2f(loc, value.x, value.y);
 }
 
 bool ShaderProgram::Validate()
@@ -193,7 +212,7 @@ bool ShaderProgram::Validate()
 
 //==============================================================================
 
-ShaderMgr::ShaderMgr() : default_program_(NULL)
+ShaderMgr::ShaderMgr() : default_program_(NULL), current_program_(NULL)
 {
 }
 
@@ -231,6 +250,20 @@ ShaderProgram* ShaderMgr::Get(const std::string& name)
 		return NULL;
 	
 	return it->second;
+}
+  
+void ShaderMgr::Use(ShaderProgram* program)
+{
+	if (NULL == program)
+		program = default_program_;
+	
+	if (current_program_ != program)
+	{
+		glUseProgram(program->program());
+		current_program_ = program;
+	}
+	
+	ASSERT(current_program_);
 }
 
 }

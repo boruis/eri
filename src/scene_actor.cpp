@@ -18,6 +18,10 @@
 #include "scene_mgr.h"
 #include "font_mgr.h"
 
+#ifdef ERI_RENDERER_ES2
+#include "shader_mgr.h"
+#endif
+
 namespace ERI {
 	
 #pragma mark SceneActor
@@ -32,6 +36,7 @@ namespace ERI {
 		bounding_sphere_(NULL),
 		bounding_sphere_world_(NULL)
 	{
+		render_data_.material_ref = &material_data_;
 	}
 	
 	SceneActor::~SceneActor()
@@ -186,7 +191,9 @@ namespace ERI {
 		if (!IsInFrustum())
 			return;
 		
-		// set material state
+#ifdef ERI_RENDERER_ES2
+		Root::Ins().shader_mgr()->Use(render_data_.program);
+#endif
 		
 		renderer->EnableMaterial(&material_data_);
 		

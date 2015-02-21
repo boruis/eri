@@ -136,8 +136,6 @@ namespace ERI {
 		int		height;
 		
 		void*	data;
-
-		int		bind_frame_buffer;
 		
 		bool	alpha_premultiplied;
 		
@@ -163,8 +161,6 @@ namespace ERI {
 		const Texture* CreateTexture(const std::string& name, TextureReader* reader);
 		void UpdateTexture(Texture* tex, const void* data);
 		
-		const Texture* GenerateRenderToTexture(int width, int height, PixelFormat format);
-		
 		bool ReleaseTexture(const std::string& name);
 		bool ReleaseTexture(const Texture* texture);
 		
@@ -183,8 +179,9 @@ namespace ERI {
 		RenderToTexture(int x, int y, int width, int height, CameraActor* render_cam = NULL);
 		~RenderToTexture();
 
-		void Init();
+		void Init(const Texture* exist_texture = NULL);
 		void Release();
+    
 		void ProcessRender();
 		
 		void CopyPixels(void* out_copy_pixels);
@@ -192,13 +189,22 @@ namespace ERI {
 		inline const Texture* texture() { return texture_; }
 		inline void set_pixel_format(PixelFormat format) { pixel_format_ = format; }
 		
+		inline int width() { return width_; }
+		inline int height() { return height_; }
+		
 	private:
+		void PreProcess();
+		void PostProcess();
+
 		int				x_, y_, width_, height_;
 
 		const Texture*	texture_;
+		int bind_frame_buffer_;
+		bool is_own_texture_;
+		
 		PixelFormat	pixel_format_;
 		
-		CameraActor*	render_cam_;
+		CameraActor *render_cam_, *default_cam_;
 		
 		void*			out_copy_pixels_;
 	};

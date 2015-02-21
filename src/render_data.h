@@ -16,6 +16,7 @@
 
 namespace ERI {
 	
+	struct MaterialData;
 	class ShaderProgram;
 	
 	struct vertex_2_pos_tex {
@@ -131,8 +132,10 @@ namespace ERI {
 		GLclampf	alpha_test_ref;
 
 		GLenum	depth_test_func;
-		
+    
 		ShaderProgram* program;
+		
+		const MaterialData* material_ref;
 	};
 
 }

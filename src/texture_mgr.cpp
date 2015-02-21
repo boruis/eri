@@ -46,7 +46,6 @@ namespace ERI {
 		width(_width),
 		height(_height),
 		data(NULL),
-		bind_frame_buffer(0),
 		alpha_premultiplied(false)
 	{
 	}
@@ -84,11 +83,7 @@ namespace ERI {
 	
 	void Texture::ReleaseFromRenderer()
 	{
-		if (bind_frame_buffer)
-			Root::Ins().renderer()->ReleaseRenderToTexture(id, bind_frame_buffer);
-		else
-			Root::Ins().renderer()->ReleaseTexture(id);
-		
+		Root::Ins().renderer()->ReleaseTexture(id);
 		id = 0;
 	}
 	
@@ -274,31 +269,6 @@ namespace ERI {
 		
 		Root::Ins().renderer()->UpdateTexture(tex->id, data, tex->width, tex->height, RGBA);
 	}
-	
-	const Texture* TextureMgr::GenerateRenderToTexture(int width, int height, PixelFormat format)
-	{
-		int bind_frame_buffer = 0;
-		int texture_id = Root::Ins().renderer()->GenerateRenderToTexture(width, height, bind_frame_buffer, format);
-		
-		// TODO: check texture invalid number, maybe use int -1 is better
-		
-		if (texture_id != 0)
-		{
-			Texture* tex = new Texture(texture_id, width, height);
-
-			tex->bind_frame_buffer = bind_frame_buffer;
-			
-			static int serial_number = 0;
-			char key[16];
-			sprintf(key, "%d_render2tex", serial_number++);
-						
-			texture_map_.insert(std::make_pair(key, tex));
-			
-			return tex;
-		}
-		
-		return NULL;
-	}
 
 	bool TextureMgr::ReleaseTexture(const std::string& name)
 	{
@@ -310,6 +280,7 @@ namespace ERI {
 			texture->ReleaseFromRenderer();
 			texture_map_.erase(it);
 			delete texture;
+      
 			return true;
 		}
 
@@ -344,8 +315,11 @@ namespace ERI {
 		width_(width),
 		height_(height),
 		texture_(NULL),
+		bind_frame_buffer_(0),
+		is_own_texture_(false),
 		pixel_format_(RGBA),
 		render_cam_(render_cam),
+		default_cam_(NULL),
 		out_copy_pixels_(NULL)
 	{
 	}
@@ -355,67 +329,99 @@ namespace ERI {
 		Release();
 	}
 	
-	void RenderToTexture::Init()
+	void RenderToTexture::Init(const Texture* exist_texture /*= NULL*/)
 	{
-		ASSERT(!texture_);
-
-		texture_ = Root::Ins().texture_mgr()->GenerateRenderToTexture(width_, height_, pixel_format_);
+		if (exist_texture)
+		{
+			if (texture_ && is_own_texture_)
+				Root::Ins().texture_mgr()->ReleaseTexture(texture_);
+			
+			texture_ = exist_texture;
+			is_own_texture_ = false;
+		}
+		else
+		{
+			if (NULL == texture_ || !is_own_texture_)
+			{
+				char name[32];
+				sprintf(name, "render2tex_%p", this);
+				texture_ = Root::Ins().texture_mgr()->CreateTexture(name, width_, height_, NULL, pixel_format_);
+				is_own_texture_ = true;
+			}
+		}
+		
+		if (bind_frame_buffer_ == 0)
+			bind_frame_buffer_ = Root::Ins().renderer()->GenerateFrameBuffer();
+		
+		Root::Ins().renderer()->BindTextureToFrameBuffer(texture_->id, bind_frame_buffer_);
 	}
 	
 	void RenderToTexture::Release()
 	{
+		if (bind_frame_buffer_ > 0)
+		{
+			Root::Ins().renderer()->ReleaseFrameBuffer(bind_frame_buffer_);
+			bind_frame_buffer_ = 0;
+		}
+		
 		if (texture_)
 		{
-			Root::Ins().texture_mgr()->ReleaseTexture(texture_);
+			if (is_own_texture_)
+				Root::Ins().texture_mgr()->ReleaseTexture(texture_);
+			
 			texture_ = NULL;
+		}
+	}
+	
+	void RenderToTexture::PreProcess()
+	{
+		Root::Ins().renderer()->EnableRenderToBuffer(x_, y_, width_, height_, bind_frame_buffer_);
+		
+		// TODO: how to handle layer's cam?
+		
+		default_cam_ = Root::Ins().scene_mgr()->default_cam();
+		
+		if (render_cam_ && render_cam_ != default_cam_)
+		{
+			Root::Ins().scene_mgr()->set_default_cam(render_cam_);
+		}
+		else
+		{
+			Root::Ins().scene_mgr()->OnViewportResize(false);
+		}
+		
+		Root::Ins().renderer()->RenderStart();
+	}
+	
+	void RenderToTexture::PostProcess()
+	{
+//		ASSERT(texture_);
+//		Root::Ins().renderer()->CopyTexture(texture_->id, pixel_format_);
+		
+		if (out_copy_pixels_)
+		{
+			Root::Ins().renderer()->CopyPixels(out_copy_pixels_, 0, 0, width_, height_, pixel_format_);
+		}
+	
+		//
+		
+		Root::Ins().renderer()->RestoreRenderToBuffer();
+		
+		if (render_cam_ && render_cam_ != default_cam_)
+		{
+			Root::Ins().scene_mgr()->set_default_cam(default_cam_);
+		}
+		else
+		{
+			Root::Ins().scene_mgr()->OnViewportResize(false);
 		}
 	}
 	
 	void RenderToTexture::ProcessRender()
 	{
-		ASSERT(texture_);
-
-		Renderer* renderer = Root::Ins().renderer();
-		SceneMgr* scene_mgr = Root::Ins().scene_mgr();
-		
-		renderer->EnableRenderToBuffer(x_, y_, width_, height_, texture_->bind_frame_buffer);
-		
-		CameraActor* default_cam = scene_mgr->default_cam();
-		
-		if (render_cam_ && render_cam_ != default_cam)
-		{
-			scene_mgr->set_default_cam(render_cam_);
-		}
-		else
-		{
-			scene_mgr->OnViewportResize(false);
-		}
-		
-		//
-
-		renderer->RenderStart();
-		scene_mgr->Render(renderer);
-		renderer->CopyTexture(texture_->id, pixel_format_);
-		
-		//
-		
-		if (out_copy_pixels_)
-		{
-			renderer->CopyPixels(out_copy_pixels_, 0, 0, width_, height_, pixel_format_);
-		}
-
-		//
-		
-		renderer->RestoreRenderToBuffer();
-		
-		if (render_cam_ && render_cam_ != default_cam)
-		{
-			scene_mgr->set_default_cam(default_cam);
-		}
-		else
-		{
-			scene_mgr->OnViewportResize(false);
-		}
+		PreProcess();
+		Root::Ins().scene_mgr()->Render(Root::Ins().renderer());
+		PostProcess();
 	}
 	
 	void RenderToTexture::CopyPixels(void* out_copy_pixels)

@@ -49,6 +49,7 @@ namespace ERI {
 		virtual int backing_width() { return backing_width_; }
 		virtual int backing_height() { return backing_height_; }
 		
+		virtual bool IsReadyToRender();
 		virtual void RenderStart();
 		virtual void RenderEnd();
 		virtual void Render(const RenderData* data);
@@ -86,16 +87,18 @@ namespace ERI {
 		virtual void SetLightSpotExponent(int idx, float exponent) {}
 		virtual void SetLightSpotCutoff(int idx, float cutoff) {}
 
-		virtual void SetFog(FogMode mode, float density = 1.f) {}
-		virtual void SetFogDistance(float start, float end = 1.f) {}
-		virtual void SetFogColor(const Color& color) {}
+		virtual void SetFog(FogMode mode, float density = 1.f);
+		virtual void SetFogDistance(float start, float end = 1.f);
+		virtual void SetFogColor(const Color& color);
 
 		virtual unsigned int GenerateTexture(const void* buffer, int width, int height, PixelFormat format, int buffer_size = 0);
 		virtual unsigned int GenerateTexture();
-		virtual unsigned int GenerateRenderToTexture(int width, int height, int& out_frame_buffer, PixelFormat format);
 		virtual void UpdateTexture(unsigned int texture_id, const void* buffer, int width, int height, PixelFormat format);
 		virtual void ReleaseTexture(int texture_id);
-		virtual void ReleaseRenderToTexture(int texture_id, int frame_buffer);
+		
+		virtual int GenerateFrameBuffer();
+		virtual void BindTextureToFrameBuffer(unsigned int texture_id, int frame_buffer);
+		virtual void ReleaseFrameBuffer(int frame_buffer);
 		
 		virtual void SetBgColor(const Color& color);
 		virtual const Color& GetBgColor();
@@ -114,9 +117,6 @@ namespace ERI {
 		virtual void SetViewOrientation(ViewOrientation orientaion);
 
 	private:
-		int GenerateFrameBuffer();
-		void ReleaseFrameBuffer(int frame_buffer);
-
 		void ActiveTextureUnit(GLenum idx);
 		
 		void AdjustProjectionForViewOrientation();
@@ -168,7 +168,10 @@ namespace ERI {
 		
 		bool is_view_proj_dirty_;
 		
-		ShaderProgram* current_program_;
+		FogMode fog_mode_;
+		float fog_density_;
+		float fog_start_, fog_end_;
+		Color fog_color_;
 	};
 	
 }

@@ -35,6 +35,7 @@ namespace ERI {
 		alpha_test_func(GL_GREATER),
 		alpha_test_ref(0.0f),
 		depth_test_func(GL_LESS),
+		material_ref(NULL),
 		program(NULL)
 	{
 	}

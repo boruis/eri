@@ -90,6 +90,9 @@ namespace ERI {
 	
 	void Root::Update()
 	{
+		if (!renderer_->IsReadyToRender())
+			return;
+		
 		renderer_->RenderStart();
 		scene_mgr_->Render(renderer_);
 		renderer_->RenderEnd();
