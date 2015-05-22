@@ -1,6 +1,6 @@
 //
 //  framework_sdl.cpp
-//  archery
+//  eri
 //
 //  Created by exe on 9/1/13.
 //
@@ -8,7 +8,7 @@
 
 #include "framework_sdl.h"
 
-#ifdef ERI_DESKTOP
+#ifdef ERI_USE_SDL
 
 #include "pch.h"
 
@@ -68,6 +68,7 @@ static unsigned int GetFunctionKeyStatus()
 	return status;
 }
 
+#ifdef ERI_USE_SDL_GAME_CONTROLLER
 //static const char* ControllerAxisName(int axis)
 //{
 //  switch (axis)
@@ -139,6 +140,7 @@ static ERI::JoystickCode TranslateButtonJoystickCode(int event_joystick_code)
   
   return code;
 }
+#endif // ERI_USE_SDL_GAME_CONTROLLER
 
 Framework::Framework(int window_width, int window_height, const char* title /*= NULL*/, unsigned int flags /*= 0*/)
   : window_(NULL),
@@ -148,20 +150,27 @@ Framework::Framework(int window_width, int window_height, const char* title /*= 
   is_running_(false),
   is_visible_(false),
   is_fullscreen_(false),
-  fullscreen_type_(SDL_WINDOW_FULLSCREEN_DESKTOP),
+  fullscreen_type_(0),
   log_fps_(false)
 {
   ASSERT(window_width_ > 0 && window_height_ > 0);
   ASSERT((flags & (FULL_SCREEN | FULL_SCREEN_DESKTOP)) != (FULL_SCREEN | FULL_SCREEN_DESKTOP));
+
+  int init_flags = SDL_INIT_VIDEO;
   
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER ) < 0)
+#ifdef ERI_USE_SDL_GAME_CONTROLLER
+  init_flags |= (SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER);
+  memset(game_controllers_, 0, sizeof(game_controllers_));
+#endif
+  
+  if (SDL_Init(init_flags) < 0)
   {
     ASSERT2(0, "Couldn't initialize SDL: %s", SDL_GetError());
   }
   
-  memset(game_controllers_, 0, sizeof(game_controllers_));
-  
   Uint32 sdl_flags = 0;
+  
+#ifdef ERI_USE_SDL_FULLSCREEN
   if (flags & FULL_SCREEN)
   {
     fullscreen_type_ = SDL_WINDOW_FULLSCREEN;
@@ -170,10 +179,16 @@ Framework::Framework(int window_width, int window_height, const char* title /*= 
   }
   if (flags & FULL_SCREEN_DESKTOP)
   {
+    fullscreen_type_ = SDL_WINDOW_FULLSCREEN_DESKTOP;
     sdl_flags |= fullscreen_type_;
     is_fullscreen_ = true;
   }
-  if (flags & RESIZABLE) sdl_flags |= SDL_WINDOW_RESIZABLE;
+#endif
+
+  if (flags & RESIZABLE)
+  {
+    sdl_flags |= SDL_WINDOW_RESIZABLE;
+  }
   
   window_ = SDL_CreateWindow(title ? title : "sdl",
                              SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -201,11 +216,13 @@ Framework::~Framework()
 {
   ERI::Root::DestroyIns();
   
+#ifdef ERI_USE_SDL_GAME_CONTROLLER
   for (int i = 0; i < kGameControllerMax; ++i)
   {
     if (NULL != game_controllers_[i])
       SDL_GameControllerClose(game_controllers_[i]);
   }
+#endif
   
   SDL_GL_DeleteContext(context_);
   SDL_DestroyWindow(window_);
@@ -429,6 +446,7 @@ float Framework::PreUpdate()
         }
         break;
         
+#ifdef ERI_USE_SDL_GAME_CONTROLLER
       case SDL_CONTROLLERAXISMOTION:
         {
 //          LOGI("Controller %d axis %d ('%s') value: %d",
@@ -527,15 +545,16 @@ float Framework::PreUpdate()
           }
         }
         break;
-
+#endif // ERI_USE_SDL_GAME_CONTROLLER
+        
       default:
         break;
     }
   }
   
   // calculate delta time
-  int now_time = SDL_GetTicks();
-  static int last_time = now_time;
+  Uint32 now_time = SDL_GetTicks();
+  static Uint32 last_time = now_time;
   static float delta_time = 0.f;
   
   delta_time = (now_time - last_time) * 0.001f;
@@ -569,11 +588,7 @@ void Framework::Stop()
   is_running_ = false;
 }
 
-int Framework::GetTicksTime()
-{
-  return SDL_GetTicks();
-}
-
+#ifdef ERI_USE_SDL_THREAD
 void* Framework::CreateThread(int (*thread_func)(void*), const char* name, void* data)
 {
   SDL_Thread* thread = SDL_CreateThread(thread_func, name, data);
@@ -581,14 +596,10 @@ void* Framework::CreateThread(int (*thread_func)(void*), const char* name, void*
   {
     LOGI("SDL_CreateThread failed: %s", SDL_GetError());
   }
-  
+
   return thread;
 }
-
-void Framework::Delay(int ms)
-{
-  SDL_Delay(ms);
-}
+#endif
 
 void Framework::LogFPS(bool enable)
 {
@@ -602,6 +613,7 @@ void Framework::LogFPS(bool enable)
 
 void Framework::ToggleFullscreen()
 {
+#ifdef ERI_USE_SDL_FULLSCREEN
   if (window_)
   {
     is_fullscreen_ = !is_fullscreen_;
@@ -618,8 +630,10 @@ void Framework::ToggleFullscreen()
       SDL_GetWindowSize(window_, &current_width_, &current_height_);
     }
   }
+#endif
 }
 
+#ifdef ERI_USE_SDL_GAME_CONTROLLER
 void Framework::AddGameController(SDL_GameController* game_controller)
 {
   ASSERT(game_controller);
@@ -647,5 +661,6 @@ void Framework::AddGameController(SDL_GameController* game_controller)
     LOGI("add game controller %s to slots[%d]!", SDL_GameControllerName(game_controller), empty_idx);
   }
 }
+#endif // ERI_USE_SDL_GAME_CONTROLLER
 
-#endif // ERI_DESKTOP
+#endif // ERI_USE_SDL

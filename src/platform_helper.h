@@ -24,8 +24,6 @@ namespace ERI {
 	const char* GetBundlePath();
 	std::string GetWritePath();
 	
-	const char* GetStringFileContent(const std::string& file_path);
-	
 	void SetDeviceOrientation(ViewOrientation orientation);
 	
 	bool GetTextureAtlasArray(const std::string& name, TextureAtlasArray& out_array);

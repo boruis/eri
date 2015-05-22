@@ -354,6 +354,7 @@ namespace ERI {
 			bind_frame_buffer_ = Root::Ins().renderer()->GenerateFrameBuffer();
 		
 		Root::Ins().renderer()->BindTextureToFrameBuffer(texture_->id, bind_frame_buffer_);
+		Root::Ins().renderer()->RestoreRenderToBuffer();
 	}
 	
 	void RenderToTexture::Release()

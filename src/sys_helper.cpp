@@ -128,15 +128,17 @@ bool GetFileContentString(const std::string& path, std::string& out_content)
 	
 	// get length of file:
 	is.seekg(0, std::ios::end);
-	std::streampos length = is.tellg();
+	long long length = is.tellg();
 	is.seekg(0, std::ios::beg);
 	
 	// allocate memory:
-	char* buffer = new char[length];
+	char* buffer = new char[length + 1];
 	
 	// read data as a block:
 	is.read(buffer, length);
 	is.close();
+	
+	buffer[length] = '\0';
 	
 	out_content = buffer;
 	

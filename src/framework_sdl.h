@@ -1,21 +1,28 @@
 //
 //  framework_sdl.h
-//  archery
+//  eri
 //
 //  Created by exe on 9/1/13.
 //
 //
 
-#ifndef __archery__framework_sdl__
-#define __archery__framework_sdl__
+#ifndef ERI_FRAMEWORK_SDL_H
+#define ERI_FRAMEWORK_SDL_H
 
 #include "pch.h"
 
-#ifdef ERI_DESKTOP
+#ifdef ERI_USE_SDL
+
+// TODO: not sure why can't include SDL2 header in emscripten
+//       disable SDL2 related funtions temporarilly
+#if ERI_PLATFORM != ERI_PLATFORM_EMSCRIPTEN
+#define ERI_USE_SDL_GAME_CONTROLLER
+#define ERI_USE_SDL_THREAD
+#define ERI_USE_SDL_FULLSCREEN
+#endif
 
 #include <cstddef>
-
-#include "SDL.h"
+#include <SDL.h>
 
 #include "math_helper.h"
 
@@ -36,9 +43,9 @@ public:
   void PostUpdate();
   void Stop();
   
-  int GetTicksTime();
+#ifdef ERI_USE_SDL_THREAD
   void* CreateThread(int (*thread_func)(void*), const char* name, void* data);
-  void Delay(int ms);
+#endif
   
   void LogFPS(bool enable);
   
@@ -48,10 +55,15 @@ public:
   inline bool is_visible() { return is_visible_; }
   inline bool is_fullscreen() { return is_fullscreen_; }
   
-  static const int kGameControllerMax = 8;
-
 private:
+#ifdef ERI_USE_SDL_GAME_CONTROLLER
   void AddGameController(SDL_GameController* game_controller);
+  
+  static const int kGameControllerMax = 8;
+  
+  ERI::Vector2 axis_left_, axis_right_;
+  SDL_GameController* game_controllers_[kGameControllerMax];
+#endif
   
   SDL_Window* window_;
   SDL_GLContext context_;
@@ -64,15 +76,11 @@ private:
   int mouse_down_x_[2];
   int mouse_down_y_[2];
   
-  ERI::Vector2 axis_left_, axis_right_;
-  
-  SDL_GameController* game_controllers_[kGameControllerMax];
-  
   bool log_fps_;
   float frame_pass_time_;
   float frame_count_;
 };
 
-#endif // ERI_DESKTOP
+#endif // ERI_USE_SDL
 
-#endif /* defined(__archery__framework_sdl__) */
+#endif // ERI_FRAMEWORK_SDL_H

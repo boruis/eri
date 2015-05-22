@@ -11,6 +11,7 @@
 #ifdef ERI_RENDERER_ES2
 
 #include "renderer_es2.h"
+#include "sys_helper.h"
 #include "platform_helper.h"
 
 namespace ERI
@@ -113,9 +114,14 @@ bool ShaderProgram::Construct(const std::string& vertex_shader_path,
 {	
 	GLuint vertex_shader;
 	
-	if (!CompileShader(&vertex_shader,
-					   GL_VERTEX_SHADER,
-					   GetStringFileContent(std::string(GetResourcePath()) + "/" + vertex_shader_path)))
+	std::string shader_code;
+	if (!GetFileContentString(std::string(GetResourcePath()) + "/" + vertex_shader_path, shader_code))
+	{
+		LOGW("Failed to load vertex shader");
+		return false;
+	}
+	
+	if (!CompileShader(&vertex_shader, GL_VERTEX_SHADER, shader_code.c_str()))
 	{
 		LOGW("Failed to compile vertex shader");
 		return false;
@@ -123,9 +129,13 @@ bool ShaderProgram::Construct(const std::string& vertex_shader_path,
 	
 	GLuint fragment_shader;
 	
-	if (!CompileShader(&fragment_shader,
-					   GL_FRAGMENT_SHADER,
-					   GetStringFileContent(std::string(GetResourcePath()) + "/" + fragment_shader_path)))
+	if (!GetFileContentString(std::string(GetResourcePath()) + "/" + fragment_shader_path, shader_code))
+	{
+		LOGW("Failed to load fragment shader");
+		return false;
+	}
+	
+	if (!CompileShader(&fragment_shader, GL_FRAGMENT_SHADER, shader_code.c_str()))
 	{
 		LOGW("Failed to compile fragment shader");
 		glDeleteShader(vertex_shader);
