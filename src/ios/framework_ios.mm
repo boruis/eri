@@ -14,6 +14,39 @@
 #include "renderer.h"
 
 @implementation FrameworkViewController
+{
+  NSMutableArray* supported_orientations_;
+}
+
+// <= iOS 5 handle
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+  if (!supported_orientations_)
+  {
+    supported_orientations_ = [NSMutableArray array];
+    
+    NSArray* orientations = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"UISupportedInterfaceOrientations"];
+    for (NSString* orientation in orientations)
+    {
+      if ([orientation isEqualToString:@"UIInterfaceOrientationPortrait"])
+        [supported_orientations_ addObject:@(UIInterfaceOrientationPortrait)];
+      else if ([orientation isEqualToString:@"UIInterfaceOrientationPortraitUpsideDown"])
+        [supported_orientations_ addObject:@(UIInterfaceOrientationPortraitUpsideDown)];
+      else if ([orientation isEqualToString:@"UIInterfaceOrientationLandscapeLeft"])
+        [supported_orientations_ addObject:@(UIInterfaceOrientationLandscapeLeft)];
+      else if ([orientation isEqualToString:@"UIInterfaceOrientationLandscapeRight"])
+        [supported_orientations_ addObject:@(UIInterfaceOrientationLandscapeRight)];
+    }
+  }
+  
+  for (NSNumber* orientation in supported_orientations_)
+  {
+    if (interfaceOrientation == [orientation integerValue])
+      return YES;
+  }
+  
+  return NO;
+}
 @end
 
 @implementation Framework
