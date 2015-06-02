@@ -77,7 +77,7 @@ namespace ERI {
 		POS_NORMAL_TEX_3,
 		POS_NORMAL_COLOR_TEX_3,
 		POS_COLOR_TEX_3,
-		INVALID_VERTEX_FORMAT
+		VERTEX_FORMAT_MAX
 	};
 
 	struct RenderData
@@ -91,6 +91,8 @@ namespace ERI {
 		void UpdateInvWorldModelMatrix();
 
 		// model
+		mutable GLuint vertex_array; // create by renderer
+		
 		GLuint			vertex_buffer;
 		GLenum			vertex_type;
 		VertexFormat	vertex_format;

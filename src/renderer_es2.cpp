@@ -19,6 +19,23 @@
 #include "render_context.h"
 #endif
 
+#ifdef ERI_GLES
+#
+# define ERI_GL_GEN_VERTEX_ARRAYS glGenVertexArraysOES
+# define ERI_GL_BIND_VERTEX_ARRAY glBindVertexArrayOES
+#
+#elif ERI_PLATFORM == ERI_PLATFORM_MAC
+#
+# define ERI_GL_GEN_VERTEX_ARRAYS glGenVertexArraysAPPLE
+# define ERI_GL_BIND_VERTEX_ARRAY glBindVertexArrayAPPLE
+#
+#else
+#
+# define ERI_GL_GEN_VERTEX_ARRAYS glGenVertexArrays
+# define ERI_GL_BIND_VERTEX_ARRAY glBindVertexArray
+#
+#endif
+
 #include "root.h"
 #include "scene_mgr.h"
 #include "render_data.h"
@@ -44,6 +61,7 @@ namespace ERI {
 	};
 
 	RendererES2::RendererES2() :
+		is_support_vertex_array_object_(false),
 		context_(NULL),
 		backing_width_(0),
 		backing_height_(0),
@@ -124,10 +142,18 @@ namespace ERI {
 		}
 
 		//
-
+		
+		const char* version = (char*)glGetString(GL_VERSION);
+		LOGI("GL_VERSION: %s", version);
+		
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &caps_.max_texture_size);
 		
-		// TODO: check
+		const char* extensions = (char*)glGetString(GL_EXTENSIONS);
+		
+		is_support_vertex_array_object_ =
+			strstr(extensions, "GL_OES_vertex_array_object") != 0 ||
+			strstr(extensions, "GL_ARB_vertex_buffer_object") != 0;
+    
 		// NOTE: npot no mipmap and only GL_CLAMP_TO_EDGE as wrap mode
 		caps_.is_support_non_power_of_2_texture = true;
 		
@@ -359,139 +385,184 @@ namespace ERI {
 		
 		//
 		
+		bool need_setup_vertex = true;
+		
+		if (is_support_vertex_array_object_)
+		{
+			if (0 == data->vertex_array)
+				ERI_GL_GEN_VERTEX_ARRAYS(1, &data->vertex_array);
+			else
+				need_setup_vertex = false;
+
+			ERI_GL_BIND_VERTEX_ARRAY(data->vertex_array);
+		}
+		
+		//
+		
 		glBindBuffer(GL_ARRAY_BUFFER, data->vertex_buffer);
 		
-		GLint vertex_pos_size, vertex_stride;
-		void* vertex_pos_offset = NULL;
-		void* vertex_normal_offset = NULL;
-		void* vertex_tex_coord_offset[4];
-		void* vertex_color_offset = NULL;
-		bool use_vertex_normal = false;
-		bool use_vertex_color = false;
-		
-		switch (data->vertex_format)
+		if (need_setup_vertex)
 		{
-			case POS_TEX_2:
-				vertex_pos_size = 2;
-				vertex_stride = sizeof(vertex_2_pos_tex);
-				vertex_pos_offset = (void*)offsetof(vertex_2_pos_tex, position);
-				vertex_tex_coord_offset[0] = (void*)offsetof(vertex_2_pos_tex, tex_coord);
-				for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
-					vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
-				}
-				break;
-				
-			case POS_TEX2_2:
-				vertex_pos_size = 2;
-				vertex_stride = sizeof(vertex_2_pos_tex2);
-				vertex_pos_offset = (void*)offsetof(vertex_2_pos_tex2, position);
-				vertex_tex_coord_offset[0] = (void*)offsetof(vertex_2_pos_tex2, tex_coord);
-				vertex_tex_coord_offset[1] = (void*)offsetof(vertex_2_pos_tex2, tex_coord2);
-				for (int i = 2; i < MAX_TEXTURE_UNIT; ++i) {
-					vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
-				}
-				break;
-				
-			case POS_TEX_COLOR_2:
-				vertex_pos_size = 2;
-				vertex_stride = sizeof(vertex_2_pos_tex_color);
-				vertex_pos_offset = (void*)offsetof(vertex_2_pos_tex_color, position);
-				vertex_tex_coord_offset[0] = (void*)offsetof(vertex_2_pos_tex_color, tex_coord);
-				for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
-					vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
-				}
-				vertex_color_offset = (void*)offsetof(vertex_2_pos_tex_color, color);
-				use_vertex_color = true;
-				break;
-				
-			case POS_TEX2_COLOR_2:
-				vertex_pos_size = 2;
-				vertex_stride = sizeof(vertex_2_pos_tex2_color);
-				vertex_pos_offset = (void*)offsetof(vertex_2_pos_tex2_color, position);
-				vertex_tex_coord_offset[0] = (void*)offsetof(vertex_2_pos_tex2_color, tex_coord);
-				vertex_tex_coord_offset[1] = (void*)offsetof(vertex_2_pos_tex2_color, tex_coord2);
-				for (int i = 2; i < MAX_TEXTURE_UNIT; ++i) {
-					vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
-				}
-				vertex_color_offset = (void*)offsetof(vertex_2_pos_tex2_color, color);
-				use_vertex_color = true;
-				break;
-				
-			case POS_NORMAL_3:
-				vertex_pos_size = 3;
-				vertex_stride = sizeof(vertex_3_pos_normal);
-				vertex_pos_offset = (void*)offsetof(vertex_3_pos_normal, position);
-				vertex_normal_offset = (void*)offsetof(vertex_3_pos_normal, normal);
-				use_vertex_normal = true;
-				ASSERT(!texture_enable_);
-				break;
-				
-			case POS_NORMAL_TEX_3:
-				vertex_pos_size = 3;
-				vertex_stride = sizeof(vertex_3_pos_normal_tex);
-				vertex_pos_offset = (void*)offsetof(vertex_3_pos_normal_tex, position);
-				vertex_normal_offset = (void*)offsetof(vertex_3_pos_normal_tex, normal);
-				vertex_tex_coord_offset[0] = (void*)offsetof(vertex_3_pos_normal_tex, tex_coord);
-				for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
-					vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
-				}
-				use_vertex_normal = true;
-				break;
-				
-			case POS_NORMAL_COLOR_TEX_3:
-				vertex_pos_size = 3;
-				vertex_stride = sizeof(vertex_3_pos_normal_color_tex);
-				vertex_pos_offset = (void*)offsetof(vertex_3_pos_normal_color_tex, position);
-				vertex_normal_offset = (void*)offsetof(vertex_3_pos_normal_color_tex, normal);
-				vertex_tex_coord_offset[0] = (void*)offsetof(vertex_3_pos_normal_color_tex, tex_coord);
-				for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
-					vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
-				}
-				use_vertex_normal = true;
-				vertex_color_offset = (void*)offsetof(vertex_3_pos_normal_color_tex, color);
-				use_vertex_color = true;
-				break;
-				
-			case POS_COLOR_TEX_3:
-				vertex_pos_size = 3;
-				vertex_stride = sizeof(vertex_3_pos_color_tex);
-				vertex_pos_offset = (void*)offsetof(vertex_3_pos_color_tex, position);
-				vertex_tex_coord_offset[0] = (void*)offsetof(vertex_3_pos_color_tex, tex_coord);
-				for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
-					vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
-				}
-				vertex_color_offset = (void*)offsetof(vertex_3_pos_color_tex, color);
-				use_vertex_color = true;
-				break;
-				
-			default:
-				ASSERT(0);
-				break;
-		}
-		
-		glVertexAttribPointer(ATTRIB_VERTEX, vertex_pos_size, GL_FLOAT, GL_FALSE, vertex_stride, vertex_pos_offset);
-		glEnableVertexAttribArray(ATTRIB_VERTEX);
+			GLint vertex_pos_size, vertex_stride;
+			void* vertex_pos_offset = NULL;
+			void* vertex_normal_offset = NULL;
+			void* vertex_tex_coord_offset[4];
+			int use_tex_coord_num = 0;
+			void* vertex_color_offset = NULL;
+			bool use_vertex_normal = false;
+			bool use_vertex_color = false;
+			
+			switch (data->vertex_format)
+			{
+				case POS_TEX_2:
+					vertex_pos_size = 2;
+					vertex_stride = sizeof(vertex_2_pos_tex);
+					vertex_pos_offset = (void*)offsetof(vertex_2_pos_tex, position);
+					vertex_tex_coord_offset[0] = (void*)offsetof(vertex_2_pos_tex, tex_coord);
+					for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
+						vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
+					}
+					use_tex_coord_num = 1;
+					break;
+					
+				case POS_TEX2_2:
+					vertex_pos_size = 2;
+					vertex_stride = sizeof(vertex_2_pos_tex2);
+					vertex_pos_offset = (void*)offsetof(vertex_2_pos_tex2, position);
+					vertex_tex_coord_offset[0] = (void*)offsetof(vertex_2_pos_tex2, tex_coord);
+					vertex_tex_coord_offset[1] = (void*)offsetof(vertex_2_pos_tex2, tex_coord2);
+					for (int i = 2; i < MAX_TEXTURE_UNIT; ++i) {
+						vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
+					}
+					use_tex_coord_num = 2;
+					break;
+					
+				case POS_TEX_COLOR_2:
+					vertex_pos_size = 2;
+					vertex_stride = sizeof(vertex_2_pos_tex_color);
+					vertex_pos_offset = (void*)offsetof(vertex_2_pos_tex_color, position);
+					vertex_tex_coord_offset[0] = (void*)offsetof(vertex_2_pos_tex_color, tex_coord);
+					for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
+						vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
+					}
+					use_tex_coord_num = 1;
+					vertex_color_offset = (void*)offsetof(vertex_2_pos_tex_color, color);
+					use_vertex_color = true;
+					break;
+					
+				case POS_TEX2_COLOR_2:
+					vertex_pos_size = 2;
+					vertex_stride = sizeof(vertex_2_pos_tex2_color);
+					vertex_pos_offset = (void*)offsetof(vertex_2_pos_tex2_color, position);
+					vertex_tex_coord_offset[0] = (void*)offsetof(vertex_2_pos_tex2_color, tex_coord);
+					vertex_tex_coord_offset[1] = (void*)offsetof(vertex_2_pos_tex2_color, tex_coord2);
+					for (int i = 2; i < MAX_TEXTURE_UNIT; ++i) {
+						vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
+					}
+					use_tex_coord_num = 2;
+					vertex_color_offset = (void*)offsetof(vertex_2_pos_tex2_color, color);
+					use_vertex_color = true;
+					break;
+					
+				case POS_NORMAL_3:
+					vertex_pos_size = 3;
+					vertex_stride = sizeof(vertex_3_pos_normal);
+					vertex_pos_offset = (void*)offsetof(vertex_3_pos_normal, position);
+					vertex_normal_offset = (void*)offsetof(vertex_3_pos_normal, normal);
+					use_vertex_normal = true;
+					ASSERT(!texture_enable_);
+					break;
+					
+				case POS_NORMAL_TEX_3:
+					vertex_pos_size = 3;
+					vertex_stride = sizeof(vertex_3_pos_normal_tex);
+					vertex_pos_offset = (void*)offsetof(vertex_3_pos_normal_tex, position);
+					vertex_normal_offset = (void*)offsetof(vertex_3_pos_normal_tex, normal);
+					vertex_tex_coord_offset[0] = (void*)offsetof(vertex_3_pos_normal_tex, tex_coord);
+					for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
+						vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
+					}
+					use_tex_coord_num = 1;
+					use_vertex_normal = true;
+					break;
+					
+				case POS_NORMAL_COLOR_TEX_3:
+					vertex_pos_size = 3;
+					vertex_stride = sizeof(vertex_3_pos_normal_color_tex);
+					vertex_pos_offset = (void*)offsetof(vertex_3_pos_normal_color_tex, position);
+					vertex_normal_offset = (void*)offsetof(vertex_3_pos_normal_color_tex, normal);
+					vertex_tex_coord_offset[0] = (void*)offsetof(vertex_3_pos_normal_color_tex, tex_coord);
+					for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
+						vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
+					}
+					use_tex_coord_num = 1;
+					use_vertex_normal = true;
+					vertex_color_offset = (void*)offsetof(vertex_3_pos_normal_color_tex, color);
+					use_vertex_color = true;
+					break;
+					
+				case POS_COLOR_TEX_3:
+					vertex_pos_size = 3;
+					vertex_stride = sizeof(vertex_3_pos_color_tex);
+					vertex_pos_offset = (void*)offsetof(vertex_3_pos_color_tex, position);
+					vertex_tex_coord_offset[0] = (void*)offsetof(vertex_3_pos_color_tex, tex_coord);
+					for (int i = 1; i < MAX_TEXTURE_UNIT; ++i) {
+						vertex_tex_coord_offset[i] = vertex_tex_coord_offset[0];
+					}
+					use_tex_coord_num = 1;
+					vertex_color_offset = (void*)offsetof(vertex_3_pos_color_tex, color);
+					use_vertex_color = true;
+					break;
+					
+				default:
+					ASSERT(0);
+					break;
+			}
+			
+			glVertexAttribPointer(ATTRIB_VERTEX, vertex_pos_size, GL_FLOAT, GL_FALSE, vertex_stride, vertex_pos_offset);
+			glEnableVertexAttribArray(ATTRIB_VERTEX);
 
-		if (use_vertex_normal)
-		{
-			glVertexAttribPointer(ATTRIB_NORMAL, 3, GL_FLOAT, GL_FALSE, vertex_stride, vertex_normal_offset);
-			glEnableVertexAttribArray(ATTRIB_NORMAL);
-		}
-		else
-		{
-			glDisableVertexAttribArray(ATTRIB_NORMAL);
+			if (use_vertex_normal)
+			{
+				glVertexAttribPointer(ATTRIB_NORMAL, 3, GL_FLOAT, GL_FALSE, vertex_stride, vertex_normal_offset);
+				glEnableVertexAttribArray(ATTRIB_NORMAL);
+			}
+			else
+			{
+				glDisableVertexAttribArray(ATTRIB_NORMAL);
+			}
+			
+			if (use_vertex_color)
+			{
+				glVertexAttribPointer(ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, 1, vertex_stride, vertex_color_offset);
+				glEnableVertexAttribArray(ATTRIB_COLOR);
+			}
+			else
+			{
+				glDisableVertexAttribArray(ATTRIB_COLOR);
+			}
+			
+			for (int i = 0; i < 2; ++i)
+			{
+				if (i < use_tex_coord_num)
+				{
+					glVertexAttribPointer(ATTRIB_TEXCOORD0 + i, 2, GL_FLOAT, GL_FALSE, vertex_stride, vertex_tex_coord_offset[texture_unit_coord_idx_[i]]);
+					glEnableVertexAttribArray(ATTRIB_TEXCOORD0 + i);
+				}
+				else
+				{
+					glDisableVertexAttribArray(ATTRIB_TEXCOORD0 + i);
+				}
+			}
 		}
 		
-		if (use_vertex_color)
-		{
-			glVertexAttribPointer(ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, 1, vertex_stride, vertex_color_offset);
-			glEnableVertexAttribArray(ATTRIB_COLOR);
-		}
-		else
+		if (POS_TEX_COLOR_2 != data->vertex_format &&
+			POS_TEX2_COLOR_2 != data->vertex_format &&
+			POS_NORMAL_COLOR_TEX_3 != data->vertex_format &&
+			POS_COLOR_TEX_3 != data->vertex_format)
 		{
 			GLfloat color[4] = { data->color.r, data->color.g, data->color.b, data->color.a };
 			glVertexAttrib4fv(ATTRIB_COLOR, color);
-			glDisableVertexAttribArray(ATTRIB_COLOR);
 		}
 		
 		if (texture_enable_)
@@ -524,27 +595,11 @@ namespace ERI {
 					glUniform1iv(uniforms[UNIFORM_TEX_MATRIX_ENABLE], 2, tex_mat_enable);
 				}
 			}
-						
-			for (int i = 0; i < 2; ++i)
-			{
-				if (tex_enable[i])
-				{
-					glVertexAttribPointer(ATTRIB_TEXCOORD0 + i, 2, GL_FLOAT, GL_FALSE, vertex_stride, vertex_tex_coord_offset[texture_unit_coord_idx_[i]]);
-					glEnableVertexAttribArray(ATTRIB_TEXCOORD0 + i);
-				}
-				else
-				{
-					glDisableVertexAttribArray(ATTRIB_TEXCOORD0 + i);
-				}
-			}
 		}
 		else
 		{
 			GLint tex_enable[2] = { 0, 0 };
 			glUniform1iv(uniforms[UNIFORM_TEX_ENABLE], 2, tex_enable);
-
-			glDisableVertexAttribArray(ATTRIB_TEXCOORD0);
-			glDisableVertexAttribArray(ATTRIB_TEXCOORD1);
 		}
 		
 #if defined(DEBUG)
@@ -561,6 +616,11 @@ namespace ERI {
 		{
 			glDrawArrays(data->vertex_type, 0,  data->vertex_count);
 		}
+		
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		
+		if (is_support_vertex_array_object_)
+			ERI_GL_BIND_VERTEX_ARRAY(0);
 	}
 
 	void RendererES2::ClearDepth()

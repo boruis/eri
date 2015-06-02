@@ -124,6 +124,8 @@ namespace ERI {
 		static const int kMaxFrameBuffer = 8;
 		static const int kDefaultFrameBufferIdx = 0;
 		
+		bool is_support_vertex_array_object_;
+		
 		RenderContext*	context_;
 		
 		// The pixel dimensions of the CAEAGLLayer

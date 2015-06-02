@@ -11,9 +11,18 @@
 
 #include "render_data.h"
 
+#ifdef ERI_GLES
+# define ERI_GL_DELETE_VERTEX_ARRAYS glDeleteVertexArraysOES
+#elif ERI_PLATFORM == ERI_PLATFORM_MAC
+# define ERI_GL_DELETE_VERTEX_ARRAYS glDeleteVertexArraysAPPLE
+#else
+# define ERI_GL_DELETE_VERTEX_ARRAYS glDeleteVertexArrays
+#endif
+
 namespace ERI {
 	
 	RenderData::RenderData() :
+		vertex_array(0),
 		vertex_buffer(0),
 		vertex_type(GL_TRIANGLE_STRIP),
 		vertex_format(POS_TEX_2),
@@ -42,13 +51,17 @@ namespace ERI {
 	
 	RenderData::~RenderData()
 	{
+		if (index_buffer != 0)
+		{
+			glDeleteBuffers(1, &index_buffer);
+		}
 		if (vertex_buffer != 0)
 		{
 			glDeleteBuffers(1, &vertex_buffer);
 		}
-		if (index_buffer != 0)
+		if (vertex_array != 0)
 		{
-			glDeleteBuffers(1, &index_buffer);
+			ERI_GL_DELETE_VERTEX_ARRAYS(1, &vertex_array);
 		}
 	}
 	
