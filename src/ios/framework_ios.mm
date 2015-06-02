@@ -1,6 +1,6 @@
 //
 //  framework_ios.cpp
-//  raid
+//  eri
 //
 //  Created by exe on 10/2/13.
 //  Copyright (c) 2013 exe. All rights reserved.
@@ -57,40 +57,51 @@
   SEL custom_update_;
   
   BOOL is_running_, keep_delta_time_;
-  CFTimeInterval delta_time_;
   
   BOOL log_fps_;
   CFTimeInterval frame_pass_time_;
   int frame_count_;
 }
 
-- (void)initEri:(CGRect)frame
-{
-  ERI::Root::Ins().Init();
-  
-  if ([UIScreen instancesRespondToSelector:@selector(scale)])
-    ERI::Root::Ins().renderer()->set_content_scale([[UIScreen mainScreen] scale]);
-  
-  _gl_view = [[EAGLView alloc] initWithFrame:frame];
-  _gl_view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-  
-  is_running_ = NO;
-  keep_delta_time_ = YES;
-  log_fps_ = NO;
-}
-
-- (id)initWithFrame:(CGRect)frame needViewController:(BOOL)need_view_controller;
+- (instancetype)initWithFrame:(CGRect)frame config:(FrameworkConfig*)config
 {
   self = [super init];
   if (self)
   {
-    [self initEri:frame];
-    
-    if (need_view_controller)
+    FrameworkConfig* default_config = NULL;
+    if (!config)
     {
-      _view_controller = [[FrameworkViewController alloc] init];
-      [_view_controller.view addSubview:_gl_view];
+      default_config = new FrameworkConfig;
+      config = default_config;
     }
+    
+    ERI::Root::Ins().Init(config->use_depth_buffer);
+    
+    if ([UIScreen instancesRespondToSelector:@selector(scale)])
+    {
+      float content_scale = [[UIScreen mainScreen] scale];
+      if (config->custom_scale > 0.f)
+        content_scale = config->custom_scale;
+    
+      ERI::Root::Ins().renderer()->set_content_scale(content_scale);
+    }
+    
+    _glView = [[EAGLView alloc] initWithFrame:frame];
+    _glView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+    
+    if (config->need_view_controller)
+    {
+      _viewController = [[FrameworkViewController alloc] init];
+      [_viewController.view addSubview:_glView];
+    }
+    
+    if (default_config) delete default_config;
+    
+    //
+    
+    is_running_ = NO;
+    keep_delta_time_ = YES;
+    log_fps_ = NO;
   }
   
   return self;
@@ -101,18 +112,11 @@
   ERI::Root::DestroyIns();
   
 #if !__has_feature(objc_arc)
-  [_view_controller release];
-  [_gl_view release];
+  [_viewController release];
+  [_glView release];
   
   [super dealloc];
 #endif
-}
-
-- (void)LogFPS:(BOOL)enable
-{
-  log_fps_ = enable;
-  frame_pass_time_ = 0.0;
-  frame_count_ = 0;
 }
 
 - (void)update
@@ -125,11 +129,11 @@
 	
 	if (keep_delta_time_)
 	{
-		delta_time_ = now_time - prev_time;
+		self.deltaTime = now_time - prev_time;
 	}
 	else
 	{
-		delta_time_ = 0.0;
+		self.deltaTime = 0.0;
 		keep_delta_time_ = YES;
 	}
 	
@@ -145,7 +149,7 @@
     {
       frame_count_ += 1;
       
-      frame_pass_time_ += delta_time_;
+      frame_pass_time_ += self.deltaTime;
       if (frame_pass_time_ >= 1.0)
       {
         NSLog(@"fps %.2f", frame_count_ / frame_pass_time_);
@@ -156,12 +160,12 @@
   }
 }
 
-- (void)Run:(id)target withUpdate:(SEL)custom_update
+- (void)run:(id)target withUpdate:(SEL)customUpdate
 {
   if (!is_running_)
   {
     target_ = target;
-    custom_update_ = custom_update;
+    custom_update_ = customUpdate;
     
     updator_ = [CADisplayLink displayLinkWithTarget:self selector:@selector(update)];
     [updator_ addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
@@ -174,7 +178,7 @@
 	}
 }
 
-- (void)Stop
+- (void)stop
 {
   if (is_running_)
   {
@@ -185,9 +189,11 @@
   }
 }
 
-- (CFTimeInterval)DeltaTime
+- (void)logFPS:(BOOL)enable
 {
-  return delta_time_;
+  log_fps_ = enable;
+  frame_pass_time_ = 0.0;
+  frame_count_ = 0;
 }
 
 @end
