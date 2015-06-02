@@ -546,7 +546,7 @@ namespace ERI {
 			{
 				if (i < use_tex_coord_num)
 				{
-					glVertexAttribPointer(ATTRIB_TEXCOORD0 + i, 2, GL_FLOAT, GL_FALSE, vertex_stride, vertex_tex_coord_offset[texture_unit_coord_idx_[i]]);
+					glVertexAttribPointer(ATTRIB_TEXCOORD0 + i, 2, GL_FLOAT, GL_FALSE, vertex_stride, vertex_tex_coord_offset[i]);
 					glEnableVertexAttribArray(ATTRIB_TEXCOORD0 + i);
 				}
 				else
