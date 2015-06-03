@@ -49,7 +49,7 @@ struct Vertex
 
 struct Mesh
 {
-	Mesh() : vertex_format(INVALID_VERTEX_FORMAT) {}
+	Mesh() : vertex_format(VERTEX_FORMAT_MAX) {}
 	~Mesh();
 	
 	std::vector<Vertex*>	vertices;
