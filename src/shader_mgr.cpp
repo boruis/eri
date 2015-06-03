@@ -175,7 +175,7 @@ bool ShaderProgram::Construct(const std::string& vertex_shader_path,
 	// get uniform locations
 	uniforms_[UNIFORM_MODEL_VIEW_PROJ_MATRIX] = glGetUniformLocation(program_, "model_view_proj_matrix");
 	uniforms_[UNIFORM_MODEL_VIEW_MATRIX] = glGetUniformLocation(program_, "model_view_matrix");
-	uniforms_[UNIFORM_TEX_ENABLE] = glGetUniformLocation(program_, "tex_enable");
+	uniforms_[UNIFORM_TEX_USE_COORD_INDEX] = glGetUniformLocation(program_, "tex_use_coord_idx");
 	uniforms_[UNIFORM_TEX0] = glGetUniformLocation(program_, "tex[0]");
 	uniforms_[UNIFORM_TEX1] = glGetUniformLocation(program_, "tex[1]");
 	uniforms_[UNIFORM_TEX_MATRIX_ENABLE] = glGetUniformLocation(program_, "tex_matrix_enable");

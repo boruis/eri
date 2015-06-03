@@ -565,15 +565,16 @@ namespace ERI {
 			glVertexAttrib4fv(ATTRIB_COLOR, color);
 		}
 		
+		// TODO: more than 2 texture unit usage?
+		
 		if (texture_enable_)
 		{
-			// TODO: more than 2 texture unit usage
-
-			GLint tex_enable[2] = { texture_unit_coord_idx_[0] >= 0, texture_unit_coord_idx_[1] >= 0 };
-			glUniform1iv(uniforms[UNIFORM_TEX_ENABLE], 2, tex_enable);
+			glUniform1iv(uniforms[UNIFORM_TEX_USE_COORD_INDEX], 2, texture_unit_coord_idx_);
 			
-			if (tex_enable[0] || tex_enable[1])
+			if (texture_unit_coord_idx_[0] >= 0 || texture_unit_coord_idx_[1] >= 0)
 			{
+				// TODO: support tex transform?
+        
 				if (data->is_tex_transform)
 				{
 					GLint tex_mat_enable[2] = { 1, 1 };
@@ -585,7 +586,7 @@ namespace ERI {
 					
 					for (int i = 0; i < 2; ++i)
 					{
-						if (tex_enable[i])
+						if (texture_unit_coord_idx_[i] >= 0)
 							glUniformMatrix4fv(uniforms[UNIFORM_TEX_MATRIX0 + i], 1, GL_FALSE, tmp_matrix_[2].m);
 					}
 				}
@@ -598,8 +599,8 @@ namespace ERI {
 		}
 		else
 		{
-			GLint tex_enable[2] = { 0, 0 };
-			glUniform1iv(uniforms[UNIFORM_TEX_ENABLE], 2, tex_enable);
+			GLint idx[2] = { -1, -1 };
+			glUniform1iv(uniforms[UNIFORM_TEX_USE_COORD_INDEX], 2, idx);
 		}
 		
 #if defined(DEBUG)
