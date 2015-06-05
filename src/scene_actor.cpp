@@ -1687,12 +1687,10 @@ namespace ERI {
 			
 			if (vertices_) free(vertices_);
 			vertices_ = static_cast<vertex_2_pos_tex*>(malloc(now_len_max_ * unit_vertex_num * sizeof(vertex_2_pos_tex)));
-			
-			if (render_data_.vertex_buffer != 0)
-			{
-				glDeleteBuffers(1, &render_data_.vertex_buffer);
-			}
-			
+		}
+		
+		if (render_data_.vertex_buffer == 0)
+		{
 			glGenBuffers(1, &render_data_.vertex_buffer);
 		}
 		

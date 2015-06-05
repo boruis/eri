@@ -182,12 +182,10 @@ class AtlasTxtMeshConstructor : public TxtMeshConstructor
       
       if (vertices_) free(vertices_);
       vertices_ = static_cast<vertex_2_pos_tex*>(malloc(now_len_max_ * unit_vertex_num * sizeof(vertex_2_pos_tex)));
-      
-      if (owner_->render_data_.vertex_buffer != 0)
-      {
-        glDeleteBuffers(1, &owner_->render_data_.vertex_buffer);
-      }
-      
+    }
+    
+    if (owner_->render_data_.vertex_buffer == 0)
+    {
       glGenBuffers(1, &owner_->render_data_.vertex_buffer);
     }
     
