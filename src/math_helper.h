@@ -44,6 +44,13 @@ namespace ERI {
 	}
 	
 	template<typename T>
+	inline T Interpolate(const T& a, const T& b, float ratio)
+	{
+		ratio = Clamp(ratio, 0.f, 1.f);
+		return a * (1.f - ratio) + b * ratio;
+	}
+	
+	template<typename T>
 	inline T Abs(const T& a) { return (a > 0) ? a : -a; }
 	
 	inline int Round(float a)
