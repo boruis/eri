@@ -288,13 +288,19 @@ namespace ERI
 	void ColorAffector::InitSetup(ParticleSystem* owner, Particle* p)
 	{
 		if (p->life > 0.f)
+		{
 			p->color = start_;
+			p->color.a *= p->max_transparency;
+		}
 	}
 	
 	void ColorAffector::Update(float delta_time, Particle* p)
 	{
 		if (p->life > 0.f)
+		{
 			p->color = start_ * (1.0f - p->lived_percent) + end_ * p->lived_percent;
+			p->color.a *= p->max_transparency;
+		}
 	}
 	
 // -----------------------------------------------------------------------------
@@ -316,6 +322,7 @@ namespace ERI
 			return;
 		
 		p->color = intervals_[0]->color;
+		p->color.a *= p->max_transparency;
 		p->color_interval = 0;
 	}
 	
@@ -337,6 +344,7 @@ namespace ERI
 		if (p->color_interval >= intervals_.size() - 1)
 		{
 			p->color = intervals_[p->color_interval]->color;
+			p->color.a *= p->max_transparency;
 		}
 		else
 		{
@@ -344,6 +352,7 @@ namespace ERI
 			float diff = lived - intervals_[p->color_interval]->lived;
 			float diff_percent = diff / total;
 			p->color = intervals_[p->color_interval]->color * (1.0f - diff_percent) + intervals_[p->color_interval + 1]->color * diff_percent;
+			p->color.a *= p->max_transparency;
 		}
 	}
 	
@@ -821,11 +830,28 @@ namespace ERI
 			
 			p->pos = pos;
 			
-			p->size = setup_ref_->particle_size * RangeRandom(setup_ref_->particle_scale_min, setup_ref_->particle_scale_max);
+			float scale = RangeRandom(setup_ref_->particle_scale_min, setup_ref_->particle_scale_max);
+			p->size = setup_ref_->particle_size * scale;
 			
 			p->rotate_angle = RangeRandom(setup_ref_->particle_rotate_min, setup_ref_->particle_rotate_max);
 			if (emitter_->align_angle())
 				p->rotate_angle += rotate;
+			
+			if (setup_ref_->particle_max_transparency_ratio_to_scale)
+			{
+				float scale_ratio = 1.0f;
+				
+				float scale_range = setup_ref_->particle_scale_max - setup_ref_->particle_scale_min;
+				if (scale_range > 0.0f)
+					scale_ratio = (scale - setup_ref_->particle_scale_min) / scale_range;
+				
+				p->max_transparency = Interpolate(setup_ref_->particle_max_transparency_min, setup_ref_->particle_max_transparency_max, scale_ratio);
+			}
+			else
+			{
+				p->max_transparency = RangeRandom(setup_ref_->particle_max_transparency_min, setup_ref_->particle_max_transparency_max);
+			}
+			p->color.a = p->max_transparency;
 			
 			p->life = RangeRandom(static_cast<float>(setup_ref_->particle_life_min),
                             static_cast<float>(setup_ref_->particle_life_max));
@@ -1167,6 +1193,12 @@ namespace ERI
 					{
 						GetAttrFloat(node2, "min", creator->setup->particle_scale_min);
 						GetAttrFloat(node2, "max", creator->setup->particle_scale_max);
+					}
+					else if (strcmp(node2->name(), "max_transparency") == 0)
+					{
+						GetAttrFloat(node2, "min", creator->setup->particle_max_transparency_min);
+						GetAttrFloat(node2, "max", creator->setup->particle_max_transparency_max);
+						GetAttrBool(node2, "ratio_to_scale", creator->setup->particle_max_transparency_ratio_to_scale);
 					}
 					else if (strcmp(node2->name(), "rotate_affector") == 0)
 					{
@@ -1655,6 +1687,17 @@ namespace ERI
 			node2 = CreateNode(data.doc, "scale");
 			PutAttrFloat(data.doc, node2, "min", creator->setup->particle_scale_min);
 			PutAttrFloat(data.doc, node2, "max", creator->setup->particle_scale_max);
+			particle_node->append_node(node2);
+		}
+    
+		if (creator->setup->particle_max_transparency_min != default_setup.particle_max_transparency_min ||
+			creator->setup->particle_max_transparency_max != default_setup.particle_max_transparency_max ||
+			creator->setup->particle_max_transparency_ratio_to_scale != default_setup.particle_max_transparency_ratio_to_scale)
+		{
+			node2 = CreateNode(data.doc, "max_transparency");
+			PutAttrFloat(data.doc, node2, "min", creator->setup->particle_max_transparency_min);
+			PutAttrFloat(data.doc, node2, "max", creator->setup->particle_max_transparency_max);
+			PutAttrBool(data.doc, node2, "ratio_to_scale", creator->setup->particle_max_transparency_ratio_to_scale);
 			particle_node->append_node(node2);
 		}
 		

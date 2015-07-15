@@ -29,6 +29,7 @@ namespace ERI
 			in_use = false;
 			scale = Vector2::UNIT;
 			color = Color::WHITE;
+			max_transparency = 1.0f;
 		}
 		
 		Vector2	pos;
@@ -37,6 +38,7 @@ namespace ERI
 		Vector2 scale;
 		float	rotate_angle;
 		Color	color;
+		float max_transparency;
     
 		Vector2 uv_start[2], uv_size[2];
 		
@@ -419,7 +421,9 @@ namespace ERI
 			particle_life_min(1.0f), particle_life_max(1.0f),
 			particle_speed_min(0.0f), particle_speed_max(0.0f),
 			particle_rotate_min(0.0f), particle_rotate_max(0.0f),
-			particle_scale_min(1.0f), particle_scale_max(1.0f)
+			particle_scale_min(1.0f), particle_scale_max(1.0f),
+			particle_max_transparency_min(1.0f), particle_max_transparency_max(1.0f),
+			particle_max_transparency_ratio_to_scale(false)
 		{
 		}
 		
@@ -433,6 +437,9 @@ namespace ERI
 		float		particle_speed_min, particle_speed_max;
 		float		particle_rotate_min, particle_rotate_max;
 		float		particle_scale_min, particle_scale_max;
+		float		particle_max_transparency_min, particle_max_transparency_max;
+		
+		bool		particle_max_transparency_ratio_to_scale;
 	};
 	
 	class ParticleSystem : public SceneActor
