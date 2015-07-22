@@ -11,12 +11,16 @@
 
 #include "render_data.h"
 
-#ifdef ERI_GLES
-# define ERI_GL_DELETE_VERTEX_ARRAYS glDeleteVertexArraysOES
-#elif ERI_PLATFORM == ERI_PLATFORM_MAC
-# define ERI_GL_DELETE_VERTEX_ARRAYS glDeleteVertexArraysAPPLE
+#ifdef ERI_RENDERER_ES2
+# ifdef ERI_GLES
+#   define ERI_GL_DELETE_VERTEX_ARRAYS glDeleteVertexArraysOES
+# elif ERI_PLATFORM == ERI_PLATFORM_MAC
+#   define ERI_GL_DELETE_VERTEX_ARRAYS glDeleteVertexArraysAPPLE
+# else
+#   define ERI_GL_DELETE_VERTEX_ARRAYS glDeleteVertexArrays
+# endif
 #else
-# define ERI_GL_DELETE_VERTEX_ARRAYS glDeleteVertexArrays
+# define ERI_GL_DELETE_VERTEX_ARRAYS
 #endif
 
 namespace ERI {
