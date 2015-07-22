@@ -1115,8 +1115,15 @@ namespace ERI {
 		GLuint id = texture_id;
 		glDeleteTextures(1, &id);
 	}
-  
-  int RendererES1::GenerateFrameBuffer()
+	
+	void RendererES1::BindDefaultFrameBuffer()
+	{
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
+		glBindFramebufferOES(GL_FRAMEBUFFER_OES, frame_buffers_[kDefaultFrameBufferIdx]);
+#endif
+	}
+	
+	int RendererES1::GenerateFrameBuffer()
 	{
 #if ERI_PLATFORM == ERI_PLATFORM_IOS
 		if (context_) context_->SetAsCurrent();

@@ -354,7 +354,7 @@ namespace ERI {
 			bind_frame_buffer_ = Root::Ins().renderer()->GenerateFrameBuffer();
 		
 		Root::Ins().renderer()->BindTextureToFrameBuffer(texture_->id, bind_frame_buffer_);
-		Root::Ins().renderer()->RestoreRenderToBuffer();
+		Root::Ins().renderer()->BindDefaultFrameBuffer();
 	}
 	
 	void RenderToTexture::Release()
@@ -396,7 +396,7 @@ namespace ERI {
 	
 	void RenderToTexture::PostProcess()
 	{
-#ifdef ERI_RENDERER_ES1
+#if defined(ERI_RENDERER_ES1) && ERI_PLATFORM != ERI_PLATFORM_IOS
 		ASSERT(texture_);
 		Root::Ins().renderer()->CopyTexture(texture_->id, pixel_format_);
 #endif

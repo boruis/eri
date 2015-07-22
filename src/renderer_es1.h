@@ -109,6 +109,7 @@ namespace ERI {
 		virtual void UpdateTexture(unsigned int texture_id, const void* buffer, int width, int height, PixelFormat format);
 		virtual void ReleaseTexture(int texture_id);
 		
+		virtual void BindDefaultFrameBuffer();
 		virtual int GenerateFrameBuffer();
 		virtual void BindTextureToFrameBuffer(unsigned int texture_id, int frame_buffer);
 		virtual void ReleaseFrameBuffer(int frame_buffer);

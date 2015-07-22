@@ -956,6 +956,11 @@ namespace ERI {
 		GLuint id = texture_id;
 		glDeleteTextures(1, &id);
 	}
+
+	void RendererES2::BindDefaultFrameBuffer()
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, frame_buffers_[kDefaultFrameBufferIdx]);
+	}
 	
 	int RendererES2::GenerateFrameBuffer()
 	{
