@@ -68,7 +68,7 @@ namespace ERI {
 				
 		virtual void Render(Renderer* renderer);
 
-		void SetColor(const Color& color);
+		virtual void SetColor(const Color& color);
 		const Color& GetColor() const;
 		
 		void BlendNormal();
