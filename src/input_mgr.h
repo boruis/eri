@@ -160,9 +160,10 @@ namespace ERI {
 		void JoystickUp(JoystickCode code);
 		void JoystickAxis(JoystickCode code, float x, float y);
 
+		const InputEvent* GetTouch(long long uid) const;
+		inline const std::vector<InputEvent>& touches() const { return touches_; }
+
 		inline void set_handler(InputHandler* handler) { handler_ = handler; }
-		
-		inline const std::vector<InputEvent>& touches() { return touches_; }
 		
 	private:
 		void AddTouch(const InputEvent& event);

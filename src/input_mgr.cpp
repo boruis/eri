@@ -132,6 +132,19 @@ namespace ERI {
 	{
 		if (handler_) handler_->JoystickAxis(code, x, y);
 	}
+	
+	const InputEvent* InputMgr::GetTouch(long long uid) const
+	{
+#ifdef ERI_RECORD_MULTI_TOUCH
+		size_t num = touches_.size();
+		for (int i = 0; i < num; ++i)
+		{
+			if (touches_[i].uid == uid)
+				return &touches_[i];
+		}
+#endif
+		return NULL;
+	}
 
 	void InputMgr::AddTouch(const InputEvent& event)
 	{
