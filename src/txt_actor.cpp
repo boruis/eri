@@ -82,6 +82,9 @@ class SpriteTxtMeshConstructor : public TxtMeshConstructor
                                                width,
                                                height);
     
+    static const int kAddActureHeight = 4;
+    height += kAddActureHeight;
+    
     if (tex)
     {
       owner_->SetMaterial(tex,

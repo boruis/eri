@@ -198,9 +198,6 @@ namespace ERI {
 		[txt_str release];
 #endif
 		
-		out_actual_size.x = actual_size.width;
-		out_actual_size.y = actual_size.height;
-
 		texture_id_ = Root::Ins().renderer()->GenerateTexture(texture_data, width_, height_, pixel_format);
 		
 		free(texture_data);
