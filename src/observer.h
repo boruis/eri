@@ -45,12 +45,12 @@ public:
 	
 	void RemoveObserver(Observer<T>* observer)
 	{
-		int observer_num = observers_.size();
+		size_t observer_num = observers_.size();
 		for (int i = 0; i < observer_num; ++i)
 		{
 			if (observers_[i] == observer)
 			{
-				if (i < observer_num - 1)
+				if (i < (observer_num - 1))
 					observers_[i] = observers_[observer_num - 1];
 				
 				observers_.pop_back();
