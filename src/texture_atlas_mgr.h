@@ -53,6 +53,9 @@ namespace ERI
   private:
     TextureAtlasMgr();
     
+    bool GetTextureAtlasArray(const std::string& name, TextureAtlasArray& out_array);
+    bool GetTextureAtlasMap(const std::string& name, TextureAtlasMap& out_map);
+    
     typedef std::map<std::string, TextureAtlasArray*> AtlasArrayMap;
     typedef std::map<std::string, TextureAtlasMap*> AtlasMapMap;
     

@@ -9,13 +9,17 @@
 
 #include "texture_atlas_mgr.h"
 
+#include <fstream>
 #include <algorithm>
 
 #include "scene_actor.h"
 #include "platform_helper.h"
 
+#include "rapidxml.hpp"
+
 namespace ERI
 {
+  
   TextureAtlasMgr* TextureAtlasMgr::ins_ptr_ = NULL;
   
   TextureAtlasMgr::TextureAtlasMgr()
@@ -142,6 +146,163 @@ namespace ERI
     return NULL;
   }
   
+  bool TextureAtlasMgr::GetTextureAtlasArray(const std::string& name, TextureAtlasArray& out_array)
+  {
+    TextureAtlasMap tmp_map;
+    if (GetTextureAtlasMap(name, tmp_map))
+    {
+      std::vector<std::string> for_sort_array;
+      
+      TextureAtlasMap::iterator it = tmp_map.begin();
+      for (; it != tmp_map.end(); ++it)
+      {
+        for_sort_array.push_back(it->first);
+      }
+      
+      if (for_sort_array.empty())
+        return false;
+      
+      std::sort(for_sort_array.begin(), for_sort_array.end());
+      
+      out_array.clear();
+      
+      size_t unit_num = for_sort_array.size();
+      for (int i = 0; i < unit_num; ++i)
+      {
+        out_array.push_back(tmp_map[for_sort_array[i]]);
+      }
+      
+      return true;
+    }
+    
+    return false;
+  }
+  
+  static void GetValue(const char* values_str, int& out_value) { out_value = atoi(values_str); }
+  static void GetValue(const char* values_str, float& out_value) { out_value = atof(values_str); }
+  
+  template<typename T>
+  static bool GetUnitAttr(const char* name, T& out_value, rapidxml::xml_node<>*& current_node)
+  {
+    if (!current_node || strcmp(current_node->value(), name) != 0)
+      return false;
+    
+    current_node = current_node->next_sibling();
+    if (!current_node)
+      return false;
+    
+    GetValue(current_node->value(), out_value);
+    
+    current_node = current_node->next_sibling();
+    
+    return true;
+  }
+  
+  bool TextureAtlasMgr::GetTextureAtlasMap(const std::string& name, TextureAtlasMap& out_map)
+  {
+    std::string path = name + ".plist";
+    
+    if (path[0] != '/')
+      path = GetResourcePath() + std::string("/") + path;
+    
+    std::ifstream ifs;
+    ifs.open(path.c_str(), std::ios::binary);
+    
+    if (ifs.fail())
+      return false;
+    
+    // get length of file:
+    ifs.seekg(0, std::ios::end);
+    long long length = ifs.tellg();
+    ifs.seekg(0, std::ios::beg);
+    
+    // allocate memory:
+    char* buffer = new char[length + 1];
+    
+    // read data as a block:
+    ifs.read(buffer, length);
+    ifs.close();
+    
+    buffer[length] = 0;
+    
+    rapidxml::xml_document<> doc;
+    doc.parse<0>(buffer);
+    
+    bool is_valid = false;
+    
+    rapidxml::xml_node<>* node = doc.first_node("plist");
+    if (node)
+    {
+      node = node->first_node("dict");
+      if (node)
+      {
+        node = node->first_node("dict");
+        if (node)
+        {
+          node = node->next_sibling("dict");
+          if (node)
+          {
+            is_valid = true;
+          }
+        }
+      }
+    }
+    
+    if (!is_valid)
+    {
+      delete [] buffer;
+      return false;
+    }
+    
+    // now node is <dict> after <key>frames</key>
+    
+    out_map.clear();
+    
+    rapidxml::xml_node<>* unit_node;
+    
+    TextureAtlasUnit* unit = NULL;
+    std::string key;
+    
+    node = node->first_node();
+    while (node)
+    {
+      if (strcmp(node->name(), "key") == 0)
+      {
+        key = node->value();
+        out_map.insert(std::make_pair(key, TextureAtlasUnit()));
+        unit = &out_map[key];
+      }
+      else if (strcmp(node->name(), "dict") == 0)
+      {
+        ASSERT(unit);
+        
+        unit_node = node->first_node();
+        
+        is_valid = GetUnitAttr("x", unit->x, unit_node);
+        if (!is_valid) break;
+        is_valid = GetUnitAttr("y", unit->y, unit_node);
+        if (!is_valid) break;
+        is_valid = GetUnitAttr("width", unit->width, unit_node);
+        if (!is_valid) break;
+        is_valid = GetUnitAttr("height", unit->height, unit_node);
+        if (!is_valid) break;
+        is_valid = GetUnitAttr("offsetX", unit->offset_x, unit_node);
+        if (!is_valid) break;
+        is_valid = GetUnitAttr("offsetY", unit->offset_y, unit_node);
+        if (!is_valid) break;
+      }
+      
+      node = node->next_sibling();
+    }
+    
+    delete [] buffer;
+    
+    if (!is_valid || out_map.empty())
+      return false;
+    
+    return true;
+  }
+  
   bool ApplyTextureAtlas(const TextureAtlasMap* atlas_map, const std::string& name, SpriteActor* sprite)
   {
     ASSERT(atlas_map && !name.empty() && sprite);
@@ -155,5 +316,5 @@ namespace ERI
     
     return false;
   }
-  
+
 }
