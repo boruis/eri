@@ -11,6 +11,7 @@
 
 #ifdef ERI_RENDERER_ES2
 
+#include <string>
 #include <vector>
 #include <map>
 

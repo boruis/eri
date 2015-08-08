@@ -11,17 +11,8 @@
 
 #include "render_data.h"
 
-#ifdef ERI_RENDERER_ES2
-# ifdef ERI_GLES
-#   define ERI_GL_DELETE_VERTEX_ARRAYS glDeleteVertexArraysOES
-# elif ERI_PLATFORM == ERI_PLATFORM_MAC
-#   define ERI_GL_DELETE_VERTEX_ARRAYS glDeleteVertexArraysAPPLE
-# else
-#   define ERI_GL_DELETE_VERTEX_ARRAYS glDeleteVertexArrays
-# endif
-#else
-# define ERI_GL_DELETE_VERTEX_ARRAYS
-#endif
+#include "root.h"
+#include "renderer.h"
 
 namespace ERI {
 	
@@ -55,18 +46,7 @@ namespace ERI {
 	
 	RenderData::~RenderData()
 	{
-		if (index_buffer != 0)
-		{
-			glDeleteBuffers(1, &index_buffer);
-		}
-		if (vertex_buffer != 0)
-		{
-			glDeleteBuffers(1, &vertex_buffer);
-		}
-		if (vertex_array != 0)
-		{
-			ERI_GL_DELETE_VERTEX_ARRAYS(1, &vertex_array);
-		}
+		Root::Ins().renderer()->ReleaseRenderData(*this);
 	}
 	
 	void RenderData::UpdateModelMatrix()

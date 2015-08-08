@@ -32,7 +32,8 @@ public:
   enum Flag {
     FULL_SCREEN         = 0x01,
     FULL_SCREEN_DESKTOP = 0x02,
-    RESIZABLE           = 0x04
+    RESIZABLE           = 0x04,
+    NO_DEPTH_BUFFER     = 0x08
   };
   
   Framework(int window_width, int window_height, const char* title = NULL, unsigned int flags = 0);

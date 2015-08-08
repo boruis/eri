@@ -10,8 +10,6 @@
 
 #ifdef ERI_USE_SDL
 
-#include "pch.h"
-
 #include "root.h"
 #include "renderer.h"
 #include "input_mgr.h"
@@ -209,7 +207,7 @@ Framework::Framework(int window_width, int window_height, const char* title /*= 
 	LOGI("Status: Using GLEW %s", glewGetString(GLEW_VERSION));
 #endif
   
-  ERI::Root::Ins().Init();
+  ERI::Root::Ins().Init(!(flags & NO_DEPTH_BUFFER));
 }
 
 Framework::~Framework()

@@ -73,7 +73,14 @@
 #  elif ERI_PLATFORM == ERI_PLATFORM_MAC
 #    include <OpenGL/gl.h>
 #  elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
-#    include <GLES/gl.h>
+#    include <EGL/egl.h>
+#    ifdef ERI_RENDERER_ES2
+#      include <GLES2/gl2.h>
+#      include <GLES2/gl2ext.h>
+#    else
+#      include <GLES/gl.h>
+#      include <GLES/glext.h>
+#    endif
 #  elif ERI_PLATFORM == ERI_PLATFORM_IOS
 #    ifdef ERI_RENDERER_ES2
 #      import <OpenGLES/ES2/gl.h>

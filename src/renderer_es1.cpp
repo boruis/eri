@@ -174,12 +174,19 @@ namespace ERI {
 		
 		//
 		
+		const char* version = (char*)glGetString(GL_VERSION);
+		LOGI("GL_VERSION: %s", version);
+		
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &caps_.max_texture_size);
 		
 		const char* extensions = (char*) glGetString(GL_EXTENSIONS);
+//		LOGI("GL_EXTENSIONS: %s", extensions);
+		
 		caps_.is_support_non_power_of_2_texture =
 			strstr(extensions, "GL_ARB_texture_non_power_of_two") != 0 ||
 			strstr(extensions, "GL_APPLE_texture_2D_limited_npot") != 0;
+		
+		LOGI("non power of 2 texture support: %s", caps_.is_support_non_power_of_2_texture ? "true" : "false");
 		
 		//
 		
@@ -1187,6 +1194,23 @@ namespace ERI {
 			}
 		}
 #endif
+	}
+	
+	void RendererES1::ReleaseRenderData(RenderData& data)
+	{
+		if (data.index_buffer != 0)
+		{
+			glDeleteBuffers(1, &data.index_buffer);
+			data.index_buffer = 0;
+		}
+		if (data.vertex_buffer != 0)
+		{
+			glDeleteBuffers(1, &data.vertex_buffer);
+			data.vertex_buffer = 0;
+		}
+		
+		// not support VAO in es1
+		ASSERT(data.vertex_array == 0);
 	}
 
 	void RendererES1::SetBgColor(const Color& color)

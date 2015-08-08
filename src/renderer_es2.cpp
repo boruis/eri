@@ -19,23 +19,6 @@
 #include "render_context.h"
 #endif
 
-#ifdef ERI_GLES
-#
-# define ERI_GL_GEN_VERTEX_ARRAYS glGenVertexArraysOES
-# define ERI_GL_BIND_VERTEX_ARRAY glBindVertexArrayOES
-#
-#elif ERI_PLATFORM == ERI_PLATFORM_MAC
-#
-# define ERI_GL_GEN_VERTEX_ARRAYS glGenVertexArraysAPPLE
-# define ERI_GL_BIND_VERTEX_ARRAY glBindVertexArrayAPPLE
-#
-#else
-#
-# define ERI_GL_GEN_VERTEX_ARRAYS glGenVertexArrays
-# define ERI_GL_BIND_VERTEX_ARRAY glBindVertexArray
-#
-#endif
-
 #include "root.h"
 #include "scene_mgr.h"
 #include "render_data.h"
@@ -43,6 +26,10 @@
 #include "shader_mgr.h"
 
 namespace ERI {
+
+	static void (*fpGenVertexArrays)(GLsizei n, GLuint *arrays);
+	static void (*fpBindVertexArray)(GLuint array);
+	static void (*fpDeleteVertexArrays)(GLsizei n, const GLuint *arrays);
 
 	const GLint kParamFilters[] =
 	{
@@ -149,13 +136,51 @@ namespace ERI {
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &caps_.max_texture_size);
 		
 		const char* extensions = (char*)glGetString(GL_EXTENSIONS);
+//    LOGI("GL_EXTENSIONS: %s", extensions);
 		
 		is_support_vertex_array_object_ =
 			strstr(extensions, "GL_OES_vertex_array_object") != 0 ||
 			strstr(extensions, "GL_ARB_vertex_buffer_object") != 0;
-    
+		
+		fpGenVertexArrays = NULL;
+		fpBindVertexArray = NULL;
+		fpDeleteVertexArrays = NULL;
+		if (is_support_vertex_array_object_)
+		{
+#if ERI_PLATFORM == ERI_PLATFORM_IOS
+			fpGenVertexArrays = glGenVertexArraysOES;
+			fpBindVertexArray = glBindVertexArrayOES;
+			fpDeleteVertexArrays = glDeleteVertexArraysOES;
+#elif ERI_PLATFORM == ERI_PLATFORM_MAC
+			fpGenVertexArrays = glGenVertexArraysAPPLE;
+			fpBindVertexArray = glBindVertexArrayAPPLE;
+			fpDeleteVertexArrays = glDeleteVertexArraysAPPLE;
+#elif ERI_PLATFORM == ERI_PLATFORM_ANDROID
+			fpGenVertexArrays = (PFNGLGENVERTEXARRAYSOESPROC)eglGetProcAddress("glGenVertexArraysOES");
+			fpBindVertexArray = (PFNGLBINDVERTEXARRAYOESPROC)eglGetProcAddress("glBindVertexArrayOES");
+			fpDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSOESPROC)eglGetProcAddress("glDeleteVertexArraysOES");
+#else
+			fpGenVertexArrays = glGenVertexArrays;
+			fpBindVertexArray = glBindVertexArray;
+			fpDeleteVertexArrays = glDeleteVertexArrays;
+#endif
+			
+			if (NULL == fpGenVertexArrays ||
+				NULL == fpBindVertexArray ||
+				NULL == fpDeleteVertexArrays)
+			{
+				LOGW("gl extensions support vertex array object but can't get functions");
+				is_support_vertex_array_object_ = false;
+				fpGenVertexArrays = NULL;
+				fpBindVertexArray = NULL;
+				fpDeleteVertexArrays = NULL;
+			}
+		}
+		
 		// NOTE: npot no mipmap and only GL_CLAMP_TO_EDGE as wrap mode
 		caps_.is_support_non_power_of_2_texture = true;
+		
+		LOGI("vertex array object support: %s", is_support_vertex_array_object_ ? "true" : "false");
 		
 		//
 		
@@ -390,11 +415,11 @@ namespace ERI {
 		if (is_support_vertex_array_object_)
 		{
 			if (0 == data->vertex_array)
-				ERI_GL_GEN_VERTEX_ARRAYS(1, &data->vertex_array);
+				(*fpGenVertexArrays)(1, &data->vertex_array);
 			else
 				need_setup_vertex = false;
 
-			ERI_GL_BIND_VERTEX_ARRAY(data->vertex_array);
+			(*fpBindVertexArray)(data->vertex_array);
 		}
 		
 		//
@@ -621,7 +646,7 @@ namespace ERI {
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		
 		if (is_support_vertex_array_object_)
-			ERI_GL_BIND_VERTEX_ARRAY(0);
+			(*fpBindVertexArray)(0);
 	}
 
 	void RendererES2::ClearDepth()
@@ -1021,7 +1046,28 @@ namespace ERI {
 			}
 		}
 	}
-	 
+	
+	void RendererES2::ReleaseRenderData(RenderData& data)
+	{
+		if (data.index_buffer != 0)
+		{
+			glDeleteBuffers(1, &data.index_buffer);
+			data.index_buffer = 0;
+		}
+		if (data.vertex_buffer != 0)
+		{
+			glDeleteBuffers(1, &data.vertex_buffer);
+			data.vertex_buffer = 0;
+		}
+		if (data.vertex_array != 0)
+		{
+			if (is_support_vertex_array_object_)
+				(*fpDeleteVertexArrays)(1, &data.vertex_array);
+      
+			data.vertex_array = 0;
+		}
+	}
+	
 	void RendererES2::SetBgColor(const Color& color)
 	{
 		bg_color_ = color;

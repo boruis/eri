@@ -91,7 +91,8 @@ namespace ERI {
 		void UpdateInvWorldModelMatrix();
 
 		// model
-		mutable GLuint vertex_array; // create by renderer
+		
+		mutable GLuint vertex_array; // create in renderer render
 		
 		GLuint			vertex_buffer;
 		GLenum			vertex_type;
@@ -100,6 +101,8 @@ namespace ERI {
 		
 		GLuint			index_buffer;
 		int				index_count;
+		
+		// transform
 		
 		Vector3	translate;
 		Vector3	scale;
@@ -121,6 +124,7 @@ namespace ERI {
 		
 		// texture
 		// TODO: multi-texture?
+		
 		bool	is_tex_transform;
 		Vector2	tex_scale;
 		Vector2 tex_translate;

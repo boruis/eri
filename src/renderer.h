@@ -119,6 +119,8 @@ namespace ERI {
 		virtual void BindTextureToFrameBuffer(unsigned int texture_id, int frame_buffer) = 0;
 		virtual void ReleaseFrameBuffer(int frame_buffer) = 0;
 		
+		virtual void ReleaseRenderData(RenderData& data) = 0;
+		
 		virtual void SetBgColor(const Color& color) = 0;
 		virtual const Color& GetBgColor() = 0;
 		
