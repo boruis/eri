@@ -100,6 +100,8 @@ namespace ERI {
 		CGSize actual_size;
 		NSLineBreakMode break_mode = NSLineBreakByWordWrapping;
 		
+		int max_texture_size = Root::Ins().renderer()->caps().max_texture_size;
+		
 		if (max_width > 0.f)
 		{
 			switch (data.line_break)
@@ -115,13 +117,13 @@ namespace ERI {
 					break;
 					
 				default:
-					actual_size = [txt_str sizeWithFont:font constrainedToSize:CGSizeMake(max_width, 1024.f)];
+					actual_size = [txt_str sizeWithFont:font constrainedToSize:CGSizeMake(max_width, max_texture_size)];
 					break;
 			}
 		}
 		else
 		{
-			actual_size = [txt_str sizeWithFont:font constrainedToSize:CGSizeMake(1024.f, 1024.f)];
+			actual_size = [txt_str sizeWithFont:font constrainedToSize:CGSizeMake(max_texture_size, max_texture_size)];
 		}
 		
 		out_actual_size.x = actual_size.width;
