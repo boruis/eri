@@ -517,7 +517,7 @@ void Framework::InitDisplay()
 
   ERI::Root::Ins().renderer()->Resize(s_app_data.width, s_app_data.height);
 
-  LOGI("framework display inited");
+  LOGI("framework display inited: %d x %d", s_app_data.width, s_app_data.height);
 }
 
 bool Framework::InitSurface()
