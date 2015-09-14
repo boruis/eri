@@ -19,6 +19,23 @@
 #include "renderer.h"
 #include "sys_helper.h"
 
+// for iOS simulator build
+
+extern "C"
+{
+  double strtod$UNIX2003(const char *nptr, char **endptr)
+  {
+    return strtod(nptr, endptr);
+  }
+
+  size_t fwrite$UNIX2003(const void *a, size_t b, size_t c, FILE *d)
+  {
+    return fwrite(a, b, c, d);
+  }
+}
+
+//
+
 namespace ERI {
 	
 	static void ReadFromReader(png_structp png_ptr, png_bytep data, png_size_t length)
