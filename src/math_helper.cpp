@@ -1650,7 +1650,7 @@ namespace ERI {
 		f4 = p1 * 3 - p0 - p2 * 3 + p3;
 	}
 	
-	Vector2 CatmullRomSpline::GetPoint(float t)
+	Vector2 CatmullRomSpline::GetPoint(float t) const
 	{
 		ASSERT(t >= 0 && t <= 1.0f);
 		
@@ -1668,7 +1668,7 @@ namespace ERI {
 		f3 = p2;
 	}
 	
-	Vector2 QuadraticBezierSpline::GetPoint(float t)
+	Vector2 QuadraticBezierSpline::GetPoint(float t) const
 	{
 		float invert_t = 1.f - t;
 		return f1 * (invert_t * invert_t) + f2 * (2 * invert_t * t) + f3 * (t * t);
@@ -1691,7 +1691,7 @@ namespace ERI {
 		f4 = p3;
 	}
 	
-	Vector2 CubicBezierSpline::GetPoint(float t)
+	Vector2 CubicBezierSpline::GetPoint(float t) const
 	{
 		float ct = 1 - t;
 		return f1 * ct * ct * ct + f2 * ct * ct * t + f3 * ct * t * t + f4 * t * t * t;

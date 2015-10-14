@@ -561,7 +561,7 @@ namespace ERI {
 							  const Vector2& p2,
 							  const Vector2& p3);
 		
-		Vector2 GetPoint(float t);
+		Vector2 GetPoint(float t) const;
 		
 	private:
 		Vector2	f1, f2, f3, f4;
@@ -576,7 +576,7 @@ namespace ERI {
 							  const Vector2& p1,
 							  const Vector2& p2);
     
-		Vector2 GetPoint(float t);
+		Vector2 GetPoint(float t) const;
 		
 	private:
 		Vector2	f1, f2, f3;
@@ -592,7 +592,7 @@ namespace ERI {
 							  const Vector2& p2,
 							  const Vector2& p3);
 		
-		Vector2 GetPoint(float t);
+		Vector2 GetPoint(float t) const;
 		
 	private:
 		Vector2	f1, f2, f3, f4;
