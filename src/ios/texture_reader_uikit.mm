@@ -159,7 +159,9 @@ namespace ERI {
 		}
 		else
 		{
-#ifndef ERI_RENDERER_ES2
+#ifdef ERI_RENDERER_ES2
+			CGContextSetRGBFillColor(context, 1.0, 1.0, 1.0, 1.0);
+#else
 			CGContextSetGrayFillColor(context, 1.0, 1.0);
 #endif
 			
