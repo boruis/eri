@@ -34,11 +34,8 @@
 	{
 		// Enable multipletouch support
 		self.multipleTouchEnabled = YES;
-		
-		if ([self respondsToSelector:@selector(setContentScaleFactor:)])
-		{
-			[self setContentScaleFactor: ERI::Root::Ins().renderer()->content_scale()];
-		}
+
+		[self refreshContentScale];
 
 		// Get the layer
 		CAEAGLLayer *eaglLayer = (CAEAGLLayer*)self.layer;
@@ -55,6 +52,12 @@
 	}
 
 	return self;
+}
+
+- (void)refreshContentScale
+{
+	if ([self respondsToSelector:@selector(setContentScaleFactor:)])
+		[self setContentScaleFactor: ERI::Root::Ins().renderer()->content_scale()];
 }
 
 - (void)layoutSubviews

@@ -11,13 +11,11 @@
 struct FrameworkConfig
 {
   FrameworkConfig() :
-    custom_scale(0.f),
     use_depth_buffer(true),
     need_view_controller(true)
   {
   }
   
-  float custom_scale;
   bool use_depth_buffer;
   bool need_view_controller;
 };
@@ -31,6 +29,7 @@ struct FrameworkConfig
 @property (assign, nonatomic) CFTimeInterval deltaTime;
 
 - (instancetype)initWithFrame:(CGRect)frame config:(FrameworkConfig*)config;
+- (void)setContentScale:(float)scale;
 - (void)run:(id)target withUpdate:(SEL)customUpdate;
 - (void)stop;
 - (void)logFPS:(BOOL)enable;

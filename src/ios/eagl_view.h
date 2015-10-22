@@ -11,6 +11,7 @@
 
 @interface EAGLView : UIView <UIAccelerometerDelegate>
 
+- (void)refreshContentScale;
 - (void)enableRetainedBacking:(BOOL)enable;
 - (void)enableAccelerometer:(BOOL)enable withTimeInterval:(NSTimeInterval)interval;
 - (void)convertPointByViewOrientation:(CGPoint*)point;

@@ -78,13 +78,7 @@
     ERI::Root::Ins().Init(config->use_depth_buffer);
     
     if ([UIScreen instancesRespondToSelector:@selector(scale)])
-    {
-      float content_scale = [[UIScreen mainScreen] scale];
-      if (config->custom_scale > 0.f)
-        content_scale = config->custom_scale;
-    
-      ERI::Root::Ins().renderer()->set_content_scale(content_scale);
-    }
+      ERI::Root::Ins().renderer()->set_content_scale([[UIScreen mainScreen] scale]);
     
     _glView = [[EAGLView alloc] initWithFrame:frame];
     _glView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -117,6 +111,12 @@
   
   [super dealloc];
 #endif
+}
+
+- (void)setContentScale:(float)scale
+{
+  ERI::Root::Ins().renderer()->set_content_scale(scale);
+  [_glView refreshContentScale];
 }
 
 - (void)update
