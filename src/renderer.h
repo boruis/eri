@@ -10,6 +10,8 @@
 #ifndef ERI_RENDERER_H
 #define ERI_RENDERER_H
 
+#include <string>
+
 #include "math_helper.h"
 
 namespace ERI {
@@ -48,6 +50,8 @@ namespace ERI {
 			is_support_non_power_of_2_texture(false)
 		{
 		}
+		
+		std::string version;
 		
 		int		max_texture_size;
 		bool	is_support_non_power_of_2_texture;

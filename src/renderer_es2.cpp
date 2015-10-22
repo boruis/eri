@@ -133,6 +133,8 @@ namespace ERI {
 		const char* version = (char*)glGetString(GL_VERSION);
 		LOGI("GL_VERSION: %s", version);
 		
+		caps_.version = version;
+		
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &caps_.max_texture_size);
 		
 		const char* extensions = (char*)glGetString(GL_EXTENSIONS);
