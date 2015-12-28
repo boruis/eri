@@ -41,6 +41,10 @@ static ERI::InputKeyCode TranslateKeyCode(int event_key_code)
     case SDLK_l: code = ERI::KEY_L; break;
     case SDLK_n: code = ERI::KEY_N; break;
     case SDLK_o: code = ERI::KEY_O; break;
+    case SDLK_z: code = ERI::KEY_Z; break;
+    case SDLK_x: code = ERI::KEY_X; break;
+    case SDLK_c: code = ERI::KEY_C; break;
+    case SDLK_v: code = ERI::KEY_V; break;
     case SDLK_1: code = ERI::KEY_1; break;
     case SDLK_2: code = ERI::KEY_2; break;
   }

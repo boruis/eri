@@ -41,6 +41,10 @@ namespace ERI {
 		KEY_L,
 		KEY_N,
 		KEY_O,
+		KEY_Z,
+		KEY_X,
+		KEY_C,
+		KEY_V,
 		KEY_1,
 		KEY_2
 	};
