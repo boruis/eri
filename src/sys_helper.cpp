@@ -135,7 +135,7 @@ bool GetFileContentString(const std::string& path, std::string& out_content)
 	char* buffer = new char[length + 1];
 	
 	// read data as a block:
-	is.read(buffer, length);
+	is.read(buffer, static_cast<std::streamsize>(length));
 	is.close();
 	
 	buffer[length] = '\0';

@@ -220,7 +220,7 @@ namespace ERI
     char* buffer = new char[length + 1];
     
     // read data as a block:
-    ifs.read(buffer, length);
+    ifs.read(buffer, static_cast<std::streamsize>(length));
     ifs.close();
     
     buffer[length] = 0;

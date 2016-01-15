@@ -288,11 +288,11 @@ private:
 	FT_Face		face_;
 };
   
-static const double kFixDiv16 = 1.0 / (1 << 16);
-static float convert_fix16(long fix)
-{
-	return fix * kFixDiv16;
-}
+//static const double kFixDiv16 = 1.0 / (1 << 16);
+//static float convert_fix16(long fix)
+//{
+//	return fix * kFixDiv16;
+//}
 static const double kFixDiv26 = 1.0 / (1 << 6);
 static float convert_fix26(long fix)
 {

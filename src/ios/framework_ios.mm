@@ -138,8 +138,11 @@
 	}
 	
 	prev_time = now_time;
-  
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
   [target_ performSelector:custom_update_];
+#pragma clang diagnostic pop
   
 	if (is_running_)
   {

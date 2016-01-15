@@ -44,14 +44,14 @@ namespace ERI
 		
 		// get length of file:
 		ifs.seekg(0, std::ios::end);
-		int length = ifs.tellg();
+		long long length = ifs.tellg();
 		ifs.seekg(0, std::ios::beg);
 		
 		// allocate memory:
 		out_data.buffer = new char[length + 1];
 		
 		// read data as a block:
-		ifs.read(out_data.buffer, length);
+		ifs.read(out_data.buffer, static_cast<std::streamsize>(length));
 		ifs.close();
 		
 		out_data.buffer[length] = 0;

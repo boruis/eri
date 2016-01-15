@@ -291,9 +291,9 @@
 		return;
 	}
 	
-	if (fabsf(acceleration.x) > 1.5
-        || fabsf(acceleration.y) > 1.5
-        || fabsf(acceleration.z) > 1.5)
+	if (fabs(acceleration.x) > 1.5
+        || fabs(acceleration.y) > 1.5
+        || fabs(acceleration.z) > 1.5)
 	{
 		shake_start_time = CFAbsoluteTimeGetCurrent();
 		ERI::Root::Ins().input_mgr()->Shake();
