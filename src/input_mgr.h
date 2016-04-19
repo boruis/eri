@@ -46,7 +46,8 @@ namespace ERI {
 		KEY_C,
 		KEY_V,
 		KEY_1,
-		KEY_2
+		KEY_2,
+		KEY_APP_BACK
 	};
 	
 	enum FunctionKeyFlag
@@ -96,6 +97,7 @@ namespace ERI {
 	struct InputKeyEvent
 	{
 		InputKeyEvent() : code(KEY_NONE), function_key_status(0) {}
+		InputKeyEvent(InputKeyCode _code) : code(_code), function_key_status(0) {}
 		
 		std::string		characters;
 		InputKeyCode	code;
@@ -119,9 +121,10 @@ namespace ERI {
 		virtual void MultiMove(const InputEvent* events, int num, bool is_start) {}
 		virtual void OverMove(const InputEvent& event) {}
 		virtual void Scroll(const InputEvent& event) {}
-    
-		virtual void KeyDown(const InputKeyEvent& event) {}
-		virtual void KeyUp(const InputKeyEvent& event) {}
+
+		virtual bool KeyDown(const InputKeyEvent& event) { return false; }
+		virtual bool KeyUp(const InputKeyEvent& event) { return false; }
+
 		virtual void Char(const InputKeyEvent& event) {}
 		
 		virtual void Accelerate(const Vector3& g) {}
@@ -168,6 +171,7 @@ namespace ERI {
 		inline const std::vector<InputEvent>& touches() const { return touches_; }
 
 		inline void set_handler(InputHandler* handler) { handler_ = handler; }
+		inline void set_global_handler(InputHandler* handler) { global_handler_ = handler; }
 		
 	private:
 		void AddTouch(const InputEvent& event);
@@ -176,6 +180,7 @@ namespace ERI {
 		std::vector<InputEvent> touches_;
 		
 		InputHandler*	handler_;
+		InputHandler*	global_handler_;
 	};
 
 }

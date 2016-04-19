@@ -69,8 +69,8 @@ void HandleAppCmd(android_app* app, int32_t cmd)
     case APP_CMD_TERM_WINDOW:
       LOGI("APP_CMD_TERM_WINDOW");
       // The window is being hidden or closed, clean it up.
-      fw->TerminateDisplay();
       fw->LostFocus();
+      fw->TerminateDisplay();
       break;
 
     case APP_CMD_GAINED_FOCUS:
@@ -335,8 +335,8 @@ static int32_t HandleInputEvent(struct android_app* app, AInputEvent* event)
         // LOGI("AKEY_EVENT_ACTION_DOWN");
         if (AKEYCODE_BACK == key_code)
         {
-            ERI::Root::Ins().input_mgr()->JoystickDown(ERI::JOYSTICK_BACK);
-            ret = 1;
+          ERI::Root::Ins().input_mgr()->KeyDown(ERI::InputKeyEvent(ERI::KEY_APP_BACK));
+          ret = 1;
         }
         break;
 
@@ -344,8 +344,8 @@ static int32_t HandleInputEvent(struct android_app* app, AInputEvent* event)
         // LOGI("AKEY_EVENT_ACTION_UP");
         if (AKEYCODE_BACK == key_code)
         {
-            ERI::Root::Ins().input_mgr()->JoystickUp(ERI::JOYSTICK_BACK);
-            ret = 1;
+          ERI::Root::Ins().input_mgr()->KeyUp(ERI::InputKeyEvent(ERI::KEY_APP_BACK));
+          ret = 1;
         }
         break;
 
@@ -422,14 +422,14 @@ float Framework::PreUpdate()
     // Check if we are exiting.
     if (0 != state_->destroyRequested)
     {
-      TerminateDisplay();
       LostFocus();
+      TerminateDisplay();
       is_stopped_ = true;
       return 0.f;
     }
   }
 
-  if (!has_focus_)
+  if (!IsReady())
     return 0.f;
 
   // calculate delta time
@@ -458,12 +458,12 @@ float Framework::PreUpdate()
 
 bool Framework::IsReady()
 {
-  return has_focus_;
+  return has_focus_ && (EGL_NO_DISPLAY != s_app_data.display);
 }
 
 void Framework::PostUpdate()
 {
-  if (!has_focus_)
+  if (!IsReady())
     return;
 
   ERI::Root::Ins().Update();
@@ -499,8 +499,9 @@ void Framework::RequestStop()
   if (is_stopping_ || is_stopped_)
     return;
 
-  ANativeActivity_finish(state_->activity);
   is_stopping_ = true;
+
+  ANativeActivity_finish(state_->activity);
 }
 
 void Framework::InitDisplay()
@@ -602,15 +603,15 @@ bool Framework::InitContext()
 
 void Framework::TerminateDisplay()
 {
-  if (destroy_app_callback_)
-    (*destroy_app_callback_)();
-
-  ERI::Root::DestroyIns();
-
-  //
-
   if (EGL_NO_DISPLAY != s_app_data.display)
   {
+    if (destroy_app_callback_)
+      (*destroy_app_callback_)();
+
+    ERI::Root::DestroyIns();
+
+    //
+
     eglMakeCurrent(s_app_data.display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 
     if (EGL_NO_CONTEXT != s_app_data.context)

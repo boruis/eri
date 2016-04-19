@@ -13,7 +13,7 @@
 
 namespace ERI {
 
-	InputMgr::InputMgr() : handler_(NULL)
+	InputMgr::InputMgr() : handler_(NULL), global_handler_(NULL)
 	{
 	}
 	
@@ -95,12 +95,24 @@ namespace ERI {
 
 	void InputMgr::KeyDown(const InputKeyEvent& event)
 	{
-		if (handler_) handler_->KeyDown(event);
+		if (handler_)
+		{
+			if (handler_->KeyDown(event))
+				return;
+		}
+		
+		if (global_handler_) global_handler_->KeyDown(event);
 	}
 	
 	void InputMgr::KeyUp(const InputKeyEvent& event)
 	{
-		if (handler_) handler_->KeyUp(event);
+		if (handler_)
+		{
+			if (handler_->KeyUp(event))
+				return;
+		}
+		
+		if (global_handler_) global_handler_->KeyUp(event);
 	}
 	
 	void InputMgr::Char(const InputKeyEvent& event)
