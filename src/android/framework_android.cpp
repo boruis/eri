@@ -12,6 +12,7 @@
 #include "root.h"
 #include "renderer.h"
 #include "input_mgr.h"
+#include "math_helper.h"
 
 // -----------------------------------------------------------------------------
 // need implement this to fix build, why?
@@ -182,11 +183,9 @@ static bool IsMotionClick(int32_t src, float x, float y)
 
       float diff_x = x - motion_press_states[i].x;
       float diff_y = y - motion_press_states[i].y;
-      
-      float distance_squared = diff_x * diff_x + diff_y * diff_y;
-      // LOGI("IsMotionClick src[%d] diff_x %f diff_y %f dist sqr %f", src, diff_x, diff_y, distance_squared);
+      // LOGI("IsMotionClick src[%d] diff_x %f diff_y %f", src, diff_x, diff_y);
 
-      if (distance_squared < 50.f)
+      if (ERI::Abs(diff_x) <= 15.f && ERI::Abs(diff_y) <= 15.f)
         return true;
 
       return false;
