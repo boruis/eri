@@ -182,8 +182,11 @@ static bool IsMotionClick(int32_t src, float x, float y)
 
       float diff_x = x - motion_press_states[i].x;
       float diff_y = y - motion_press_states[i].y;
+      
+      float distance_squared = diff_x * diff_x + diff_y * diff_y;
+      // LOGI("IsMotionClick src[%d] diff_x %f diff_y %f dist sqr %f", src, diff_x, diff_y, distance_squared);
 
-      if ((diff_x * diff_x + diff_y * diff_y) < 25.f)
+      if (distance_squared < 50.f)
         return true;
 
       return false;
@@ -267,12 +270,12 @@ static int32_t HandleInputEvent(struct android_app* app, AInputEvent* event)
             // LOGI("%d release x %f y %f", pointer_id, x, y);
 
             ERI::InputEvent e(pointer_id, x, y);
-            ERI::Root::Ins().input_mgr()->Release(e);
             if (IsMotionClick(pointer_id, x, y))
             {
               // LOGI("%d click x %f y %f", pointer_id, x, y);
               ERI::Root::Ins().input_mgr()->Click(e);
             }
+            ERI::Root::Ins().input_mgr()->Release(e);
 
             if (AMotionEvent_getPointerCount(event) <= 2)
               in_multi_move = false;
