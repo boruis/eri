@@ -137,8 +137,23 @@ namespace ERI {
 		
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &caps_.max_texture_size);
 		
+// 		int n;
+// 		glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n);
+// 		LOGI("GL_MAX_VERTEX_ATTRIBS: %d", n);
+// #if ERI_PLATFORM == ERI_PLATFORM_MAC
+// 		glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &n);
+// 		LOGI("GL_MAX_VERTEX_UNIFORM_COMPONENTS: %d", n);
+// 		glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &n);
+// 		LOGI("GL_MAX_FRAGMENT_UNIFORM_COMPONENTS: %d", n);
+// #else
+// 		glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &n);
+// 		LOGI("GL_MAX_VERTEX_UNIFORM_VECTORS: %d", n);
+// 		glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_VECTORS, &n);
+// 		LOGI("GL_MAX_FRAGMENT_UNIFORM_VECTORS: %d", n);
+// #endif
+		
 		const char* extensions = (char*)glGetString(GL_EXTENSIONS);
-//    LOGI("GL_EXTENSIONS: %s", extensions);
+//		LOGI("GL_EXTENSIONS: %s", extensions);
 		
 		is_support_vertex_array_object_ =
 			strstr(extensions, "GL_OES_vertex_array_object") != 0 ||

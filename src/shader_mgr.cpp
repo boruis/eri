@@ -25,7 +25,7 @@ static bool CompileShader(GLuint* shader, GLenum type, const char* source)
 	glShaderSource(*shader, 1, &source, NULL);
 	glCompileShader(*shader);
 	
-#if defined(DEBUG)
+//#if defined(DEBUG)
 	GLint logLength;
 	glGetShaderiv(*shader, GL_INFO_LOG_LENGTH, &logLength);
 	if (logLength > 0)
@@ -35,7 +35,7 @@ static bool CompileShader(GLuint* shader, GLenum type, const char* source)
 		LOGI("Shader compile log:\n%s", log);
 		free(log);
 	}
-#endif
+//#endif
 	
 	GLint status;
 	glGetShaderiv(*shader, GL_COMPILE_STATUS, &status);
@@ -52,7 +52,7 @@ static bool LinkProgram(GLuint program)
 {
 	glLinkProgram(program);
 	
-#if defined(DEBUG)
+//#if defined(DEBUG)
 	GLint logLength;
 	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
 	if (logLength > 0)
@@ -62,7 +62,7 @@ static bool LinkProgram(GLuint program)
 		LOGI("Program link log:\n%s", log);
 		free(log);
 	}
-#endif
+//#endif
 	
 	GLint status;
 	glGetProgramiv(program, GL_LINK_STATUS, &status);
@@ -76,7 +76,7 @@ static bool ValidateProgram(GLuint program)
 {
 	glValidateProgram(program);
 	
-#if defined(DEBUG)
+//#if defined(DEBUG)
 	GLint logLength;
 	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
 	if (logLength > 0)
@@ -86,7 +86,7 @@ static bool ValidateProgram(GLuint program)
 		LOGI("Program validate log:\n%s", log);
 		free(log);
 	}
-#endif
+//#endif
 	
 	GLint status;
 	glGetProgramiv(program, GL_VALIDATE_STATUS, &status);
@@ -111,19 +111,21 @@ ShaderProgram::~ShaderProgram()
 
 bool ShaderProgram::Construct(const std::string& vertex_shader_path,
 							 const std::string& fragment_shader_path)
-{	
+{
+	// LOGI("shader program construct vs: %s, fs: %s", vertex_shader_path.c_str(), fragment_shader_path.c_str());
+
 	GLuint vertex_shader;
 	
 	std::string shader_code;
 	if (!GetFileContentString(std::string(GetResourcePath()) + "/" + vertex_shader_path, shader_code))
 	{
-		LOGW("Failed to load vertex shader");
+		LOGW("Failed to load vertex shader: %s", vertex_shader_path.c_str());
 		return false;
 	}
 	
 	if (!CompileShader(&vertex_shader, GL_VERTEX_SHADER, shader_code.c_str()))
 	{
-		LOGW("Failed to compile vertex shader");
+		LOGW("Failed to compile vertex shader: %s", vertex_shader_path.c_str());
 		return false;
 	}
 	
@@ -131,13 +133,13 @@ bool ShaderProgram::Construct(const std::string& vertex_shader_path,
 	
 	if (!GetFileContentString(std::string(GetResourcePath()) + "/" + fragment_shader_path, shader_code))
 	{
-		LOGW("Failed to load fragment shader");
+		LOGW("Failed to load fragment shader: %s", fragment_shader_path.c_str());
 		return false;
 	}
 	
 	if (!CompileShader(&fragment_shader, GL_FRAGMENT_SHADER, shader_code.c_str()))
 	{
-		LOGW("Failed to compile fragment shader");
+		LOGW("Failed to compile fragment shader: %s", fragment_shader_path.c_str());
 		glDeleteShader(vertex_shader);
 		return false;
 	}
@@ -193,6 +195,12 @@ bool ShaderProgram::Construct(const std::string& vertex_shader_path,
 		glDeleteShader(vertex_shader);
 	if (fragment_shader)
 		glDeleteShader(fragment_shader);
+
+	// int n;
+	// glGetProgramiv(program_, GL_ACTIVE_UNIFORMS, &n);
+	// LOGI("GL_ACTIVE_UNIFORMS: %d", n);
+	// glGetProgramiv(program_, GL_ACTIVE_ATTRIBUTES, &n);
+	// LOGI("GL_ACTIVE_ATTRIBUTES: %d", n);
 	
 	return true;
 }
