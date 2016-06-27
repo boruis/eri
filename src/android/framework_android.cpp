@@ -183,9 +183,13 @@ static bool IsMotionClick(int32_t src, float x, float y)
 
       float diff_x = x - motion_press_states[i].x;
       float diff_y = y - motion_press_states[i].y;
-      // LOGI("IsMotionClick src[%d] diff_x %f diff_y %f", src, diff_x, diff_y);
 
-      if (ERI::Abs(diff_x) <= 15.f && ERI::Abs(diff_y) <= 15.f)
+      float ratio_x = diff_x / s_app_data.width;
+      float ratio_y = diff_y / s_app_data.height;
+
+      // LOGI("IsMotionClick src[%d] diff_x %f ratio_x %f diff_y %f ratio_y %f", src, diff_x, ratio_x, diff_y, ratio_y);
+
+      if (ERI::Abs(ratio_x) <= 0.05f && ERI::Abs(ratio_y) <= 0.05f)
         return true;
 
       return false;
