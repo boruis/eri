@@ -92,6 +92,7 @@ namespace ERI {
 
 		// model
 		
+		bool disable_vertex_array;
 		mutable GLuint vertex_array; // create in renderer render
 		
 		GLuint			vertex_buffer;

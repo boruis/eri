@@ -969,6 +969,11 @@ namespace ERI
 		render_data_.vertex_format = POS_TEX2_COLOR_2;
 		render_data_.vertex_count = 0;
 		render_data_.index_count = 0;
+		
+		// some devices' VAO support works strangely
+#if ERI_PLATFORM == ERI_PLATFORM_ANDROID
+		render_data_.disable_vertex_array = true;
+#endif
 	}
 
 

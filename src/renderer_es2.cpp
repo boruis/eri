@@ -137,6 +137,10 @@ namespace ERI {
 		
 		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &caps_.max_texture_size);
 		
+//		int max_vertex_attribs;
+//		glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &max_vertex_attribs);
+//		LOGI("GL_MAX_VERTEX_ATTRIBS: %d", max_vertex_attribs);
+		
 // 		int n;
 // 		glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n);
 // 		LOGI("GL_MAX_VERTEX_ATTRIBS: %d", n);
@@ -429,7 +433,7 @@ namespace ERI {
 		
 		bool need_setup_vertex = true;
 		
-		if (is_support_vertex_array_object_)
+		if (is_support_vertex_array_object_ && !data->disable_vertex_array)
 		{
 			if (0 == data->vertex_array)
 				(*fpGenVertexArrays)(1, &data->vertex_array);

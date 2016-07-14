@@ -17,6 +17,7 @@
 namespace ERI {
 	
 	RenderData::RenderData() :
+		disable_vertex_array(false),
 		vertex_array(0),
 		vertex_buffer(0),
 		vertex_type(GL_TRIANGLE_STRIP),
