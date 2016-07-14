@@ -32,7 +32,9 @@ public:
   Framework(android_app* state, FrameworkConfig* config = NULL);
   ~Framework();
 
-  void SetAppCallback(FrameworkCallback create_app_callback, 
+  void SetAppCallback(FrameworkCallback create_app_callback,
+                      FrameworkCallback pause_app_callback,
+                      FrameworkCallback resume_app_callback,
                       FrameworkCallback destroy_app_callback);
 
   float PreUpdate();
@@ -51,10 +53,15 @@ private:
   void GainFocus();
   void LostFocus();
 
+  void Pause();
+  void Resume();
+
   void InitSensor();
   void ResumeSensor();
   void SuspendSensor();
   void ProcessSensor(int id);
+
+  void Destroy();
 
   void RefreshDisplayRotation();
 
@@ -71,6 +78,8 @@ private:
   bool is_stopping_, is_stopped_;
 
   FrameworkCallback create_app_callback_;
+  FrameworkCallback pause_app_callback_;
+  FrameworkCallback resume_app_callback_;
   FrameworkCallback destroy_app_callback_;
 
   friend void HandleAppCmd(android_app* app, int32_t cmd);

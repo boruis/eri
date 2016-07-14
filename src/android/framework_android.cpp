@@ -90,10 +90,12 @@ void HandleAppCmd(android_app* app, int32_t cmd)
 
     case APP_CMD_RESUME:
       LOGI("APP_CMD_RESUME");
+      fw->Resume();
       break;
 
     case APP_CMD_PAUSE:
       LOGI("APP_CMD_PAUSE");
+      fw->Pause();
       break;
 
     case APP_CMD_STOP:
@@ -102,6 +104,7 @@ void HandleAppCmd(android_app* app, int32_t cmd)
 
     case APP_CMD_DESTROY:
       LOGI("APP_CMD_DESTROY");
+      fw->Destroy();
       break;
 
     case APP_CMD_CONFIG_CHANGED:
@@ -378,6 +381,8 @@ Framework::Framework(android_app* state, FrameworkConfig* config /*= NULL*/)
   is_stopping_(false),
   is_stopped_(false),
   create_app_callback_(NULL),
+  pause_app_callback_(NULL),
+  resume_app_callback_(NULL),
   destroy_app_callback_(NULL)
 {
   ASSERT(state_);
@@ -402,9 +407,13 @@ Framework::~Framework()
 }
 
 void Framework::SetAppCallback(FrameworkCallback create_app_callback, 
+                               FrameworkCallback pause_app_callback,
+                               FrameworkCallback resume_app_callback,
                                FrameworkCallback destroy_app_callback)
 {
   create_app_callback_ = create_app_callback;
+  pause_app_callback_ = pause_app_callback;
+  resume_app_callback_ = resume_app_callback;
   destroy_app_callback_ = destroy_app_callback;
 }
 
@@ -474,26 +483,25 @@ void Framework::PostUpdate()
 
   ERI::Root::Ins().Update();
 
-  bool b = eglSwapBuffers(s_app_data.display, s_app_data.surface);
-  if (!b)
+  if (EGL_FALSE == eglSwapBuffers(s_app_data.display, s_app_data.surface))
   {
     EGLint err = eglGetError();
 
     if (EGL_BAD_SURFACE == err)
     {
-      LOGW("EGL_BAD_SURFACE");
+      LOGW("eglSwapBuffers failed: EGL_BAD_SURFACE");
     }
     else if (EGL_CONTEXT_LOST == err)
     {
-      LOGW("EGL_CONTEXT_LOST");
+      LOGW("eglSwapBuffers failed: EGL_CONTEXT_LOST");
     }
     else if (EGL_BAD_CONTEXT == err)
     {
-      LOGW("EGL_BAD_CONTEXT");
+      LOGW("eglSwapBuffers failed: EGL_BAD_CONTEXT");
     }
     else
     {
-      LOGW("eglSwapBuffers failed, error: %d", err);
+      LOGW("eglSwapBuffers failed: %d", err);
     }
 
     // TODO: terminate?
@@ -512,15 +520,61 @@ void Framework::RequestStop()
 
 void Framework::InitDisplay()
 {
-  if (InitSurface())
-    InitContext();
+  if (EGL_NO_DISPLAY == s_app_data.display)
+  {
+    EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    eglInitialize(display, 0, 0);
 
-  //
+    /*
+     * Here specify the attributes of the desired configuration.
+     * Below, we select an EGLConfig with at least 8 bits per color
+     * component compatible with on-screen windows
+     */
+    const EGLint attribs[] = {
+#ifdef ERI_RENDERER_ES2
+      EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+#endif
+      EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+      EGL_BLUE_SIZE, 8,
+      EGL_GREEN_SIZE, 8,
+      EGL_RED_SIZE, 8,
+      EGL_DEPTH_SIZE, config_.use_depth_buffer ? 16 : 0,
+      EGL_NONE
+    };
 
-  ERI::Root::Ins().Init(config_.use_depth_buffer);
+    /* Here, the application chooses the configuration it desires. In this
+     * sample, we have a very simplified selection process, where we pick
+     * the first EGLConfig that matches our criteria */
+    EGLint num_configs;
+    EGLConfig config;
+    eglChooseConfig(display, attribs, &config, 1, &num_configs);
 
-  if (create_app_callback_)
-    (*create_app_callback_)();
+    if (!num_configs)
+    {
+      LOGW("Unable to retrieve EGL config");
+      return;
+    }
+
+    /* EGL_NATIVE_VISUAL_ID is an attribute of the EGLConfig that is
+     * guaranteed to be accepted by ANativeWindow_setBuffersGeometry().
+     * As soon as we picked a EGLConfig, we can safely reconfigure the
+     * ANativeWindow buffers to match, using EGL_NATIVE_VISUAL_ID. */
+    EGLint format;
+    eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format);
+    ANativeWindow_setBuffersGeometry(state_->window, 0, 0, format);
+
+    s_app_data.display = display;
+    s_app_data.config = config;
+  }
+
+  if (EGL_NO_DISPLAY == s_app_data.display)
+    return;
+
+  if (!InitSurface())
+    return;
+
+  if (!InitContext())
+    return;
 
   ERI::Root::Ins().renderer()->Resize(s_app_data.width, s_app_data.height);
 
@@ -529,109 +583,72 @@ void Framework::InitDisplay()
 
 bool Framework::InitSurface()
 {
-  EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-  eglInitialize(display, 0, 0);
-
-  /*
-   * Here specify the attributes of the desired configuration.
-   * Below, we select an EGLConfig with at least 8 bits per color
-   * component compatible with on-screen windows
-   */
-  const EGLint attribs[] = {
-#ifdef ERI_RENDERER_ES2
-    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-#endif
-    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-    EGL_BLUE_SIZE, 8,
-    EGL_GREEN_SIZE, 8,
-    EGL_RED_SIZE, 8,
-    EGL_DEPTH_SIZE, config_.use_depth_buffer ? 16 : 0,
-    EGL_NONE
-  };
-
-  /* Here, the application chooses the configuration it desires. In this
-   * sample, we have a very simplified selection process, where we pick
-   * the first EGLConfig that matches our criteria */
-  EGLint num_configs;
-  EGLConfig config;
-  eglChooseConfig(display, attribs, &config, 1, &num_configs);
-
-  if (!num_configs)
+  if (EGL_NO_SURFACE != s_app_data.surface)
   {
-    LOGW("Unable to retrieve EGL config");
-    return false;
+    LOGW("InitSurface: surface should not exist, destroy it");
+    eglDestroySurface(s_app_data.display, s_app_data.surface);
   }
-
-  /* EGL_NATIVE_VISUAL_ID is an attribute of the EGLConfig that is
-   * guaranteed to be accepted by ANativeWindow_setBuffersGeometry().
-   * As soon as we picked a EGLConfig, we can safely reconfigure the
-   * ANativeWindow buffers to match, using EGL_NATIVE_VISUAL_ID. */
-  EGLint format;
-  eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format);
-  ANativeWindow_setBuffersGeometry(state_->window, 0, 0, format);
 
   EGLSurface surface;
   EGLint w, h;
 
-  surface = eglCreateWindowSurface(display, config, state_->window, NULL);
-  eglQuerySurface(display, surface, EGL_WIDTH, &w);
-  eglQuerySurface(display, surface, EGL_HEIGHT, &h);
+  surface = eglCreateWindowSurface(s_app_data.display, s_app_data.config, state_->window, NULL);
+  eglQuerySurface(s_app_data.display, surface, EGL_WIDTH, &w);
+  eglQuerySurface(s_app_data.display, surface, EGL_HEIGHT, &h);
 
-  s_app_data.display = display;
-  s_app_data.config = config;
   s_app_data.surface = surface;
   s_app_data.width = w;
   s_app_data.height = h;
 
-  return true;
+  return EGL_NO_SURFACE != s_app_data.surface;
 }
 
 bool Framework::InitContext()
 {
-  const EGLint context_attribs[] = {
-#ifdef ERI_RENDERER_ES2
-    EGL_CONTEXT_CLIENT_VERSION, 2,
-#endif
-    EGL_NONE
-  };
+  bool is_create = false;
 
-  EGLContext context = eglCreateContext(s_app_data.display, s_app_data.config, NULL, context_attribs);
-  if (EGL_FALSE == eglMakeCurrent(s_app_data.display, s_app_data.surface, s_app_data.surface, context))
+  if (EGL_NO_CONTEXT == s_app_data.context)
   {
-    LOGW("Unable to eglMakeCurrent");
+    const EGLint context_attribs[] = {
+#ifdef ERI_RENDERER_ES2
+      EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
+      EGL_NONE
+    };
+
+    s_app_data.context = eglCreateContext(s_app_data.display, s_app_data.config, NULL, context_attribs);
+
+    is_create = true;
+  }
+
+  if (EGL_FALSE == eglMakeCurrent(s_app_data.display, s_app_data.surface, s_app_data.surface, s_app_data.context))
+  {
+    LOGW("eglMakeCurrent failed: %d", eglGetError());
     return false;
   }
 
-  s_app_data.context = context;
+  if (EGL_NO_CONTEXT == s_app_data.context)
+    return false;
+
+  if (is_create)
+  {
+    ERI::Root::Ins().Init(config_.use_depth_buffer);
+
+    if (create_app_callback_)
+      (*create_app_callback_)();
+  }
 
   return true;
 }
 
 void Framework::TerminateDisplay()
 {
-  if (EGL_NO_DISPLAY != s_app_data.display)
-  {
-    if (destroy_app_callback_)
-      (*destroy_app_callback_)();
+  eglMakeCurrent(s_app_data.display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 
-    ERI::Root::DestroyIns();
+  if (EGL_NO_SURFACE != s_app_data.surface)
+    eglDestroySurface(s_app_data.display, s_app_data.surface);
 
-    //
-
-    eglMakeCurrent(s_app_data.display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-
-    if (EGL_NO_CONTEXT != s_app_data.context)
-        eglDestroyContext(s_app_data.display, s_app_data.context);
-
-    if (EGL_NO_SURFACE != s_app_data.surface)
-        eglDestroySurface(s_app_data.display, s_app_data.surface);
-
-    eglTerminate(s_app_data.display);
-  }
-
-  s_app_data.context = EGL_NO_CONTEXT;
   s_app_data.surface = EGL_NO_SURFACE;
-  s_app_data.display = EGL_NO_DISPLAY;
 
   LOGI("framework display terminated");
 }
@@ -651,6 +668,18 @@ void Framework::LostFocus()
   SuspendSensor();
 
   has_focus_ = false;
+}
+
+void Framework::Pause()
+{
+  if (pause_app_callback_)
+    (*pause_app_callback_)();
+}
+
+void Framework::Resume()
+{
+  if (resume_app_callback_)
+    (*resume_app_callback_)();
 }
 
 void Framework::InitSensor()
@@ -729,6 +758,27 @@ void Framework::ProcessSensor(int id)
 
     ERI::Root::Ins().input_mgr()->Accelerate(g);
   }
+}
+
+void Framework::Destroy()
+{
+  if (destroy_app_callback_)
+    (*destroy_app_callback_)();
+
+  ERI::Root::DestroyIns();
+
+  //
+
+  eglMakeCurrent(s_app_data.display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+
+  if (EGL_NO_CONTEXT != s_app_data.context)
+    eglDestroyContext(s_app_data.display, s_app_data.context);
+
+  if (EGL_NO_DISPLAY != s_app_data.display)
+    eglTerminate(s_app_data.display);
+
+  s_app_data.context = EGL_NO_CONTEXT;
+  s_app_data.display = EGL_NO_DISPLAY;
 }
 
 void Framework::RefreshDisplayRotation()
