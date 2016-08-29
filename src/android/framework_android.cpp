@@ -120,6 +120,36 @@ void HandleAppCmd(android_app* app, int32_t cmd)
 // -----------------------------------------------------------------------------
 // input event handle
 
+// -----------------------------------------------------------------------------
+// joystick?
+
+#ifdef CONSOLE_MODE
+
+// missed api in ndk
+
+enum { AXIS_X = 0, AXIS_Y = 1, AXIS_Z = 11, AXIS_RZ = 14 };
+extern float AMotionEvent_getAxisValue(const AInputEvent* motion_event, int32_t axis, size_t pointer_index);
+static typeof(AMotionEvent_getAxisValue) *p_AMotionEvent_getAxisValue;
+#include <dlfcn.h>
+void InitAxis(void)
+{
+    p_AMotionEvent_getAxisValue = (float (*)(const AInputEvent*, int32_t, size_t))
+        dlsym(RTLD_DEFAULT, "AMotionEvent_getAxisValue");
+}
+float GetAxis(AInputEvent *event, int stick, int axis)
+{
+    int axis_arg[2][2] = { { AXIS_X, AXIS_Y }, { AXIS_Z, AXIS_RZ } };
+    return (*p_AMotionEvent_getAxisValue)(event, axis_arg[stick][axis], 0);
+}
+
+//
+
+static ERI::Vector2 ls_axis, rs_axis;
+
+#endif // CONSOLE_MODE
+
+// -----------------------------------------------------------------------------
+
 struct MotionPressState
 {
   MotionPressState() : src(-1) {}
@@ -251,6 +281,25 @@ static int32_t HandleInputEvent(struct android_app* app, AInputEvent* event)
 
   if (AINPUT_EVENT_TYPE_MOTION == AInputEvent_getType(event))
   {
+#ifdef CONSOLE_MODE
+
+    if ((AMotionEvent_getAction(event) & AMOTION_EVENT_ACTION_MASK) == AMOTION_EVENT_ACTION_MOVE)
+    {
+        ls_axis.x = GetAxis(event, 0, 0);
+        ls_axis.y = -GetAxis(event, 0, 1);
+        rs_axis.x = GetAxis(event, 1, 0);
+        rs_axis.y = -GetAxis(event, 1, 1);
+
+        // ERI::Root::Ins().input_mgr()->JoystickAxis(ERI::JOYSTICK_AXISL, ls_axis.x, ls_axis.y);
+        // ERI::Root::Ins().input_mgr()->JoystickAxis(ERI::JOYSTICK_AXISR, rs_axis.x, rs_axis.y);
+
+        return 1;
+    }
+
+    return 0;
+
+#else // CONSOLE_MODE
+
     int32_t action = AMotionEvent_getAction(event);
     int32_t pointer_idx = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
 
@@ -330,6 +379,8 @@ static int32_t HandleInputEvent(struct android_app* app, AInputEvent* event)
     }
 
     return 1;
+
+#endif // CONSOLE_MODE
   }
   else if (AINPUT_EVENT_TYPE_KEY == AInputEvent_getType(event))
   {
@@ -338,24 +389,63 @@ static int32_t HandleInputEvent(struct android_app* app, AInputEvent* event)
     int32_t key_code = AKeyEvent_getKeyCode(event);
     // LOGI("keycode %d", key_code);
 
+#ifdef CONSOLE_MODE
+    ERI::JoystickCode joystick_code = ERI::JOYSTICK_NONE;
+    switch (key_code)
+    {
+        case AKEYCODE_DPAD_UP: joystick_code = ERI::JOYSTICK_DPAD_UP; break;
+        case AKEYCODE_DPAD_DOWN: joystick_code = ERI::JOYSTICK_DPAD_DOWN; break;
+        case AKEYCODE_DPAD_LEFT: joystick_code = ERI::JOYSTICK_DPAD_LEFT; break;
+        case AKEYCODE_DPAD_RIGHT: joystick_code = ERI::JOYSTICK_DPAD_RIGHT; break;
+        case AKEYCODE_BUTTON_A: joystick_code = ERI::JOYSTICK_A; break;
+        case AKEYCODE_BUTTON_B: joystick_code = ERI::JOYSTICK_B; break;
+        case AKEYCODE_BUTTON_X: joystick_code = ERI::JOYSTICK_X; break;
+        case AKEYCODE_BUTTON_Y: joystick_code = ERI::JOYSTICK_Y; break;
+        case AKEYCODE_BUTTON_L1: joystick_code = ERI::JOYSTICK_L1; break;
+        case AKEYCODE_BUTTON_R1: joystick_code = ERI::JOYSTICK_R1; break;
+        case AKEYCODE_BUTTON_L2: joystick_code = ERI::JOYSTICK_L2; break;
+        case AKEYCODE_BUTTON_R2: joystick_code = ERI::JOYSTICK_R2; break;
+        case AKEYCODE_BACK: joystick_code = ERI::JOYSTICK_BACK; break;
+        case AKEYCODE_BUTTON_START: joystick_code = ERI::JOYSTICK_START; break;
+        case AKEYCODE_BUTTON_THUMBL: joystick_code = ERI::JOYSTICK_THUMBL; break;
+        case AKEYCODE_BUTTON_THUMBR: joystick_code = ERI::JOYSTICK_THUMBR; break;
+    }
+#endif // CONSOLE_MODE
+
     switch (AKeyEvent_getAction(event))
     {
       case AKEY_EVENT_ACTION_DOWN:
         // LOGI("AKEY_EVENT_ACTION_DOWN");
+#ifdef CONSOLE_MODE
+        if (joystick_code != ERI::JOYSTICK_NONE)
+        {
+            ERI::Root::Ins().input_mgr()->JoystickDown(joystick_code);
+            ret = 1;
+        }
+#else
         if (AKEYCODE_BACK == key_code)
         {
           ERI::Root::Ins().input_mgr()->KeyDown(ERI::InputKeyEvent(ERI::KEY_APP_BACK));
           ret = 1;
         }
+#endif
         break;
 
       case AKEY_EVENT_ACTION_UP:
         // LOGI("AKEY_EVENT_ACTION_UP");
+#ifdef CONSOLE_MODE
+        if (joystick_code != ERI::JOYSTICK_NONE)
+        {
+            ERI::Root::Ins().input_mgr()->JoystickUp(joystick_code);
+            ret = 1;
+        }
+#else
         if (AKEYCODE_BACK == key_code)
         {
           ERI::Root::Ins().input_mgr()->KeyUp(ERI::InputKeyEvent(ERI::KEY_APP_BACK));
           ret = 1;
         }
+#endif
         break;
 
       case AKEY_EVENT_ACTION_MULTIPLE:
@@ -393,6 +483,10 @@ Framework::Framework(android_app* state, FrameworkConfig* config /*= NULL*/)
   state_->userData = this;
   state_->onAppCmd = HandleAppCmd;
   state_->onInputEvent = HandleInputEvent;
+
+#ifdef CONSOLE_MODE
+  InitAxis();
+#endif
 
   InitSensor();
 
@@ -443,6 +537,11 @@ float Framework::PreUpdate()
       return 0.f;
     }
   }
+
+#ifdef CONSOLE_MODE
+    ERI::Root::Ins().input_mgr()->JoystickAxis(ERI::JOYSTICK_AXISL, ls_axis.x, ls_axis.y);
+    ERI::Root::Ins().input_mgr()->JoystickAxis(ERI::JOYSTICK_AXISR, rs_axis.x, rs_axis.y);
+#endif
 
   if (!IsReady())
     return 0.f;
