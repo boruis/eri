@@ -7,12 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1B9DA954129681D100285E72 /* collada_loader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1B9DA94B129681D100285E72 /* collada_loader.cpp */; };
-		1B9DA955129681D100285E72 /* mesh_actor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1B9DA94D129681D100285E72 /* mesh_actor.cpp */; };
-		1B9DA956129681D100285E72 /* skeleton_actor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1B9DA950129681D100285E72 /* skeleton_actor.cpp */; };
 		1B9DA957129681D100285E72 /* xml_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1B9DA952129681D100285E72 /* xml_helper.cpp */; };
 		1DDD58160DA1D0A300B32029 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DDD58140DA1D0A300B32029 /* MainMenu.xib */; };
 		256AC3DA0F4B6AC300CF3369 /* eriAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 256AC3D90F4B6AC300CF3369 /* eriAppDelegate.mm */; };
+		526219051EDEE1920027F72C /* texture_atlas_mgr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 526219031EDEE1920027F72C /* texture_atlas_mgr.cpp */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
@@ -41,20 +39,12 @@
 		F6CCF5EB15358F0B00EFD95F /* texture_reader_libpng.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6CCF5E915358F0B00EFD95F /* texture_reader_libpng.cpp */; };
 		F6CCF5EF15358F5400EFD95F /* libpng.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F6CCF5EE15358F5400EFD95F /* libpng.a */; };
 		F6E5DB131363BDCD00D71F1A /* txt_actor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6E5DB111363BDCD00D71F1A /* txt_actor.cpp */; };
-		F6F1B5A013643297008F5876 /* shared_skeleton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F6F1B59E13643297008F5876 /* shared_skeleton.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
-		1B9DA94B129681D100285E72 /* collada_loader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = collada_loader.cpp; path = ../../src/collada_loader.cpp; sourceTree = SOURCE_ROOT; };
-		1B9DA94C129681D100285E72 /* collada_loader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = collada_loader.h; path = ../../src/collada_loader.h; sourceTree = SOURCE_ROOT; };
-		1B9DA94D129681D100285E72 /* mesh_actor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mesh_actor.cpp; path = ../../src/mesh_actor.cpp; sourceTree = SOURCE_ROOT; };
-		1B9DA94E129681D100285E72 /* mesh_actor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mesh_actor.h; path = ../../src/mesh_actor.h; sourceTree = SOURCE_ROOT; };
-		1B9DA94F129681D100285E72 /* mesh_loader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mesh_loader.h; path = ../../src/mesh_loader.h; sourceTree = SOURCE_ROOT; };
-		1B9DA950129681D100285E72 /* skeleton_actor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = skeleton_actor.cpp; path = ../../src/skeleton_actor.cpp; sourceTree = SOURCE_ROOT; };
-		1B9DA951129681D100285E72 /* skeleton_actor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = skeleton_actor.h; path = ../../src/skeleton_actor.h; sourceTree = SOURCE_ROOT; };
 		1B9DA952129681D100285E72 /* xml_helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xml_helper.cpp; path = ../../src/xml_helper.cpp; sourceTree = SOURCE_ROOT; };
 		1B9DA953129681D100285E72 /* xml_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xml_helper.h; path = ../../src/xml_helper.h; sourceTree = SOURCE_ROOT; };
 		1DDD58150DA1D0A300B32029 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
@@ -64,6 +54,8 @@
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		526219031EDEE1920027F72C /* texture_atlas_mgr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = texture_atlas_mgr.cpp; path = ../../src/texture_atlas_mgr.cpp; sourceTree = "<group>"; };
+		526219041EDEE1920027F72C /* texture_atlas_mgr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = texture_atlas_mgr.h; path = ../../src/texture_atlas_mgr.h; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* eri-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "eri-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* eri.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = eri.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F612B1A3126B6374002C8152 /* gl_view.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gl_view.h; sourceTree = "<group>"; };
@@ -116,8 +108,6 @@
 		F6E5DB111363BDCD00D71F1A /* txt_actor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 2; lastKnownFileType = sourcecode.cpp.cpp; name = txt_actor.cpp; path = ../../src/txt_actor.cpp; sourceTree = "<group>"; tabWidth = 2; usesTabs = 0; };
 		F6E5DB121363BDCD00D71F1A /* txt_actor.h */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 2; lastKnownFileType = sourcecode.c.h; name = txt_actor.h; path = ../../src/txt_actor.h; sourceTree = "<group>"; tabWidth = 2; usesTabs = 0; };
 		F6F1B59D13643297008F5876 /* observer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = observer.h; path = ../../src/observer.h; sourceTree = "<group>"; };
-		F6F1B59E13643297008F5876 /* shared_skeleton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = shared_skeleton.cpp; path = ../../src/shared_skeleton.cpp; sourceTree = "<group>"; };
-		F6F1B59F13643297008F5876 /* shared_skeleton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = shared_skeleton.h; path = ../../src/shared_skeleton.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -229,6 +219,8 @@
 		F6B3AB0D1269CBC4009303FA /* ERI */ = {
 			isa = PBXGroup;
 			children = (
+				526219031EDEE1920027F72C /* texture_atlas_mgr.cpp */,
+				526219041EDEE1920027F72C /* texture_atlas_mgr.h */,
 				F6327601126B520D005C23B6 /* apple */,
 				F612B1A2126B6374002C8152 /* mac */,
 				F6B3AB3B1269CC2E009303FA /* pch.h */,
@@ -263,15 +255,6 @@
 				F6B3AB481269CC2E009303FA /* scene_actor.h */,
 				F6E5DB111363BDCD00D71F1A /* txt_actor.cpp */,
 				F6E5DB121363BDCD00D71F1A /* txt_actor.h */,
-				1B9DA94F129681D100285E72 /* mesh_loader.h */,
-				1B9DA94B129681D100285E72 /* collada_loader.cpp */,
-				1B9DA94C129681D100285E72 /* collada_loader.h */,
-				1B9DA94D129681D100285E72 /* mesh_actor.cpp */,
-				1B9DA94E129681D100285E72 /* mesh_actor.h */,
-				1B9DA950129681D100285E72 /* skeleton_actor.cpp */,
-				1B9DA951129681D100285E72 /* skeleton_actor.h */,
-				F6F1B59E13643297008F5876 /* shared_skeleton.cpp */,
-				F6F1B59F13643297008F5876 /* shared_skeleton.h */,
 				F6B3AB391269CC2E009303FA /* particle_system.cpp */,
 				F6B3AB3A1269CC2E009303FA /* particle_system.h */,
 				F6B3AB4B1269CC2E009303FA /* texture_mgr.cpp */,
@@ -363,18 +346,15 @@
 				F6B3AB551269CC2E009303FA /* root.cpp in Sources */,
 				F6B3AB561269CC2E009303FA /* scene_actor.cpp in Sources */,
 				F6B3AB571269CC2E009303FA /* scene_mgr.cpp in Sources */,
+				526219051EDEE1920027F72C /* texture_atlas_mgr.cpp in Sources */,
 				F6B3AB581269CC2E009303FA /* texture_mgr.cpp in Sources */,
 				F6B3AB681269CD0F009303FA /* demo_app.cpp in Sources */,
 				F6B3AB8F1269D224009303FA /* texture_reader_freeimage.cpp in Sources */,
 				F6327603126B520D005C23B6 /* platform_helper_apple.mm in Sources */,
 				F612B1A5126B6374002C8152 /* gl_view.mm in Sources */,
-				1B9DA954129681D100285E72 /* collada_loader.cpp in Sources */,
-				1B9DA955129681D100285E72 /* mesh_actor.cpp in Sources */,
-				1B9DA956129681D100285E72 /* skeleton_actor.cpp in Sources */,
 				1B9DA957129681D100285E72 /* xml_helper.cpp in Sources */,
 				F6AC86A81360EFB60067F913 /* sys_helper.cpp in Sources */,
 				F6E5DB131363BDCD00D71F1A /* txt_actor.cpp in Sources */,
-				F6F1B5A013643297008F5876 /* shared_skeleton.cpp in Sources */,
 				F6CCF5EB15358F0B00EFD95F /* texture_reader_libpng.cpp in Sources */,
 				F689F85A1619275800DC7B7C /* renderer_es2.cpp in Sources */,
 				F69135F11622E4FB004B8EF6 /* shader_mgr.cpp in Sources */,
@@ -418,15 +398,15 @@
 					../3rd/libpng,
 					../3rd/FreeImage,
 					../3rd/rapidxml,
-					../3rd/freetype,
+					/usr/local/include/freetype2,
+					/usr/local/include,
 				);
 				INFOPLIST_FILE = "eri-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					../3rd/libpng,
-					../3rd/FreeImage,
 					/usr/local/lib,
+					/usr/local/Cellar/freeimage/3.17.0_1/lib/,
 				);
 				OTHER_LDFLAGS = "-lfreetype";
 				PRODUCT_NAME = eri;
@@ -446,15 +426,15 @@
 					../3rd/libpng,
 					../3rd/FreeImage,
 					../3rd/rapidxml,
-					../3rd/freetype,
+					/usr/local/include/freetype2,
+					/usr/local/include,
 				);
 				INFOPLIST_FILE = "eri-Info.plist";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					../3rd/libpng,
-					../3rd/FreeImage,
 					/usr/local/lib,
+					/usr/local/Cellar/freeimage/3.17.0_1/lib/,
 				);
 				OTHER_LDFLAGS = "-lfreetype";
 				PRODUCT_NAME = eri;
